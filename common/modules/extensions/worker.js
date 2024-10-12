@@ -67,7 +67,11 @@ class Extensions {
 export async function loadExtensions (extensions) {
   const sources = (await Promise.all(extensions.map(async extension => {
     try {
-      if (!extension.startsWith('http')) extension = `https://esm.sh/${extension}`
+        if (/^[GFCA]:/.test(extension)) {
+          extension = `file:///${extension.replace(/\\/g, '/')}`;
+        } else if (!extension.startsWith('http')) {
+          extension = `https://esm.sh/${extension}`;
+        }
       return Object.values(await import(/* webpackIgnore: true */extension))
     } catch (error) {
       return []
