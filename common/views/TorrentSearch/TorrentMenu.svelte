@@ -2,6 +2,7 @@
   import { toast } from 'svelte-sonner'
   import { settings } from '@/modules/settings.js'
   import { anilistClient } from '@/modules/anilist.js'
+  import { sanitiseTerms } from './TorrentCard.svelte'
   import { click } from '@/modules/click.js'
   import getResultsFromExtensions from '@/modules/extensions/index.js'
   import Debug from 'debug'
@@ -9,6 +10,7 @@
   const debug = Debug('ui:extensions')
 
   /** @typedef {import('@/modules/al.d.ts').Media} Media */
+  /** @typedef {import('anitomyscript').AnitomyResult} AnitomyResult */
 
   /** @param {Media} media */
   function isMovie (media) {
@@ -18,15 +20,29 @@
     return media.duration > 80 && media.episodes === 1
   }
 
-  /** @param {ReturnType<typeof getResultsFromExtensions>} promise */
-  async function getBest (promise) {
+  /** @param {AnitomyResult} result
+   * @param {string} audioLang
+   */
+  function getRequestedAudio(result, audioLang) {
+    const terms = sanitiseTerms(result)
+
+    const exactMatch = terms.some(term => term.text.toLowerCase().includes(audioLang))
+    const dualAudio = terms.some(term => term.text.toLowerCase().includes('dual'))
+
+    return exactMatch || dualAudio
+  }
+
+  /** @param {ReturnType<typeof getResultsFromExtensions>} promise
+   * @param {string} audioLang
+   */
+  async function getBest(promise, audioLang) {
     const results = await promise
 
-    const best = results.find(result => result.type === 'best') || results.find(result => result.type === 'alt') || results[0]
+    const bestRequestedAudio = audioLang !== 'jpn' && results.find(result => (result.type === 'best' || result.type === 'alt') && getRequestedAudio(result.parseObject, audioLang))
+    const livingRequestedAudio = audioLang !== 'jpn' && results.find(result => getRequestedAudio(result.parseObject, audioLang) && result.seeders > 4)
+    const bestGenericAudio = results.find(result => result.type === 'best' || result.type === 'alt' && result.seeders > 9)
 
-    if (best?.seeders < 10) return results[0]
-
-    return best
+    return bestRequestedAudio || livingRequestedAudio || bestGenericAudio || results[0]
   }
 
   function filterResults (results, searchText) {
@@ -77,7 +93,7 @@
   $: resolution = $settings.rssQuality
 
   $: lookup = sortResults(getResultsFromExtensions({ ...search, batch, movie, resolution }))
-  $: best = getBest(lookup)
+  $: best = getBest(lookup, $settings.audioLanguage)
 
   onDestroy(() => {
     clearTimeout(timeoutHandle)
@@ -122,7 +138,37 @@
     <h3 class='mb-10 font-weight-bold text-white'>Find Torrents</h3>
     <button class='btn btn-square rounded-circle ml-auto pointer' type='button' use:click={close}> &times; </button>
   </div>
-  <h4 class='mb-10 text-light'>Auto-Selected Torrent</h4>
+  <div class='d-flex align-items-center flex-wrap ml-20 mr-20'>
+    <h4 class='mb-10 text-light'>Auto-Selected Torrent</h4>
+    <div class='w-300 d-flex align-items-center ml-auto'>
+      <span class='text-nowrap'>Preferred Audio Language</span>
+      <select class='form-control w-full bg-dark ml-10' bind:value={$settings.audioLanguage}>
+        <option value='jpn' selected>Japanese</option>
+        <option value='eng'>English</option>
+        <option value='chi'>Chinese</option>
+        <option value='por'>Portuguese</option>
+        <option value='spa'>Spanish</option>
+        <option value='ger'>German</option>
+        <option value='pol'>Polish</option>
+        <option value='cze'>Czech</option>
+        <option value='dan'>Danish</option>
+        <option value='gre'>Greek</option>
+        <option value='fin'>Finnish</option>
+        <option value='fre'>French</option>
+        <option value='hun'>Hungarian</option>
+        <option value='ita'>Italian</option>
+        <option value='kor'>Korean</option>
+        <option value='dut'>Dutch</option>
+        <option value='nor'>Norwegian</option>
+        <option value='rum'>Romanian</option>
+        <option value='rus'>Russian</option>
+        <option value='slo'>Slovak</option>
+        <option value='swe'>Swedish</option>
+        <option value='ara'>Arabic</option>
+        <option value='idn'>Indonesian</option>
+      </select>
+    </div>
+  </div>
   {#await best}
     <TorrentSkeletonCard />
   {:then bestRelease}
