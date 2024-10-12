@@ -42,7 +42,7 @@ export default class Updater {
         } catch (e) {}
         autoUpdater.quitAndInstall(true, forceRunAfter)
       })
-      if (process.platform === 'darwin') shell.openExternal('https://miru.watch/download')
+      if (process.platform === 'darwin') shell.openExternal('https://shiru.watch/download')
       this.hasUpdate = false
       return true
     }

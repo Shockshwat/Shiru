@@ -11,7 +11,7 @@
 
 <div class='d-flex position-relative justify-content-center align-items-center hero flex-column' bind:this={hero}>
   <div class='position-absolute ghost text-nowrap font-weight-semi-bold' data-nosnippet>
-    MIRU MIRU MIRU MIRU MIRU MIRU MIRU MIRU MIRU MIRU MIRU MIRU MIRU
+    SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU SHIRU
   </div>
   <div class='h-50' />
   <div class='position-relative text-center text-white font-weight-bold hero-text'>

@@ -11,14 +11,14 @@
         <img src='/logo_filled.svg' alt='logo' class='w-50 h-50 p-5' />
       </a>
       <br />
-      © 2020 - {new Date().getFullYear()}, ThaUnknown
+      © 2020 - {new Date().getFullYear()}, RockinChaos
       <br />
       All rights reserved
     </div>
     <div class='col-6 col-sm-4 col-md-3 pt-20 d-flex justify-content-md-end'>
       <div class='d-flex flex-column'>
         <div class='font-weight-semi-bold mb-10 text-white'>Product</div>
-        <a href='https://github.com/sponsors/ThaUnknown/' target='_blank'>Donate</a>
+        <a href='https://github.com/sponsors/RockinChaos/' target='_blank'>Donate</a>
         <a href='/features'>Features</a>
         <a href='/download'>Download</a>
         <a href='/changelog'>Changelog</a>
@@ -37,7 +37,7 @@
       <div>
         <div class='font-weight-semi-bold mb-10 text-white'>Social</div>
         <a href={atob('aHR0cHM6Ly9kaXNjb3JkLmdnL1o4N05oN2M0QWM=')} target='_blank'><DiscordSVG class='icon mr-10' /></a>
-        <a href='https://github.com/ThaUnknown/miru' target='_blank'><GithubSVG class='icon' /></a>
+        <a href='https://github.com/RockinChaos/Shiru' target='_blank'><GithubSVG class='icon' /></a>
       </div>
     </div>
   </div>

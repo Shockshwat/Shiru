@@ -1,26 +1,26 @@
 <p align="center">
-	<a href="https://github.com/ThaUnknown/miru">
+	<a href="https://github.com/RockinChaos/Shiru">
 		<img src="./web/static/logo_filled.svg" width="200">
 	</a>
 </p>
-<h1 align="center"><b>Miru</b></h1>
+<h1 align="center"><b>Shiru</b></h1>
 
 <h4 align="center"><b>Stream anime torrents, real-time with no waiting for downloads</b></h4>
 
 <p align="center">
-  <a href="https://miru.watch/#about">About</a> •
-  <a href="https://miru.watch/features/">Features</a> •
-  <a href="https://miru.watch/faq/">Frequently Asked Questions</a> •
+  <a href="https://shiru.watch/#about">About</a> •
+  <a href="https://shiru.watch/features/">Features</a> •
+  <a href="https://shiru.watch/faq/">Frequently Asked Questions</a> •
   <a href="#building-and-development">Building and Development</a> •
-  <a href="https://miru.watch/download/">Download</a>
+  <a href="https://shiru.watch/download/">Download</a>
 </p>
 <p align="center">
   <img src="./docs/out.gif" alt="showcase"><br>
   <a href="https://discord.gg/Z87Nh7c4Ac">
     <img src="https://img.shields.io/discord/953341991134064651?style=flat-square" alt="chat">
   </a>
-  <a href="https://miru.watch/download/">
-    <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/ThaUnknown/miru/total?style=flat-square">
+  <a href="https://shiru.watch/download/">
+    <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/RockinChaos/Shiru/total?style=flat-square">
   </a>
 </p>
 
@@ -94,21 +94,21 @@ Unlike qBit's sequential, seeking into undownloaded data will prioritise downloa
 
 If you use paru:
 ```bash
-paru -S miru-bin
+paru -S shiru-bin
 ```
 
 If you use yay:
 
 ```bash
-yay -S miru-bin
+yay -S shiru-bin
 ```
 
 ### Debian/Ubuntu
 
-- Download the `linux-Miru-version.deb` from the [releases](https://github.com/ThaUnknown/miru/releases/latest) page.
+- Download the `linux-Shiru-version.deb` from the [releases](https://github.com/RockinChaos/Shiru/releases/latest) page.
 - Install the deb file with package manager.
 ```bash
-apt install linux-Miru-*.deb
+apt install linux-Shiru-*.deb
 ```
 
 ## **Building and Development**

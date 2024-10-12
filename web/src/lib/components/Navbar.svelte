@@ -11,7 +11,7 @@
         <a href='/download' class='nav-link'>Download</a>
       </li>
     </ul>
-    <a href='https://github.com/sponsors/ThaUnknown/' class='navbar-link navbar-link-with-icon pointer overflow-hidden donate mr-20 h-full' target='_blank'>
+    <a href='https://github.com/sponsors/RockinChaos/' class='navbar-link navbar-link-with-icon pointer overflow-hidden donate mr-20 h-full' target='_blank'>
       <span class='material-symbols-outlined rounded filled font-size-20 h-full'>favorite</span>
     </a>
     <hr class='m-0 w-full position-absolute bottom-0 w-full' />

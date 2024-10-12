@@ -15,7 +15,7 @@ export function load ({ fetch }) {
   return {
     releases: (async () => {
       try {
-        const res = await fetch('https://api.github.com/repos/ThaUnknown/miru/releases')
+        const res = await fetch('https://api.github.com/repos/RockinChaos/Shiru/releases')
         /** @type {any[]} */
         const json = await res.json()
         return json.map(({ body, tag_name: version, published_at: date, assets }) => /** @type {{ body: string, version: string, date: string, assets: {name: string, browser_download_url: string}[] }} */({ body, version, date, assets }))
@@ -25,7 +25,7 @@ export function load ({ fetch }) {
     })(),
     stargazers: (async () => {
       try {
-        const res = await fetch('https://api.github.com/repos/ThaUnknown/miru/stargazers?per_page=100&page=' + (Math.round(Math.random() * 10) + 1))
+        const res = await fetch('https://api.github.com/repos/RockinChaos/Shiru/stargazers?per_page=100&page=' + (Math.round(Math.random() * 10) + 1))
         /** @type {any[]} */
         const json = await res.json()
         return json.map(({ html_url: htmlUrl, avatar_url: avatarUrl, login }) => ({ htmlUrl, avatarUrl, login }))

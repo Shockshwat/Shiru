@@ -1,4 +1,4 @@
-package watch.miru;
+package watch.shiru;
 
 import android.os.Bundle;
 import android.webkit.ServiceWorkerClient;

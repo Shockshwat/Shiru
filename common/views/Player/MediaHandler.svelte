@@ -190,7 +190,7 @@
 
   function setMediaSession (nowPlaying) {
     if (typeof MediaMetadata === 'undefined') return
-    const name = [nowPlaying.title, nowPlaying.episode, nowPlaying.episodeTitle, 'Miru'].filter(i => i).join(' - ')
+    const name = [nowPlaying.title, nowPlaying.episode, nowPlaying.episodeTitle, 'Shiru'].filter(i => i).join(' - ')
 
     navigator.mediaSession.metadata = nowPlaying.thumbnail
         ? new MediaMetadata({

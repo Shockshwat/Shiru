@@ -169,7 +169,7 @@
                     <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
                   </button>
                   <Scoring {media} viewAnime={true} />
-                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => copyToClipboard(`https://miru.watch/anime/${media.id}`)}>
+                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => copyToClipboard(`https://shiru.watch/anime/${media.id}`)}>
                     <Share2 size='1.7rem' />
                   </button>
                   <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => openInBrowser(`https://anilist.co/anime/${media.id}`)}>

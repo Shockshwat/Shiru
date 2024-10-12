@@ -86,7 +86,7 @@ async function handleToken (token) {
     return
   }
   const lists = viewer?.data?.Viewer?.mediaListOptions?.animeList?.customLists || []
-  if (!lists.includes('Watched using Miru')) {
+  if (!lists.includes('Watched using Shiru')) {
     await anilistClient.customList({lists})
   }
   swapProfiles({token, viewer})

@@ -28,7 +28,7 @@
 <div class='container-xl'>
   <div class='my-20 pb-20' id='about'>
     <h1 class='font-weight-bold text-white content text-center'>Torrenting made simple.</h1>
-    <p class='text-muted font-size-18 content text-center pb-20'>Feature-rich yet wonderfully simple. Miru delivers what you want effortlessly.<br />No complex configurations or high entry barriers — Miru is perfectly functional out of the box.</p>
+    <p class='text-muted font-size-18 content text-center pb-20'>Feature-rich yet wonderfully simple. Shiru delivers what you want effortlessly.<br />No complex configurations or high entry barriers — Shiru is perfectly functional out of the box.</p>
     <div class='row pt-20'>
       <div class='col-md-4 col-12'>
         <div class='content'>
@@ -99,7 +99,7 @@
           <h1 class='w-full font-weight-bold text-white'>
             It already does that.
           </h1>
-          <p class='text-muted font-size-16'>Feature rich, with a perfect balance of simplicity, with no restrictions, paywalls or tracking. You want it, Miru does it. No need for multi-layer-deep configuration, complex setup, or high entry levels, Miru comes perfectly functional out of the box.</p>
+          <p class='text-muted font-size-16'>Feature rich, with a perfect balance of simplicity, with no restrictions, paywalls or tracking. You want it, Shiru does it. No need for multi-layer-deep configuration, complex setup, or high entry levels, Shiru comes perfectly functional out of the box.</p>
         </div>
       </div>
     </div>
@@ -146,7 +146,7 @@
     <div class='pt-20'>
       <div class='content my-0 align-items-center d-flex flex-column'>
         <h1 class='text-center font-weight-bold text-white mb-0'>
-          MIRU
+          SHIRU
         </h1>
         <p class='text-center text-muted font-size-16'>Start your journey right here. Right now. Get started by<br />clicking download button below.</p>
         <a href='/download' class='btn btn-danger btn-lg'>

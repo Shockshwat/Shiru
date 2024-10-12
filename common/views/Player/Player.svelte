@@ -1064,7 +1064,7 @@
           large_text: np.title,
           large_image: np.thumbnail,
           small_image: !paused ? 'logo' : 'https://i.imgur.com/3RuaavC.png', // probably should upload the 'paused' image to the discord assets for the bot.
-          small_text: (!paused ? '(Playing)' : '(Paused)') + ' https://github.com/ThaUnknown/miru'
+          small_text: (!paused ? '(Playing)' : '(Paused)') + ' https://github.com/RockinChaos/Shiru'
         },
         instance: true,
         type: 3
@@ -1080,11 +1080,11 @@
         activity.buttons = [
           {
             label: 'Download app',
-            url: 'https://github.com/ThaUnknown/miru/releases/latest'
+            url: 'https://github.com/RockinChaos/Shiru/releases/latest'
           },
           {
-            label: 'Watch on Miru',
-            url: `miru://anime/${np.media?.id}`
+            label: 'Watch on Shiru',
+            url: `shiru://anime/${np.media?.id}`
           }
         ]
       }
@@ -1095,14 +1095,14 @@
         state: 'Browsing for anime',
         assets: {
           large_image: 'logo',
-          large_text: 'https://github.com/ThaUnknown/miru',
+          large_text: 'https://github.com/RockinChaos/Shiru',
           small_image: 'https://i.imgur.com/GiDlvVA.png', // probably should upload the 'search' image to the discord assets for the bot.
           small_text: 'Browsing for anime',
         },
         buttons: [
           {
             label: 'Download app',
-            url: 'https://github.com/ThaUnknown/miru/releases/latest'
+            url: 'https://github.com/RockinChaos/Shiru/releases/latest'
           }
         ],
         instance: true,

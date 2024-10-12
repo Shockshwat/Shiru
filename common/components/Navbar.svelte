@@ -35,7 +35,7 @@
     <NavbarLink click={() => { page = 'watchtogether' }} _page='watchtogether' icon='groups' {page} overlay={($view || $profileView || $rss) && 'active'} let:active>
       <Users size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
     </NavbarLink>
-    <NavbarLink click={() => { IPC.emit('open', 'https://github.com/sponsors/ThaUnknown/') }} icon='favorite' css='ml-auto donate' {page} let:active>
+    <NavbarLink click={() => { IPC.emit('open', 'https://github.com/sponsors/RockinChaos/') }} icon='favorite' css='ml-auto donate' {page} let:active>
       <Heart size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded donate' strokeWidth={active ? '3' : '2'} fill='currentColor' />
     </NavbarLink>
     <NavbarLink click={() => { page = 'settings' }} _page='settings' icon='settings' {page} overlay={($view || $profileView || $rss) && 'active'} let:active>

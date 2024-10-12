@@ -55,7 +55,7 @@
   }
 
   function confirmAnilist () {
-    IPC.emit('open', 'https://anilist.co/api/v2/oauth/authorize?client_id=4254&response_type=token') // Change redirect_url to miru://auth
+    IPC.emit('open', 'https://anilist.co/api/v2/oauth/authorize?client_id=4254&response_type=token') // Change redirect_url to shiru://auth
     supportNotify()
   }
 
@@ -63,7 +63,7 @@
     const state = generateRandomString(10)
     const challenge = generateRandomString(50)
     sessionStorage.setItem(state, challenge)
-    IPC.emit('open', `https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id=${clientID}&state=${state}&code_challenge=${challenge}&code_challenge_method=plain`) // Change redirect_url to miru://malauth
+    IPC.emit('open', `https://myanimelist.net/v1/oauth2/authorize?response_type=code&client_id=${clientID}&state=${state}&code_challenge=${challenge}&code_challenge_method=plain`) // Change redirect_url to shiru://malauth
     supportNotify()
   }
 

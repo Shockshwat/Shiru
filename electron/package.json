@@ -1,11 +1,11 @@
 {
-  "name": "Miru",
+  "name": "Shiru",
   "version": "5.5.6",
   "private": true,
-  "author": "ThaUnknown_ <ThaUnknown@users.noreply.github.com>",
+  "author": "RockinChaos <RockinChaos@users.noreply.github.com>",
   "description": "Stream anime torrents, real-time with no waiting for downloads.",
   "main": "build/main.js",
-  "homepage": "https://github.com/ThaUnknown/miru#readme",
+  "homepage": "https://github.com/RockinChaos/Shiru#readme",
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack build && concurrently --kill-others \"npm run web:watch\" \"npm run electron:start\"",
     "web:watch": "webpack serve",
@@ -49,20 +49,20 @@
       "customDir": "2ffc48f0b43f"
     },
     "protocols": {
-      "name": "miru",
+      "name": "shiru",
       "schemes": [
-        "miru"
+        "shiru"
       ]
     },
     "publish": [
       {
         "provider": "github",
-        "owner": "ThaUnknown",
-        "repo": "miru"
+        "owner": "RockinChaos",
+        "repo": "shiru"
       }
     ],
-    "appId": "com.github.thaunknown.miru",
-    "productName": "Miru",
+    "appId": "com.github.rockinchaos.shiru",
+    "productName": "Shiru",
     "files": [
       "build/**/*",
       "!node_modules/**/*.{mk,a,o,h}"
@@ -96,11 +96,11 @@
       "category": "AudioVideo;Video",
       "description": "Bittorrent streaming software for cats",
       "desktop": {
-        "Name": "Miru",
+        "Name": "Shiru",
         "Comment": "Bittorrent streaming software for cats",
         "Keywords": "anime",
         "Type": "Application",
-        "MimeType": "x-scheme-handler/miru;"
+        "MimeType": "x-scheme-handler/shiru;"
       },
       "target": [
         {

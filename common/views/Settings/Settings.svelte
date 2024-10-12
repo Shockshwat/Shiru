@@ -20,7 +20,7 @@
   IPC.emit('version')
 
   const changeLog = (async () => {
-    const res = await fetch('https://api.github.com/repos/ThaUnknown/miru/releases')
+    const res = await fetch('https://api.github.com/repos/RockinChaos/Shiru/releases')
     const json = await res.json()
     return json.map(({ body, tag_name: version, published_at: date, assets }) => ({ body, version, date, assets }))
   })()
@@ -95,7 +95,7 @@
           </div>
         </TabLabel>
       {/each}
-      <div class='pointer my-5 rounded' tabindex='0' role='button' use:click={() => IPC.emit('open', 'https://github.com/sponsors/ThaUnknown/')}>
+      <div class='pointer my-5 rounded' tabindex='0' role='button' use:click={() => IPC.emit('open', 'https://github.com/sponsors/RockinChaos/')}>
         <div class='px-20 py-10 d-flex align-items-center'>
           <Heart class='pr-10 d-inline-flex' size='3.1rem' />
           <div class='font-size-16 line-height-normal'>Donate</div>
@@ -149,7 +149,7 @@
           <div class='col-sm-3 d-none d-sm-flex' />
           <div class='col-sm-6 d-flex justify-content-center flex-column'>
             <h1 class='font-weight-bold text-white title'>Changelog</h1>
-            <div class='font-size-18 text-muted'>New updates and improvements to Miru.</div>
+            <div class='font-size-18 text-muted'>New updates and improvements to Shiru.</div>
           </div>
         </div>
         {#await changeLog}

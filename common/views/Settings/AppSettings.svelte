@@ -91,7 +91,7 @@
 </script>
 
 <h4 class='mb-10 font-weight-bold'>Debug Settings</h4>
-<SettingCard title='Logging Levels' description='Enable logging of specific parts of the app. These logs are saved to %appdata$/Miru/logs/main.log or ~/config/Miru/logs/main.log.'>
+<SettingCard title='Logging Levels' description='Enable logging of specific parts of the app. These logs are saved to %appdata$/Shiru/logs/main.log or ~/config/Shiru/logs/main.log.'>
   <select class='form-control bg-dark w-300 mw-full' bind:value={$debug}>
     <option value='' selected>None</option>
     <option value='*'>All</option>

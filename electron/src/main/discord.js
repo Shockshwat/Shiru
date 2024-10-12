@@ -10,12 +10,12 @@ export default class Discord {
       state: 'Watching anime',
       assets: {
         small_image: 'logo',
-        small_text: 'https://github.com/ThaUnknown/miru'
+        small_text: 'https://github.com/RockinChaos/Shiru'
       },
       buttons: [
         {
           label: 'Download app',
-          url: 'https://github.com/ThaUnknown/miru/releases/latest'
+          url: 'https://github.com/RockinChaos/Shiru/releases/latest'
         }
       ],
       instance: true,
