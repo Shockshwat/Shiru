@@ -54,7 +54,7 @@ class MALDubs {
     printError(error) {
         debug(`Error: ${error.status || 429} - ${error.message || codes[error.status || 429]}`)
         toast.error('Dub Caching Failed', {
-            description: `Failed to load dub information!\nTry again in a minute.\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
+            description: `Failed to load dub information!\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
             duration: 3000
         })
     }

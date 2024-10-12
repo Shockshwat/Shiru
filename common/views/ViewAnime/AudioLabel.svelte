@@ -20,7 +20,7 @@
     function setLabel() {
         const dubLists = malDubs.dubLists.value
         if (media?.idMal && dubLists?.dubbed) {
-            const episodeOrMedia = !episode || (matchPhrase(data.parseObject?.language, 'English', 3) || matchPhrase(data.parseObject?.file_name, ['Multi Audio', 'Dual Audio', 'English Audio'], 3))
+            const episodeOrMedia = !episode || (matchPhrase(data.parseObject?.language, 'English', 3) || matchPhrase(data.parseObject?.file_name, ['Multi Audio', 'Dual', 'Dual Audio', 'English Audio', 'English Dub'], 3))
             isDubbed.set(episodeOrMedia && dubLists.dubbed.includes(media.idMal))
             isPartial.set(episodeOrMedia && dubLists.incomplete.includes(media.idMal))
         }
