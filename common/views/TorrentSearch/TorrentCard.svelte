@@ -1,5 +1,6 @@
 <script context='module'>
   import { click } from '@/modules/click.js'
+  import { matchPhrase } from "@/modules/util.js"
   import { fastPrettyBytes, since } from '@/modules/util.js'
   import { Database, BadgeCheck } from 'lucide-svelte'
 
@@ -23,7 +24,12 @@
   termMapping.FLACX4 = termMapping.FLAC
   termMapping.VORBIS = { text: 'Vorbis', color: '#f67255' }
   termMapping.DUALAUDIO = { text: 'Dual Audio', color: '#f67255' }
+  termMapping.ENGLISHAUDIO = { text: 'English Audio', color: '#f67255' }
+  termMapping['DUAL'] = termMapping.DUALAUDIO
   termMapping['DUAL AUDIO'] = termMapping.DUALAUDIO
+  termMapping['MULTI AUDIO'] = termMapping.DUALAUDIO
+  termMapping['ENGLISH AUDIO'] = termMapping.ENGLISHAUDIO
+  termMapping['ENGLISH DUB'] = termMapping.ENGLISHAUDIO
   termMapping['10BIT'] = { text: '10 Bit', color: '#0c8ce9' }
   termMapping['10BITS'] = termMapping['10BIT']
   termMapping['10-BIT'] = termMapping['10BIT']
@@ -40,14 +46,26 @@
   termMapping.AV1 = { text: 'AV1', color: '#0c8ce9' }
 
   /** @param {AnitomyResult} param0 */
-  function sanitiseTerms ({ video_term: vid, audio_term: aud, video_resolution: resolution }) {
+  export function sanitiseTerms ({ video_term: vid, audio_term: aud, video_resolution: resolution, file_name: fileName }) {
     const video = !Array.isArray(vid) ? [vid] : vid
     const audio = !Array.isArray(aud) ? [aud] : aud
 
     const terms = [...new Set([...video, ...audio].map(term => termMapping[term?.toUpperCase()]).filter(t => t))]
     if (resolution) terms.unshift({ text: resolution, color: '#c6ec58' })
 
-    return terms
+    for (const key of Object.keys(termMapping)) {
+      if (fileName && !terms.some(existingTerm => existingTerm.text === termMapping[key].text)) {
+        if (!fileName.toLowerCase().includes(key.toLowerCase())) {
+          if (matchPhrase(key.toLowerCase(), fileName, 1)) {
+            terms.push(termMapping[key])
+          }
+        } else {
+          terms.push(termMapping[key])
+        }
+      }
+    }
+
+    return [...terms]
   }
 
   /** @param {AnitomyResult} param0 */
@@ -101,11 +119,11 @@
       <div class='text-light d-flex align-items-center text-nowrap'>{since(new Date(result.date))}</div>
       <div class='d-flex ml-auto flex-row-reverse'>
         {#if result.type === 'best'}
-          <div class='rounded px-15 py-5 ml-10 border text-nowrap d-flex align-items-center' style='background: #1d2d1e; border-color: #53da33 !important; color: #53da33'>
+          <div class='rounded px-15 py-5 ml-10 border text-nowrap font-weight-bold d-flex align-items-center' style='background: #1d2d1e; border-color: #53da33 !important; color: #53da33'>
             Best Release
           </div>
         {:else if result.type === 'alt'}
-          <div class='rounded px-15 py-5 ml-10 border text-nowrap d-flex align-items-center' style='background: #391d20; border-color: #c52d2d !important; color: #c52d2d'>
+          <div class='rounded px-15 py-5 ml-10 border text-nowrap font-weight-bold d-flex align-items-center' style='background: #391d20; border-color: #c52d2d !important; color: #c52d2d'>
             Alt Release
           </div>
         {/if}
@@ -120,9 +138,6 @@
 </div>
 
 <style>
-  .symbol-bold {
-    font-variation-settings: 'wght' 300;
-  }
   .scale {
     transition: transform 0.2s ease;
   }
