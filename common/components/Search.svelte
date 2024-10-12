@@ -235,7 +235,9 @@
   )
 
   function searchClear() {
+    const schedule = $page === 'schedule'
     search = {
+      ...(schedule ? search : {}),
       title: '',
       search: '',
       genre: '',
@@ -247,11 +249,19 @@
       sort: '',
       hideSubs: false,
       hideMyAnime: false,
-      hideStatus: ''
+      disableHide: false,
+      hideStatus: '',
+      scheduleList: schedule,
+      userList: false,
+      missedList: true,
+      completedList: true,
+      planningList: true,
+      droppedList: true,
+      continueWatching: false
     }
     searchTextInput.title.focus()
     form.dispatchEvent(new Event('input', { bubbles: true }))
-    $page = 'search'
+    $page = schedule ? 'schedule' : 'search'
   }
 
   function getSortDisplayName(value) {
@@ -263,6 +273,7 @@
       delete search.load
       delete search.disableHide
       delete search.userList
+      delete search.scheduleList
       delete search.continueWatching
       delete search.completedList
       if (Helper.isUserSort(search)) {
@@ -294,6 +305,11 @@
 
   function toggleSubs() {
     search.hideSubs = !search.hideSubs
+    if (search.scheduleList) {
+      search.status = ''
+      search.season = ''
+      search.year = null
+    }
     form.dispatchEvent(new Event('input', { bubbles: true }))
   }
 
@@ -311,7 +327,7 @@
         searchTextInput[searchKey] = null
         setTimeout(() => {
           form.dispatchEvent(new Event('input', {bubbles: true}))
-        }, 0);
+        }, 0)
       }
     }
   }
@@ -425,7 +441,7 @@
         <div>Season</div>
       </div>
       <div class='input-group'>
-        <select class='form-control bg-dark-light border-right-dark' required bind:value={search.season} disabled={search.disableSearch}>
+        <select class='form-control bg-dark-light border-right-dark' required bind:value={search.season} disabled={search.disableSearch || (search.scheduleList && search.hideSubs)}>
           <option value selected>Any</option>
           <option value='WINTER'>Winter</option>
           <option value='SPRING'>Spring</option>
@@ -438,7 +454,7 @@
             <option>{year}</option>
           {/each}
         </datalist>
-        <input type='number' inputmode='numeric' pattern='[0-9]*' placeholder='Any' min='1940' max='2100' list='search-year' class='bg-dark-light form-control' disabled={search.disableSearch} bind:value={search.year} />
+        <input type='number' inputmode='numeric' pattern='[0-9]*' placeholder='Any' min='1940' max='2100' list='search-year' class='bg-dark-light form-control' disabled={search.disableSearch || (search.scheduleList && search.hideSubs)} bind:value={search.year} />
       </div>
     </div>
     <div class='col p-10 d-flex flex-column justify-content-end'>
@@ -463,7 +479,7 @@
         <div>Status</div>
       </div>
       <div class='input-group'>
-        <select class='form-control bg-dark-light' required bind:value={search.status} disabled={search.disableSearch}>
+        <select class='form-control bg-dark-light' required bind:value={search.status} disabled={search.disableSearch || (search.scheduleList && search.hideSubs)}>
           <option value selected>Any</option>
           <option value='RELEASING'>Releasing</option>
           <option value='FINISHED'>Finished</option>

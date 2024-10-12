@@ -1,13 +1,30 @@
 <script context='module'>
+  import { animeSchedule } from "@/modules/animeschedule"
+
   let fillerEpisodes = {}
 
   fetch('https://raw.githubusercontent.com/ThaUnknown/filler-scrape/master/filler.json').then(async res => {
     fillerEpisodes = await res.json()
   })
+
+  async function dubbedEpisode(i, media) {
+    const episodeAiring = (await animeSchedule.airingLists.value).find(cached => cached.media.id === media.id)?.media?.airingSchedule?.nodes?.[0]
+    return episodeAiring ? episodeAiring.episodeNumber <= (i + 1) ? episodeAiring : Number(episodeAiring.episodeNumber >= (i + 1)) ? "Dubbed" : null : null
+  }
+
+  function isDubDelayed(delayedDate, episodeDate) {
+    const delayedUntil = new Date(delayedDate)
+    const episodeAt = new Date(episodeDate)
+    delayedUntil.setUTCSeconds(0, 0)
+    delayedUntil.setUTCHours(0, 0, 0, 0)
+    episodeAt.setUTCSeconds(0, 0)
+    episodeAt.setUTCHours(0, 0, 0, 0)
+    return delayedUntil >= episodeAt
+  }
 </script>
 
 <script>
-  import { since } from '@/modules/util.js'
+  import { since, past } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
   import { episodeByAirDate } from '@/modules/extensions/index.js'
   import { anilistClient } from '@/modules/anilist.js'
@@ -33,27 +50,31 @@
   async function load () {
     // updates episodeList when clicking through relations / recommendations
     episodeList = Array.from({ length: episodeCount }, (_, i) => ({
-      episode: i + 1, image: null, summary: null, rating: null, title: null, length: null, airdate: null, airingAt: null, filler: fillerEpisodes[id]?.includes(i + 1)
+      episode: i + 1, image: null, summary: null, rating: null, title: null, length: null, airdate: null, airingAt: null, filler: fillerEpisodes[id]?.includes(i + 1), dubAiring: dubbedEpisode(i, media)
     }))
 
     const res = await fetch('https://api.ani.zip/mappings?anilist_id=' + id)
     const { episodes, specialCount, episodeCount: newEpisodeCount } = await res.json()
-    /** @type {{ airingAt: number; episode: number; filler?: boolean }[]} */
+    /** @type {{ airingAt: number; episode: number; filler?: boolean; dubAiring?: object; }[]} */
     let alEpisodes = episodeList
 
     // fallback: pull episodes from airing schedule if anime doesn't have expected episode count
     if (!(media.episodes && media.episodes === newEpisodeCount && media.status === 'FINISHED')) {
       const settled = (await anilistClient.episodes({ id })).data.Page?.airingSchedules
-      if (settled?.length) alEpisodes = settled
+      if (settled?.length) {
+        alEpisodes = settled.map((episode, i) => ({
+          ...episode, airingAt: episode.airingAt, episode: episode.episode, filler: fillerEpisodes[id]?.includes(i + 1), dubAiring: dubbedEpisode(i, media)
+        }))
+      }
     }
-    for (const { episode, airingAt, filler } of alEpisodes) {
+    for (const { episode, airingAt, filler, dubAiring } of alEpisodes) {
       const alDate = new Date((airingAt || 0) * 1000)
 
       // validate by air date if the anime has specials AND doesn't have matching episode count
       const needsValidation = !(!specialCount || (media.episodes && media.episodes === newEpisodeCount && episodes && episodes[Number(episode)]))
       const { image, summary, rating, title, length, airdate } = needsValidation ? episodeByAirDate(alDate, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
 
-      episodeList[episode - 1] = { episode, image, summary, rating, title, length: length || duration, airdate: +alDate || airdate, airingAt: +alDate || airdate, filler }
+      episodeList[episode - 1] = { episode, image, summary, rating, title, length: length || duration, airdate: +alDate || airdate, airingAt: +alDate || airdate, filler, dubAiring }
     }
   }
   $: if (media) load()
@@ -61,7 +82,7 @@
   const animeProgress = liveAnimeProgress(id)
 </script>
 
-{#each episodeOrder ? episodeList : [...episodeList].reverse() as { episode, image, summary, rating, title, length, airdate, filler }}
+{#each episodeOrder ? episodeList : [...episodeList].reverse() as { episode, image, summary, rating, title, length, airdate, filler, dubAiring }}
   {@const completed = !watched && userProgress >= episode}
   {@const target = userProgress + 1 === episode}
   {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
@@ -104,6 +125,20 @@
           {#if airdate}
             {since(new Date(airdate))}
           {/if}
+        </div>
+        <div class='pt-20 font-size-12 mt-auto'>
+          {#await dubAiring then dubAiring}
+            {#if dubAiring}
+              {@const delayed = dubAiring.episodeDate && isDubDelayed(dubAiring.delayedUntil, dubAiring.episodeDate)}
+              <div class='position-absolute bottom-0 left-0 {delayed ? "bg-danger" : "bg-secondary"} py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
+                {#if dubAiring.episodeDate}
+                  Dub: {since(past(new Date(dubAiring.episodeDate), (dubAiring.episodeNumber >= episode ? 0 : (episode - dubAiring.episodeNumber)), true))} {delayed ? ' (delayed)' : ''}
+                {:else}
+                  {dubAiring}
+                {/if}
+              </div>
+            {/if}
+          {/await}
         </div>
       </div>
     </div>

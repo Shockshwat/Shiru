@@ -97,15 +97,8 @@ export default new class AnimeResolver {
     return res.data.Media
   }
 
-  // TODO: anidb aka true episodes need to be mapped to anilist episodes a bit better, shit like mushoku offsets caused by episode 0's in between seasons
-  /**
-   * @param {string | string[]} fileName
-   * @returns {Promise<any[]>}
-   */
-  async resolveFileAnime (fileName) {
-    if (!fileName) return [{}]
+  async findAndCacheTitle(fileName) {
     const parseObjs = await anitomyscript(fileName)
-
     const TYPE_EXCLUSIONS = ['ED', 'ENDING', 'NCED', 'NCOP', 'OP', 'OPENING', 'PREVIEW', 'PV']
 
     /** @type {Record<string, import('anitomyscript').AnitomyResult>} */
@@ -117,6 +110,17 @@ export default new class AnimeResolver {
       uniq[key] = obj
     }
     await this.findAnimesByTitle(Object.values(uniq))
+    return parseObjs
+  }
+
+  // TODO: anidb aka true episodes need to be mapped to anilist episodes a bit better, shit like mushoku offsets caused by episode 0's in between seasons
+  /**
+   * @param {string | string[]} fileName
+   * @returns {Promise<any[]>}
+   */
+  async resolveFileAnime (fileName) {
+    if (!fileName) return [{}]
+    const parseObjs = await this.findAndCacheTitle(fileName)
 
     const fileAnimes = []
     for (const parseObj of parseObjs) {
@@ -191,7 +195,7 @@ export default new class AnimeResolver {
           }
         }
       }
-      debug(`Resolved ${parseObj.anime_title} ${parseObj.episode_number} ${episode} ${media?.id}:${media?.title?.userPreferred}`)
+      debug(`${failed || !(media?.title?.userPreferred) ? `Failed to resolve` : `Resolved`} ${parseObj.anime_title} ${parseObj.episode_number} ${episode} ${media?.id}:${media?.title?.userPreferred}`)
       fileAnimes.push({
         episode: episode || parseObj.episode_number,
         parseObject: parseObj,
