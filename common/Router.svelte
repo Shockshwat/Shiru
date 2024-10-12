@@ -15,7 +15,7 @@
   import Settings from '@/views/Settings/Settings.svelte'
   import WatchTogether from './views/WatchTogether/WatchTogether.svelte'
   import Miniplayer from 'svelte-miniplayer'
-  import Search from './views/Search.svelte'
+  import Search, { search } from './views/Search.svelte'
   import AiringSchedule from './views/AiringSchedule.svelte'
 
   export let page = 'home'
@@ -23,6 +23,7 @@
 
   $: minwidth = $isMobile ? '200px' : '35rem'
   $: maxwidth = $isMobile ? '200px' : '60rem'
+  $: $search = page === 'search' && $search.scheduleList ? {} : $search
 </script>
 
 <div class='w-full h-full position-absolute overflow-hidden'>

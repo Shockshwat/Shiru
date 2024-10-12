@@ -93,15 +93,6 @@
       close()
     }
   })
-
-// async function score (media, score) {
-    //   const variables = {
-    //     id: media.id,
-    //     score: score * 10
-    //   }
-    //   await anilistClient.entry(variables)
-    //   media = (await anilistClient.searchIDSingle({ id: media.id })).data.Media
-    // }
 </script>
 
 <div class='modal modal-full z-50' class:show={media} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
@@ -184,24 +175,6 @@
                   <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => openInBrowser(`https://anilist.co/anime/${media.id}`)}>
                     <ExternalLink size='1.7rem' />
                   </button>
-                  <!-- <div class='input-group shadow-lg mb-5 font-size-16'>
-                    <div class='input-group-prepend'>
-                      <span class='input-group-text bg-tp pl-15 d-flex font-size-18'>hotel_class</span> stars
-                    </div>
-                    <select class='form-control' required value={(media.mediaListEntry?.score || '').toString()} on:change={({ target }) => { score(media, Number(target.value)) }}>
-                      <option value selected disabled hidden>Score</option>
-                      <option>1</option>
-                      <option>2</option>
-                      <option>3</option>
-                      <option>4</option>
-                      <option>5</option>
-                      <option>6</option>
-                      <option>7</option>
-                      <option>8</option>
-                      <option>9</option>
-                      <option>10</option>
-                    </select>
-                  </div> -->
                 </div>
               </div>
             </div>
@@ -238,7 +211,11 @@
                   return typeComparison
                }
                return (a.node.seasonYear || 0) - (b.node.seasonYear || 0)
-            })} promise={ anilistClient.searchIDS({ page: 1, perPage: 50, id: media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) }) } let:item let:promise title='Relations'>
+            })}   promise={
+            (() => {
+              const ids = media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id)
+              return ids && ids.length > 0 ? anilistClient.searchIDS({ page: 1, perPage: 50, id: ids }) : Promise.resolve([])
+            })() } let:item let:promise title='Relations'>
             <div class='small-card'>
               {#await promise}
                 <SkeletonCard />
@@ -251,7 +228,11 @@
           </ToggleList>
           {#await mediaRecommendation then res} <!-- reduces query complexity improving load times -->
             {@const mediaRecommendation = res?.data?.Media}
-            <ToggleList list={ mediaRecommendation.recommendations?.edges?.filter(({ node }) => node.mediaRecommendation).sort((a, b) => b.node.rating - a.node.rating) } promise={ anilistClient.searchIDS({ page: 1, perPage: 50, id: mediaRecommendation.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) }) } let:item let:promise title='Recommendations'>
+            <ToggleList list={ mediaRecommendation.recommendations?.edges?.filter(({ node }) => node.mediaRecommendation).sort((a, b) => b.node.rating - a.node.rating) }
+              promise={(() => {
+                const ids = mediaRecommendation.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id)
+                return ids && ids.length > 0 ? anilistClient.searchIDS({ page: 1, perPage: 50, id: ids }): Promise.resolve([])
+              })() } let:item let:promise title='Recommendations'>
               <div class='small-card'>
                 {#await promise}
                   <SkeletonCard />

@@ -49,6 +49,19 @@ export function since (date) {
   }
 }
 
+/**
+ * @param {Date} episodeDate
+ * @param {number} weeks - the number of weeks past the episodeDate
+ * @param {boolean} skip - Add the specified number of weeks regardless of the episodeDate having past.
+ * @returns {Date}
+ */
+export function past(episodeDate, weeks = 0, skip) {
+  if (episodeDate < new Date() || skip) {
+    episodeDate.setDate(episodeDate.getDate() + (7 * weeks))
+  }
+  return episodeDate
+}
+
 const units = [' B', ' kB', ' MB', ' GB', ' TB']
 export function fastPrettyBytes (num) {
   if (isNaN(num)) return '0 B'
@@ -101,6 +114,12 @@ export function generateRandomString(length) {
     string += possible.charAt(Math.floor(Math.random() * possible.length))
   }
   return string
+}
+
+export function getRandomInt(min, max) {
+  min = Math.ceil(min)
+  max = Math.floor(max)
+  return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
 export function matchPhrase(search, phrase, threshold) {

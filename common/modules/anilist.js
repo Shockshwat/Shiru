@@ -4,7 +4,7 @@ import Bottleneck from 'bottleneck'
 
 import { alToken, settings } from '@/modules/settings.js'
 import { toast } from 'svelte-sonner'
-import { sleep } from './util.js'
+import { getRandomInt, sleep } from './util.js'
 import Helper from '@/modules/helper.js'
 import IPC from '@/modules/ipc.js'
 import Debug from 'debug'
@@ -59,8 +59,7 @@ function getDistanceFromTitle (media, name) {
     const titles = Object.values(media.title).filter(v => v).map(title => lavenshtein(title.toLowerCase(), name.toLowerCase()))
     const synonyms = media.synonyms.filter(v => v).map(title => lavenshtein(title.toLowerCase(), name.toLowerCase()) + 2)
     const distances = [...titles, ...synonyms]
-    const min = distances.reduce((prev, curr) => prev < curr ? prev : curr)
-    media.lavenshtein = min
+    media.lavenshtein = distances.reduce((prev, curr) => prev < curr ? prev : curr)
     return media
   }
 }
@@ -175,6 +174,25 @@ class AnilistClient {
 
   /** @type {Record<number, import('./al.d.ts').Media>} */
   mediaCache = {}
+
+  /**
+   * @template T
+   * @typedef {Object} Cache
+   * @property {Promise<T>} data - Cached promise for the query
+   * @property {number} expiry - Timestamp (in milliseconds since epoch) of how long the data is valid
+   */
+
+  /** @type {Record<number, Cache<import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>>>} */
+  recommendationCache = {}
+
+  /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{ airingSchedules: { airingAt: number, episode: number }[]}>>>} */
+  episodeCache = {}
+
+  /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>>} */
+  searchCache = {}
+
+  /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>>} */
+  idsCache = {}
 
   lastNotificationDate = Date.now() / 1000
 
@@ -396,8 +414,15 @@ class AnilistClient {
     return res
   }
 
+  /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
   async searchIDS (variables) {
-    debug(`Searching for IDs: ${variables?.id?.length || variables?.idMal?.length}`)
+    debug(`Searching for IDs ${JSON.stringify(variables)}`)
+    const cachedEntry = this.idsCache[JSON.stringify(variables)];
+    if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      debug(`Found cached IDs ${JSON.stringify(variables)}`);
+      return cachedEntry.data;
+    }
+
     const query = /* js */` 
     query($id: [Int], $idMal: [Int], $id_not: [Int], $page: Int, $perPage: Int, $status: [MediaStatus], $onList: Boolean, $sort: [MediaSort], $search: String, $season: MediaSeason, $year: Int, $genre: [String], $tag: [String], $format: MediaFormat) { 
       Page(page: $page, perPage: $perPage) {
@@ -410,12 +435,14 @@ class AnilistClient {
       }
     }`
 
-    /** @type {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
+    /** @type {Promise<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>} */
     const res = await this.alRequest(query, variables)
 
-    await this.updateCache(res.data.Page.media)
+    await this.updateCache((await res).data.Page.media)
 
-    return res
+    this.idsCache[JSON.stringify(variables)] = { data: res, expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000 }
+
+    return this.idsCache[JSON.stringify(variables)].data
   }
 
   /** @returns {Promise<import('./al.d.ts').PagedQuery<{ notifications: { id: number, type: string, createdAt: number, episode: number, media: import('./al.d.ts').Media}[] }>>} */
@@ -553,8 +580,15 @@ class AnilistClient {
   }
 
   /** @returns {Promise<import('./al.d.ts').PagedQuery<{ airingSchedules: { airingAt: number, episode: number }[]}>>} */
-  episodes (variables = {}) {
-    debug(`Searching for episodes: ${variables.id}`)
+  async episodes (variables = {}) {
+    debug(`Getting episodes for ${variables.id}`)
+
+    const cachedEntry = this.episodeCache[variables.id];
+    if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      debug(`Found cached episodes for ${variables.id}`);
+      return cachedEntry.data;
+    }
+
     const query = /* js */` 
       query($id: Int) {
         Page(page: 1, perPage: 1000) {
@@ -565,11 +599,19 @@ class AnilistClient {
         }
       }`
 
-    return this.alRequest(query, variables)
+    this.episodeCache[variables.id] = { data: await this.alRequest(query, variables), expiry: Date.now() + getRandomInt(75, 100) * 60 * 1000 }
+
+    return this.episodeCache[variables.id].data
   }
 
   async search (variables = {}) {
     debug(`Searching ${JSON.stringify(variables)}`)
+    const cachedEntry = this.searchCache[JSON.stringify(variables)];
+    if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      debug(`Found cached search ${JSON.stringify(variables)}`);
+      return cachedEntry.data;
+    }
+
     const query = /* js */` 
     query($page: Int, $perPage: Int, $sort: [MediaSort], $search: String, $onList: Boolean, $status: MediaStatus, $status_not: MediaStatus, $season: MediaSeason, $year: Int, $genre: [String], $tag: [String], $format: MediaFormat, $id_not: [Int], $idMal_not: [Int], $idMal: [Int]) {
       Page(page: $page, perPage: $perPage) {
@@ -582,17 +624,19 @@ class AnilistClient {
       }
     }`
 
-    /** @type {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
+    /** @type {Promise<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>} */
     const res = await this.alRequest(query, variables)
 
-    await this.updateCache(res.data.Page.media)
+    await this.updateCache((await res).data.Page.media)
+    this.searchCache[JSON.stringify(variables)] = { data: res, expiry: Date.now() + getRandomInt(16, 28) * 60 * 1000 }
 
-    return res
+    return this.searchCache[JSON.stringify(variables)].data
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{ AiringSchedule: { airingAt: number }}>>} */
   episodeDate (variables) {
     debug(`Searching for episode date: ${variables.id}, ${variables.ep}`)
+    console.log("hello world!!!!!")
     const query = /* js */`
       query($id: Int, $ep: Int) {
         AiringSchedule(mediaId: $id, episode: $ep) {
@@ -626,8 +670,15 @@ class AnilistClient {
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>>} */
-  recommendations (variables) {
+  async recommendations (variables) {
     debug(`Getting recommendations for ${variables.id}`)
+
+    const cachedEntry = this.recommendationCache[variables.id];
+    if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      debug(`Found cached recommendations for ${variables.id}`);
+      return cachedEntry.data;
+    }
+
     const query = /* js */` 
       query($id: Int) {
         Media(id: $id, type: ANIME) {
@@ -651,7 +702,9 @@ class AnilistClient {
         }
       }`
 
-    return this.alRequest(query, variables)
+    this.recommendationCache[variables.id] = { data: await this.alRequest(query, variables), expiry: Date.now() + getRandomInt(50, 60) * 60 * 1000 }
+
+    return this.recommendationCache[variables.id].data
   }
 
   async entry (variables) {
