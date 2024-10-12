@@ -62,10 +62,10 @@
 
       const np = {
         media,
-        title: anilistClient.title(media) || parseObject.anime_title,
+        title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
         episode: ep,
         episodeTitle: streamingEpisode && episodeRx.exec(streamingEpisode.title)[2],
-        thumbnail: streamingEpisode?.thumbnail || media?.coverImage.extraLarge
+        thumbnail: media?.coverImage.extraLarge || streamingEpisode?.thumbnail
       }
       setMediaSession(np)
       nowPlaying.set(np)
@@ -192,20 +192,18 @@
     if (typeof MediaMetadata === 'undefined') return
     const name = [nowPlaying.title, nowPlaying.episode, nowPlaying.episodeTitle, 'Miru'].filter(i => i).join(' - ')
 
-    const metadata =
-      nowPlaying.thumbnail
+    navigator.mediaSession.metadata = nowPlaying.thumbnail
         ? new MediaMetadata({
-          title: name,
-          artwork: [
-            {
-              src: nowPlaying.thumbnail,
-              sizes: '256x256',
-              type: 'image/jpg'
-            }
-          ]
+            title: name,
+            artwork: [
+                {
+                    src: nowPlaying.thumbnail,
+                    sizes: '256x256',
+                    type: 'image/jpg'
+                }
+            ]
         })
         : new MediaMetadata({ title: name })
-    navigator.mediaSession.metadata = metadata
   }
 </script>
 
