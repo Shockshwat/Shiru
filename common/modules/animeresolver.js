@@ -128,7 +128,7 @@ export default new class AnimeResolver {
       let episode
       let media = this.animeNameCache[this.getCacheKeyForTitle(parseObj)]
       // resolve episode, if movie, dont.
-      const maxep = media?.nextAiringEpisode?.episode || media?.episodes
+      let maxep = media?.nextAiringEpisode?.episode || media?.episodes
       debug(`Resolving ${parseObj?.anime_title} ${parseObj?.episode_number} ${maxep} ${media?.title?.userPreferred} ${media?.format}`)
       if ((media?.format !== 'MOVIE' || maxep) && parseObj.episode_number) {
         if (Array.isArray(parseObj.episode_number)) {
@@ -169,19 +169,28 @@ export default new class AnimeResolver {
             }
           }
         } else {
-          if (maxep && parseInt(parseObj.episode_number) > maxep) {
+          let offset = 0
+          // media is missing! Likely a horribly named title for a sequel... try fetching the root.
+          if (!media) {
+            debug(`Media failed to resolve, attempting to fetch root media for ${parseObj.anime_title}`)
+            const parseNew = await this.findAndCacheTitle(parseObj.anime_title.replace(/S\d+(E\d+)?/, ''))
+            media = this.animeNameCache[this.getCacheKeyForTitle(parseNew[0])]
+            maxep = media?.nextAiringEpisode?.episode || media?.episodes
+            offset = (-(media?.episodes || media?.nextAiringEpisode?.episode)) || 0
+          }
+          if ((maxep && parseInt(parseObj.episode_number) > maxep) || (offset !== 0 && maxep && parseInt(parseObj.episode_number) <= maxep)) {
             // see big comment above
             const prequel = !parseObj.anime_season && (this.findEdge(media, 'PREQUEL')?.node || ((media.format === 'OVA' || media.format === 'ONA') && this.findEdge(media, 'PARENT')?.node))
             debug(`Prequel ${prequel?.id}:${prequel?.title?.userPreferred}`)
-            const root = prequel && (await this.resolveSeason({ media: await this.getAnimeById(prequel.id), force: true })).media
+            const root = prequel && (await this.resolveSeason({ media: await this.getAnimeById(prequel.id), force: true, offset })).media
             debug(`Root ${root?.id}:${root?.title?.userPreferred}`)
 
             // value bigger than episode count
-            let result = await this.resolveSeason({ media: root || media, episode: parseInt(parseObj.episode_number), increment: !parseObj.anime_season ? null : true })
+            let result = await this.resolveSeason({ media: root || media, episode: parseInt(parseObj.episode_number), increment: !parseObj.anime_season ? null : true, offset })
 
             // last ditch attempt, see above
             if (result.failed && parseObj.anime_season) {
-              result = await this.resolveSeason({ media: root || media, episode: parseInt(parseObj.episode_number) })
+              result = await this.resolveSeason({ media: root || media, episode: parseInt(parseObj.episode_number), offset })
             }
 
             debug(`Found rootMedia for ${parseObj.anime_title}: ${result.rootMedia?.id}:${result.rootMedia?.title?.userPreferred} from ${media.id}:${media.title?.userPreferred}`)
@@ -224,7 +233,7 @@ export default new class AnimeResolver {
     return res
   }
 
-  // note: this doesnt cover anime which uses partially relative and partially absolute episode number, BUT IT COULD!
+  // note: this doesn't cover anime which uses partially relative and partially absolute episode number, BUT IT COULD!
   /**
    * @param {{ media: import('./al.js').Media , episode?:number, force?:boolean, increment?:boolean, offset?: number, rootMedia?: import('./al.js').Media }} opts
    * @returns {Promise<{ media: import('./al.js').Media, episode: number, offset: number, increment: boolean, rootMedia: import('./al.js').Media, failed?: boolean }>}
