@@ -84,7 +84,7 @@ IPC.on('dialog', async () => {
 
 // schema: shiru://key/value
 const protocolMap = {
-  auth: token => sendToken(token),
+  alauth: token => sendToken(token),
   malauth: token => sendMalToken(token),
   anime: id => IPC.emit('open-anime', id),
   w2g: link => IPC.emit('w2glink', link),

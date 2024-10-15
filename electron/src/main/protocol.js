@@ -13,7 +13,7 @@ if (process.defaultApp) {
 export default class Protocol {
   // schema: shiru://key/value
   protocolMap = {
-    auth: token => this.sendToken(token),
+    alauth: token => this.sendToken(token),
     malauth: token => this.sendMalToken(token),
     anime: id => this.window.webContents.send('open-anime', id),
     w2g: link => this.window.webContents.send('w2glink', link),

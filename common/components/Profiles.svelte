@@ -55,7 +55,7 @@
   }
 
   function confirmAnilist () {
-    IPC.emit('open', 'https://anilist.co/api/v2/oauth/authorize?client_id=4254&response_type=token') // Change redirect_url to shiru://auth
+    IPC.emit('open', 'https://anilist.co/api/v2/oauth/authorize?client_id=21788&response_type=token') // Change redirect_url to shiru://alauth
     supportNotify()
   }
 

@@ -10,7 +10,7 @@ import Debug from 'debug'
 
 const debug = Debug('ui:myanimelist')
 
-export const clientID = '4c2c172971b9164f924fd5925b443ac3' // app type MUST be set to other, do not generate a seed.
+export const clientID = 'bb7dce3881d803e656c45aa39bda9ccc' // app type MUST be set to other, do not generate a seed.
 
 function printError (error) {
   debug(`Error: ${error.status || error || 429} - ${error.message || codes[error.status || error || 429]}`)
