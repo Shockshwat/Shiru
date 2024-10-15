@@ -98,7 +98,9 @@
   {#if $profileView}
     <div class='modal-dialog' on:pointerup|self={close} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
       <div class='modal-content w-auto mw-400 d-flex justify-content-center flex-column'>
-        <button class='close pointer z-30 top-20 right-0 position-absolute' type='button' use:click={close}> &times; </button>
+        <div class="d-flex justify-content-end align-items-start w-auto">
+          <button type='button' class='btn btn-square text-white font-size-24 font-weight-bold' use:click={close}>&times;</button>
+        </div>
         <div class='d-flex flex-column align-items-center'>
           {#if $currentProfile}
             <img class='h-150 rounded-circle' src={$currentProfile.viewer.data.Viewer.avatar?.large || $currentProfile.viewer.data.Viewer.avatar?.medium || $currentProfile.viewer.data.Viewer.picture} alt='Current Profile' title='Current Profile'>
@@ -175,11 +177,6 @@
 </div>
 
 <style>
-  .close {
-    top: 4rem !important;
-    left: unset !important;
-    right: 2.5rem !important;
-  }
   .logout:hover {
     background: #393838 !important;
   }
