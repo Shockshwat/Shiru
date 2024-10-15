@@ -103,7 +103,7 @@
         </div>
         <div class='d-flex flex-column align-items-center'>
           {#if $currentProfile}
-            <img class='h-150 rounded-circle' src={$currentProfile.viewer.data.Viewer.avatar?.large || $currentProfile.viewer.data.Viewer.avatar?.medium || $currentProfile.viewer.data.Viewer.picture} alt='Current Profile' title='Current Profile'>
+            <img class='h-150 rounded-circle' src={$currentProfile.viewer.data.Viewer["avatar"]?.large || $currentProfile.viewer.data.Viewer["avatar"]?.medium || $currentProfile.viewer.data.Viewer["picture"]} alt='Current Profile' title='Current Profile'>
             <img class='h-3 auth-icon rounded-circle' src={isAniProfile($currentProfile) ? './anilist_icon.png' : './myanimelist_icon.png'} alt={isAniProfile($currentProfile) ? 'Logged in with AniList' : 'Logged in with MyAnimeList'} title={isAniProfile($currentProfile) ? 'Logged in with AniList' : 'Logged in with MyAnimeList'}>
             <p class='font-size-18 font-weight-bold'>{$currentProfile.viewer.data.Viewer.name}</p>
           {/if}
