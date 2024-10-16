@@ -1,14 +1,22 @@
 import { DOMPARSER } from '@/modules/util.js'
-import { settings } from '@/modules/settings.js'
+import { settings, profiles, alToken, malToken } from '@/modules/settings.js'
 import { toast } from 'svelte-sonner'
 import { add } from '@/modules/torrent.js'
-import { getEpisodeMetadataForMedia } from './anime.js'
+import { getEpisodeMetadataForMedia } from '@/modules/anime.js'
 import AnimeResolver from '@/modules/animeresolver.js'
+import { anilistClient } from '@/modules/anilist.js'
 import { hasNextPage } from '@/modules/sections.js'
+import { malDubs } from '@/modules/animedubs.js'
+import { writable, get } from "svelte/store"
 import IPC from '@/modules/ipc.js'
 import Debug from 'debug'
 
 const debug = Debug('ui:rss')
+
+const currentProfile = writable(alToken || malToken)
+profiles.subscribe(() => {
+  currentProfile.set(alToken || malToken)
+})
 
 export function parseRSSNodes (nodes) {
   return nodes.map(item => {
@@ -86,13 +94,16 @@ class RSSMediaManager {
     if (!changed) return this.resultMap[url].result
     debug(`Feed ${url} has changed, updating`)
 
+    const mainProfile = get(currentProfile)
     const index = (page - 1) * perPage
     const targetPage = [...changed.content.querySelectorAll('item')].slice(index, index + perPage)
     const items = parseRSSNodes(targetPage)
     hasNextPage.value = items.length === perPage
     const result = this.structureResolveResults(items)
 
-    this.findNewReleasesAndNotify(result, this.resultMap[url]?.date)
+    this.findNewReleasesAndNotify(result, mainProfile.viewer.data.Viewer.rssNotify?.[url]?.date);
+    (mainProfile.viewer.data.Viewer.rssNotify ??= {})[url] = { date: changed.pubDate }
+    localStorage.setItem(alToken ? 'ALviewer' : 'MALviewer', JSON.stringify(mainProfile))
 
     this.resultMap[url] = {
       date: changed.pubDate,
@@ -109,13 +120,17 @@ class RSSMediaManager {
     debug(`Found ${newReleases?.length} new releases, notifying...`)
 
     for (const { media, parseObject, episode } of newReleases) {
-      const options = {
-        title: media?.title.userPreferred || parseObject.anime_title,
-        body: `Episode ${episode || 1} is out!`,
-        icon: media?.coverImage.medium,
-        data: { id: media?.id }
+      const notify = (!media?.mediaListEntry && settings.value.rssNotify.includes("NOTONLIST")) || (media?.mediaListEntry && settings.value.rssNotify.includes(media.mediaListEntry.status))
+      const dubbed = malDubs.isDubMedia(parseObject)
+      if (notify && (!settings.value.rssNotifyDubs || dubbed || !malDubs.isDubMedia(media))) {
+        const options = {
+          title: anilistClient.title(media) || parseObject.anime_title,
+          body: `Episode ${episode || 1} (${dubbed ? "Dub" : "Sub"}) is out!`,
+          icon: media?.coverImage.medium,
+          data: {id: media?.id}
+        }
+        IPC.emit('notification', options)
       }
-      IPC.emit('notification', options)
     }
   }
 

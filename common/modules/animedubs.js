@@ -1,4 +1,5 @@
 import { toast } from 'svelte-sonner'
+import { matchPhrase } from "@/modules/util.js"
 import { writable } from 'simple-store-svelte'
 import { codes } from '@/modules/anilist.js'
 import Debug from 'debug'
@@ -19,6 +20,16 @@ class MALDubs {
         setInterval(() => {
             this.getMALDubs()
         }, 1000 * 60 * 60)
+    }
+
+    isDubMedia(media) {
+        if (this.dubLists.value?.dubbed) {
+            if (media?.idMal) {
+                return this.dubLists.value.dubbed.includes(media.idMal) || this.dubLists.value.incomplete.includes(media.idMal)
+            } else if (media?.language || media?.file_name) {
+                return matchPhrase(media?.language, 'English', 3) || matchPhrase(media?.file_name, ['Multi Audio', 'Dual Audio', 'English Audio', 'English Dub'], 3) || matchPhrase(media?.file_name, ['Dual', 'Dub'], 1)
+            }
+        }
     }
 
     async getMALDubs() {

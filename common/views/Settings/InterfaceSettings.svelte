@@ -85,6 +85,31 @@
     </select>
   </SettingCard>
 {/if}
+<h4 class='mb-10 font-weight-bold'>Notification Settings</h4>
+<SettingCard title='RSS Feed' description={'When your RSS feed updates with new entries a notification will be sent out depending on your list status.'}>
+  <div>
+    {#each settings.rssNotify as status, i}
+      <div class='input-group mb-10 w-500 mw-full'>
+        <select id='rss-feed-{i}' class='w-400 form-control mw-full bg-dark' bind:value={settings.rssNotify[i]} >
+          <option disabled value=''>Select a status</option>
+          {#each [['Watching', 'CURRENT'], ['Planning', 'PLANNING'], ['Paused', 'PAUSED'], ['Completed', 'COMPLETED'], ['Dropped', 'DROPPED'], ['Rewatching', 'REPEATING'], ['Not on List', 'NOTONLIST']].filter(option => !settings.rssNotify.includes(option)) as option}
+            <option value='{option[1]}'>{option[0]}</option>
+          {/each}
+        </select>
+        <div class='input-group-append'>
+          <button type='button' use:click={() => { settings.rssNotify.splice(i, 1); settings.rssNotify = settings.rssNotify }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>
+        </div>
+      </div>
+    {/each}
+    <button type='button' use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
+  </div>
+</SettingCard>
+<SettingCard title='RSS Dubs' description={'Enabling this means you will only receive notifications for an anime title if it is either a dubbed episode or no dub exists for the series.\nWhen this is disabled it will result in both dubbed and subbed episode notifications for the same anime title.'}>
+  <div class='custom-switch'>
+    <input type='checkbox' id='rss-feed-dubs' bind:checked={settings.rssNotifyDubs} />
+    <label for='rss-feed-dubs'>{settings.rssNotifyDubs ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 
 <h4 class='mb-10 font-weight-bold'>Home Screen Settings</h4>
 {#if Helper.isAuthorized()}

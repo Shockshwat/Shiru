@@ -3,7 +3,6 @@
     import { settings } from '@/modules/settings.js'
     import { malDubs } from '@/modules/animedubs.js'
     import { writable } from 'svelte/store'
-    import { matchPhrase } from "@/modules/util.js"
     import { Mic, MicOff, Captions, TriangleAlert } from 'lucide-svelte'
 
     /** @type {import('@/modules/al.d.ts').Media} */
@@ -20,7 +19,7 @@
     function setLabel() {
         const dubLists = malDubs.dubLists.value
         if (media?.idMal && dubLists?.dubbed) {
-            const episodeOrMedia = !episode || (matchPhrase(data.parseObject?.language, 'English', 3) || matchPhrase(data.parseObject?.file_name, ['Multi Audio', 'Dual Audio', 'English Audio', 'English Dub'], 3) || matchPhrase(data.parseObject?.file_name, ['Dual', 'Dub'], 2))
+            const episodeOrMedia = !episode || malDubs.isDubMedia(data?.parseObject)
             isDubbed.set(episodeOrMedia && dubLists.dubbed.includes(media.idMal))
             isPartial.set(episodeOrMedia && dubLists.incomplete.includes(media.idMal))
         }
