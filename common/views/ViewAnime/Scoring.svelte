@@ -39,19 +39,19 @@
   }
 
   async function toggleModal (state) {
-    showModal.set(!$showModal)
     if (state.save || state.delete) {
-      await new Promise(resolve => setTimeout(resolve, 300)) // allows time for animation to play
       if (state.save) {
         await saveEntry()
       } else if (state.delete) {
         await deleteEntry()
       }
+      showModal.set(false)
     } else {
       score = (media.mediaListEntry?.score ? media.mediaListEntry?.score : 0)
       status = (media.mediaListEntry?.status ? media.mediaListEntry?.status : 'NOT IN LIST')
       episode = (media.mediaListEntry?.progress ? media.mediaListEntry?.progress : 0)
       totalEpisodes = (media.episodes ? `${media.episodes}` : '?')
+      showModal.set(!$showModal)
     }
   }
 
@@ -186,8 +186,9 @@
     }
   }
 
-  function handleClick({target}) {
-    if (modal && !modal.contains(target) && target.id !== 'list-btn') {
+  async function handleClick({target}) {
+    if (modal && !modal.contains(target)) {
+      await new Promise(resolve => setTimeout(resolve))
       showModal.set(false)
       document.removeEventListener('click', handleClick, true)
     }
@@ -203,7 +204,7 @@
 </script>
 
 
-<button type='button' id='list-btn' class='btn { viewAnime ? "bg-dark btn-lg font-size-20" : (previewAnime ? "btn-square" : "bg-dark-light") + " font-size-16" } btn-square ml-10 shadow-none border-0 d-flex align-items-center justify-content-center' use:click={toggleModal} disabled={!Helper.isAuthorized()}>
+<button type='button' id='list-btn' class='btn { viewAnime ? "bg-dark btn-lg font-size-20" : (previewAnime ? "btn-square" : "bg-dark-light") + " font-size-16" } btn-square ml-10 shadow-none border-0 d-flex align-items-center justify-content-center' use:click={() => toggleModal({ toggle: !$showModal })} disabled={!Helper.isAuthorized()}>
   {#if media.mediaListEntry}
     <PencilLine size='1.7rem' />
   {:else}
@@ -214,7 +215,7 @@
   <div bind:this={modal} class='modal scoring position-absolute bg-dark shadow-lg rounded-3 p-20 z-30 {$showModal ? "visible" : "invisible"} {!previewAnime && !viewAnime ? "banner w-auto h-auto" : (!previewAnime ? "viewAnime w-auto h-auto" : "previewAnime")}' use:click={() => {}}>
     <div class='d-flex justify-content-between align-items-center mb-2'>
       <h5 class='font-weight-bold'>List Editor</h5>
-      <button type='button' class='btn btn-square mb-20 text-white font-size-24 font-weight-bold' use:click={toggleModal}>&times;</button>
+      <button type='button' class='btn btn-square mb-20 text-white font-size-24 font-weight-bold' use:click={() => toggleModal({ toggle: false })}>&times;</button>
     </div>
     <div class='modal-body'>
       <div class='form-group mb-15'>
