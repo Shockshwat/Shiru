@@ -92,7 +92,7 @@
               episode,
               score: Helper.isAniAuth() ? (score * 10) : score, // AniList score scale is out of 100, others use a scale of 10.
               repeat: media.mediaListEntry?.repeat || 0,
-              lists: media.mediaListEntry?.customLists || [],
+              lists: media.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || [],
               ...fuzzyDate
             }
       if (media?.mediaListEntry?.status !== variables.status || media?.mediaListEntry?.progress !== variables.episode || media?.mediaListEntry?.score !== variables.score || media?.mediaListEntry?.repeat !== variables.repeat) {
@@ -105,13 +105,12 @@
         const description = `Title: ${anilistClient.title(media)}\nStatus: ${Helper.statusName[status]}\nEpisode: ${episode} / ${totalEpisodes}${score !== 0 ? `\nYour Score: ${score}` : ''}`
         printToast(res, description, true, false)
         if (Helper.getUser().sync) { // handle profile syncing
-          const mediaId = media.id
           for (const profile of get(profiles)) {
             if (profile.viewer?.data?.Viewer.sync) {
               const anilist = profile.viewer?.data?.Viewer?.avatar
               const res = await Helper.entry(media, {
                 ...variables,
-                lists: media.mediaListEntry?.customLists || [],
+                lists: media.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || [],
                 score: (anilist ? (score * 10) : score),
                 token: profile.token,
                 anilist

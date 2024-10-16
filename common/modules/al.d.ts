@@ -54,7 +54,7 @@ export type Media = {
     progress: number
     repeat: number
     status?: string
-    customLists?: string[]
+    customLists?: { name: string; enabled: boolean }[]
     score?: number
     startedAt?: {
       year: number
@@ -152,7 +152,7 @@ export type Viewer = {
   sync: boolean
   mediaListOptions?: {
     animeList?: {
-      customLists?: string[]
+      customLists?: { name: string; enabled: boolean }[]
     }
   }
 }
