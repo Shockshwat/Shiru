@@ -368,9 +368,6 @@ class AnilistClient {
   }
 
   async alEntry (lists, variables) {
-    if (!lists.includes('Watched using Shiru')) {
-      variables.lists.push('Watched using Shiru')
-    }
     return await this.entry(variables)
   }
 
@@ -760,7 +757,6 @@ class AnilistClient {
 
   customList (variables = {}) {
     debug('Updating custom list')
-    variables.lists = [...variables.lists, 'Watched using Shiru']
     const query = /* js */`
       mutation($lists: [String]) {
         UpdateUser(animeListOptions: { customLists: $lists }) {

@@ -85,10 +85,6 @@ async function handleToken (token) {
     debug(`Failed to sign in with AniList: ${JSON.stringify(viewer)}`)
     return
   }
-  const lists = viewer?.data?.Viewer?.mediaListOptions?.animeList?.customLists || []
-  if (!lists.includes('Watched using Shiru')) {
-    await anilistClient.customList({lists})
-  }
   swapProfiles({token, viewer})
   location.reload()
 }

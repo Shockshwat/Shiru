@@ -85,10 +85,6 @@
   async function saveEntry() {
     if (!status.includes('NOT IN LIST')) {
       const fuzzyDate = Helper.getFuzzyDate(media, status)
-      const lists = media.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || []
-      if (!lists.includes('Watched using Shiru')) {
-        lists.push('Watched using Shiru')
-      }
       const variables = {
               id: media.id,
               idMal: media.idMal,
@@ -96,7 +92,7 @@
               episode,
               score: Helper.isAniAuth() ? (score * 10) : score, // AniList score scale is out of 100, others use a scale of 10.
               repeat: media.mediaListEntry?.repeat || 0,
-              lists,
+              lists: media.mediaListEntry?.customLists || [],
               ...fuzzyDate
             }
       if (media?.mediaListEntry?.status !== variables.status || media?.mediaListEntry?.progress !== variables.episode || media?.mediaListEntry?.score !== variables.score || media?.mediaListEntry?.repeat !== variables.repeat) {
@@ -113,16 +109,9 @@
           for (const profile of get(profiles)) {
             if (profile.viewer?.data?.Viewer.sync) {
               const anilist = profile.viewer?.data?.Viewer?.avatar
-              const currentLists = (anilist ? (await anilistClient.getUserLists({
-                userID: profile.viewer.data.Viewer.id,
-                token: profile.token
-              }))?.data?.MediaListCollection?.lists?.flatMap(list => list.entries).find(({media}) => media.id === mediaId)?.media?.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || [] : lists)
-              if (!currentLists.includes('Watched using Shiru')) {
-                currentLists.push('Watched using Shiru')
-              }
               const res = await Helper.entry(media, {
                 ...variables,
-                lists: currentLists,
+                lists: media.mediaListEntry?.customLists || [],
                 score: (anilist ? (score * 10) : score),
                 token: profile.token,
                 anilist

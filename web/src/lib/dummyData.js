@@ -379,12 +379,7 @@ export const cards = [
       progress: 12,
       repeat: 1,
       status: 'COMPLETED',
-      customLists: [
-        {
-          name: 'Watched using Shiru',
-          enabled: true
-        }
-      ],
+      customLists: [],
       score: 0
     },
     source: 'LIGHT_NOVEL',
