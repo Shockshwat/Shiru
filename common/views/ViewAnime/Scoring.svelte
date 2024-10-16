@@ -285,7 +285,7 @@
   .viewAnime {
     top: auto;
     left: auto;
-    margin-top: -1rem;
+    margin-top: 3rem;
     margin-left: 4rem;
   }
   .banner {
