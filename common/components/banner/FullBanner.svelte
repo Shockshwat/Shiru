@@ -94,10 +94,14 @@
       use:click={() => playMedia(current)}>
       Watch Now
     </button>
-    <button class='btn bg-dark-light btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
-      <Heart fill={current.isFavourite ? 'currentColor' : 'transparent'} size='1.5rem' />
-    </button>
-    <Scoring media={current} />
+    {#if Helper.isAuthorized()}
+      <Scoring media={current} />
+    {/if}
+    {#if Helper.isAniAuth()}
+      <button class='btn bg-dark-light btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
+        <Heart fill={current.isFavourite ? 'currentColor' : 'transparent'} size='1.5rem' />
+      </button>
+    {/if}
   </div>
   <div class='d-flex'>
     {#each mediaList as media}

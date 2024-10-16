@@ -89,10 +89,14 @@
         <Play class='pr-10 z-10' fill='currentColor' size='2.2rem' />
         {playButtonText}
       </button>
-      <button class='btn btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
-        <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.5rem' />
-      </button>
-      <Scoring {media} previewAnime={true}/>
+      {#if Helper.isAuthorized()}
+        <Scoring {media} previewAnime={true}/>
+      {/if}
+      {#if Helper.isAniAuth()}
+        <button class='btn btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
+          <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.5rem' />
+        </button>
+      {/if}
     </div>
     <div class='details text-white text-capitalize pt-15 d-flex'>
       {#if type || type === 0}
