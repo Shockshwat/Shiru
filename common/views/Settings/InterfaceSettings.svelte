@@ -110,6 +110,22 @@
     <label for='rss-feed-dubs'>{settings.rssNotifyDubs ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+{#if Helper.isAniAuth()}
+  <SettingCard title='AniList Notifications' description={'Enables the checking of notifications on your Anilist account. This will show when episodes have aired and any new anime titles you are following have been added to the database. This can cause notifications to be cluttered if you rely on RSS Feed notifications, consider narrowing the scope if this is enabled.'}>
+    <div class='custom-switch'>
+      <input type='checkbox' id='ani-notify' bind:checked={settings.aniNotify} />
+      <label for='ani-notify'>{settings.aniNotify ? 'On' : 'Off'}</label>
+    </div>
+  </SettingCard>
+  {#if settings.aniNotify}
+    <SettingCard title='AniList Limited' description={'Reduces the amount of notifications retrieved, with this enabled you will only get important notifications like when a new season is announced. Note, you will not get notifications about currently airing episodes.'}>
+      <div class='custom-switch'>
+        <input type='checkbox' id='ani-limited' bind:checked={settings.aniNotifyLimited} />
+        <label for='ani-limited'>{settings.aniNotifyLimited ? 'On' : 'Off'}</label>
+      </div>
+    </SettingCard>
+  {/if}
+{/if}
 
 <h4 class='mb-10 font-weight-bold'>Home Screen Settings</h4>
 {#if Helper.isAuthorized()}

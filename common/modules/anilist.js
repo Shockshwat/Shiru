@@ -2,10 +2,11 @@ import lavenshtein from 'js-levenshtein'
 import { writable } from 'simple-store-svelte'
 import Bottleneck from 'bottleneck'
 
-import { alToken, settings } from '@/modules/settings.js'
+import { alToken, profiles, settings } from '@/modules/settings.js'
 import { toast } from 'svelte-sonner'
 import { getRandomInt, sleep } from './util.js'
 import Helper from '@/modules/helper.js'
+import { get } from "svelte/store"
 import IPC from '@/modules/ipc.js'
 import Debug from '@/modules/debug.js'
 
@@ -172,6 +173,8 @@ class AnilistClient {
 
   userID = alToken
 
+  currentProfile = writable(alToken)
+
   /** @type {Record<number, import('./al.d.ts').Media>} */
   mediaCache = {}
 
@@ -194,8 +197,6 @@ class AnilistClient {
   /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>>} */
   idsCache = {}
 
-  lastNotificationDate = Date.now() / 1000
-
   constructor () {
     debug('Initializing Anilist Client for ID ' + this.userID?.viewer?.data?.Viewer?.id)
     this.limiter.on('failed', async (error, jobInfo) => {
@@ -212,8 +213,13 @@ class AnilistClient {
       return time
     })
 
+    profiles.subscribe(() => {
+      this.currentProfile.set(alToken)
+    })
+
     if (this.userID?.viewer?.data?.Viewer) {
       this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC' })
+      this.findNewNotifications()
       // update userLists every 15 mins
       setInterval(() => this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC' }), 1000 * 60 * 15)
       // check notifications every 5 mins
@@ -289,20 +295,27 @@ class AnilistClient {
   }
 
   async findNewNotifications () {
-    debug('Checking for new notifications')
-    const res = await this.getNotifications()
-    const notifications = res.data.Page.notifications
-    const newNotifications = notifications.filter(({ createdAt }) => createdAt > this.lastNotificationDate)
-    this.lastNotificationDate = Date.now() / 1000
-    debug(`Found ${newNotifications?.length} new notifications`)
-    for (const { media, episode, type } of newNotifications) {
-      const options = {
-        title: media.title.userPreferred,
-        body: type === 'AIRING' ? `Episode ${episode} is out in Japan, it should be available soon.` : 'Was recently added to AniList.',
-        icon: media.coverImage.medium,
-        data: { id: media.id }
+    if (settings.value.aniNotify) {
+      debug('Checking for new AniList notifications')
+      const res = await this.getNotifications()
+      const mainProfile = get(this.currentProfile)
+      const notifications = res.data.Page.notifications
+      const newNotifications = notifications.filter(({createdAt}) => createdAt > (mainProfile.viewer.data.Viewer.aniNotify))
+      mainProfile.viewer.data.Viewer.aniNotify = Date.now() / 1000
+      localStorage.setItem(alToken ? 'ALviewer' : 'MALviewer', JSON.stringify(mainProfile))
+
+      debug(`Found ${newNotifications?.length} new notifications`)
+      for (const {media, episode, type} of newNotifications) {
+        if (!settings.value.aniNotifyLimited || type !== 'AIRING') {
+          const options = {
+            title: media.title.userPreferred,
+            body: type === 'AIRING' ? `Episode ${episode} is out in Japan, it should be available soon.` : 'Was recently announced!',
+            icon: media.coverImage.extraLarge || media.coverImage.medium,
+            data: { id: media.id }
+          }
+          IPC.emit('notification', options)
+        }
       }
-      IPC.emit('notification', options)
     }
   }
 
@@ -414,10 +427,10 @@ class AnilistClient {
   /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
   async searchIDS (variables) {
     debug(`Searching for IDs ${JSON.stringify(variables)}`)
-    const cachedEntry = this.idsCache[JSON.stringify(variables)];
+    const cachedEntry = this.idsCache[JSON.stringify(variables)]
     if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached IDs ${JSON.stringify(variables)}`);
-      return cachedEntry.data;
+      debug(`Found cached IDs ${JSON.stringify(variables)}`)
+      return cachedEntry.data
     }
 
     const query = /* js */` 
@@ -580,10 +593,10 @@ class AnilistClient {
   async episodes (variables = {}) {
     debug(`Getting episodes for ${variables.id}`)
 
-    const cachedEntry = this.episodeCache[variables.id];
+    const cachedEntry = this.episodeCache[variables.id]
     if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached episodes for ${variables.id}`);
-      return cachedEntry.data;
+      debug(`Found cached episodes for ${variables.id}`)
+      return cachedEntry.data
     }
 
     const query = /* js */` 
@@ -603,10 +616,10 @@ class AnilistClient {
 
   async search (variables = {}) {
     debug(`Searching ${JSON.stringify(variables)}`)
-    const cachedEntry = this.searchCache[JSON.stringify(variables)];
+    const cachedEntry = this.searchCache[JSON.stringify(variables)]
     if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached search ${JSON.stringify(variables)}`);
-      return cachedEntry.data;
+      debug(`Found cached search ${JSON.stringify(variables)}`)
+      return cachedEntry.data
     }
 
     const query = /* js */` 
@@ -670,10 +683,10 @@ class AnilistClient {
   async recommendations (variables) {
     debug(`Getting recommendations for ${variables.id}`)
 
-    const cachedEntry = this.recommendationCache[variables.id];
+    const cachedEntry = this.recommendationCache[variables.id]
     if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached recommendations for ${variables.id}`);
-      return cachedEntry.data;
+      debug(`Found cached recommendations for ${variables.id}`)
+      return cachedEntry.data
     }
 
     const query = /* js */` 

@@ -176,6 +176,8 @@ export const defaults = {
   rssFeedsNew: SUPPORTS.extensions ? [['New Releases', 'SubsPlease']] : [],
   rssNotify: ['CURRENT', 'PLANNING'],
   rssNotifyDubs: false,
+  aniNotify: true,
+  aniNotifyLimited: true,
   rssAutoplay: true,
   torrentSpeed: 5,
   torrentPersist: false,
