@@ -6,7 +6,7 @@
   import { toast } from 'svelte-sonner'
   import { Bookmark, PencilLine } from 'lucide-svelte'
   import Helper from '@/modules/helper.js'
-  import Debug from 'debug'
+  import Debug from '@/modules/debug.js'
 
   const debug = Debug('ui:scoring')
 

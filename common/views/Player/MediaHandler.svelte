@@ -4,7 +4,7 @@
   import { videoRx } from '@/modules/util.js'
   import { tick } from 'svelte'
   import { anilistClient } from "@/modules/anilist.js"
-  import Debug from 'debug'
+  import Debug from '@/modules/debug.js'
 
   const debug = Debug('ui:mediahandler')
 

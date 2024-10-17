@@ -3,7 +3,7 @@ import { toast } from 'svelte-sonner'
 import { writable } from 'simple-store-svelte'
 import { codes } from '@/modules/anilist.js'
 import { past } from "@/modules/util"
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:animeschedule')
 

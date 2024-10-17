@@ -6,7 +6,7 @@ import { profiles } from '@/modules/settings.js'
 import { toast } from 'svelte-sonner'
 import { get } from 'svelte/store'
 import Fuse from 'fuse.js'
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:helper')
 

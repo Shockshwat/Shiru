@@ -2,7 +2,7 @@ import { toast } from 'svelte-sonner'
 import { matchPhrase } from "@/modules/util.js"
 import { writable } from 'simple-store-svelte'
 import { codes } from '@/modules/anilist.js'
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:animedubs')
 

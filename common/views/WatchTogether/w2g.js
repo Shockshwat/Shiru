@@ -7,7 +7,7 @@ import Helper from '@/modules/helper.js'
 import { add } from '@/modules/torrent.js'
 import { generateRandomHexCode } from '@/modules/util.js'
 import { writable } from 'simple-store-svelte'
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:w2g')
 

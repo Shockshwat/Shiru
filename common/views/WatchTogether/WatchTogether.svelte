@@ -6,7 +6,7 @@
   import { page } from '@/App.svelte'
   import IPC from '@/modules/ipc.js'
   import 'browser-event-target-emitter'
-  import Debug from 'debug'
+  import Debug from '@/modules/debug.js'
 
   const debug = Debug('ui:w2g')
 

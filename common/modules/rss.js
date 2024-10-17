@@ -9,7 +9,7 @@ import { hasNextPage } from '@/modules/sections.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { writable, get } from "svelte/store"
 import IPC from '@/modules/ipc.js'
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:rss')
 

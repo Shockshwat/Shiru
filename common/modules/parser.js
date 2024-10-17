@@ -1,5 +1,5 @@
 import Metadata from 'matroska-metadata'
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 import { arr2hex, hex2bin } from 'uint8-util'
 import { fontRx } from './util.js'
 import { SUPPORTS } from '@/modules/support.js'

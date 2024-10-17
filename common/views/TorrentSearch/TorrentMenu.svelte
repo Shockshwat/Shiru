@@ -5,7 +5,7 @@
   import { sanitiseTerms } from './TorrentCard.svelte'
   import { click } from '@/modules/click.js'
   import getResultsFromExtensions from '@/modules/extensions/index.js'
-  import Debug from 'debug'
+  import Debug from '@/modules/debug.js'
 
   const debug = Debug('ui:extensions')
 

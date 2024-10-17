@@ -44,7 +44,7 @@
 </script>
 
 <script>
-  import Debug from 'debug'
+  import Debug from '@/modules/debug.js'
   import { persisted } from 'svelte-persisted-store'
   import { client } from '@/modules/torrent.js'
   import { onDestroy } from 'svelte'

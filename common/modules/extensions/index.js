@@ -5,7 +5,7 @@ import { anitomyscript } from '../anime.js'
 import { client } from '@/modules/torrent.js'
 import { extensionsWorker } from '@/views/Settings/TorrentSettings.svelte'
 import { toast } from 'svelte-sonner'
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:extensions')
 

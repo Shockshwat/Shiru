@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import Debug from 'debug'
+import Debug from '@/modules/debug.js'
 import WebTorrent from 'webtorrent'
 import querystring from 'querystring'
 import HTTPTracker from 'bittorrent-tracker/lib/client/http-tracker.js'
