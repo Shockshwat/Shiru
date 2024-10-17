@@ -13,6 +13,7 @@ import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:rss')
 
+let fallbackNotify = JSON.parse(localStorage.getItem('rssNotify'))
 const currentProfile = writable(alToken || malToken)
 profiles.subscribe(() => {
   currentProfile.set(alToken || malToken)
@@ -101,9 +102,9 @@ class RSSMediaManager {
     hasNextPage.value = items.length === perPage
     const result = this.structureResolveResults(items)
 
-    this.findNewReleasesAndNotify(result, mainProfile.viewer.data.Viewer.rssNotify?.[url]?.date);
-    (mainProfile.viewer.data.Viewer.rssNotify ??= {})[url] = { date: changed.pubDate }
-    localStorage.setItem(alToken ? 'ALviewer' : 'MALviewer', JSON.stringify(mainProfile))
+    await this.findNewReleasesAndNotify(result,  mainProfile?.viewer?.data?.Viewer?.rssNotify?.[url]?.date || fallbackNotify?.[url]?.date);
+    (mainProfile?.viewer?.data?.Viewer?.rssNotify ?? (fallbackNotify ??= {}))[url] = { date: changed.pubDate }
+    localStorage.setItem(mainProfile ? (alToken ? 'ALviewer' : 'MALviewer') : 'rssNotify', JSON.stringify(mainProfile || fallbackNotify))
 
     this.resultMap[url] = {
       date: changed.pubDate,
@@ -120,13 +121,13 @@ class RSSMediaManager {
     debug(`Found ${newReleases?.length} new releases, notifying...`)
 
     for (const { media, parseObject, episode } of newReleases) {
-      const notify = (!media?.mediaListEntry && settings.value.rssNotify.includes("NOTONLIST")) || (media?.mediaListEntry && settings.value.rssNotify.includes(media.mediaListEntry.status))
+      const notify = (!media?.mediaListEntry && settings.value.rssNotify?.includes("NOTONLIST")) || (media?.mediaListEntry && settings.value.rssNotify?.includes(media?.mediaListEntry?.status))
       const dubbed = malDubs.isDubMedia(parseObject)
       if (notify && (!settings.value.rssNotifyDubs || dubbed || !malDubs.isDubMedia(media))) {
         const options = {
           title: anilistClient.title(media) || parseObject.anime_title,
-          body: `Episode ${episode || 1} (${dubbed ? "Dub" : "Sub"}) is out!`,
-          icon: media?.coverImage.medium,
+          body: `${episode ? `Episode ${episode}` : media?.format === 'MOVIE' ? `The Movie` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch ${dubbed ? "Dub" : "Sub"}`} ${episode || media?.format === 'MOVIE' ? `is out!` : `is now available to binge!`}`,
+          icon: media?.coverImage.large || media?.coverImage.medium,
           data: {id: media?.id}
         }
         IPC.emit('notification', options)

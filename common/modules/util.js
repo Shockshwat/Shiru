@@ -174,7 +174,7 @@ export const defaults = {
   playerDeband: false,
   rssQuality: '1080',
   rssFeedsNew: SUPPORTS.extensions ? [['New Releases', 'SubsPlease']] : [],
-  rssNotify: [['Watching', 'CURRENT'], ['Planning', 'PLANNING']],
+  rssNotify: ['CURRENT', 'PLANNING'],
   rssNotifyDubs: false,
   rssAutoplay: true,
   torrentSpeed: 5,
