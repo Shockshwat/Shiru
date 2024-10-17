@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import process from 'node:process'
 
-import { BrowserWindow, MessageChannelMain, Notification, app, dialog, ipcMain, nativeImage, powerMonitor, shell } from 'electron'
+import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, app, dialog, ipcMain, nativeImage, powerMonitor, shell } from 'electron'
 import electronShutdownHandler from '@paymoapp/electron-shutdown-handler'
 
 import { development } from './util.js'
@@ -51,6 +51,7 @@ export default class App {
   protocol = new Protocol(this.mainWindow)
   updater = new Updater(this.mainWindow, this.webtorrentWindow)
   dialog = new Dialog(this.webtorrentWindow)
+  tray = new Tray(join(__dirname, '/logo_filled.png'))
   debug = new Debug()
 
   constructor () {
@@ -75,6 +76,15 @@ export default class App {
       if (this.destroyed) return
       e.preventDefault()
       this.destroy()
+    })
+
+    this.tray.setToolTip('Shiru')
+    this.tray.setContextMenu(Menu.buildFromTemplate([
+      { label: 'Show', click: () => { this.mainWindow.show() }},
+      { label: 'Quit', click: () => { this.destroy() } }
+    ]))
+    this.tray.on('click', () => {
+      this.mainWindow.show()
     })
 
     ipcMain.on('notification', async (e, opts) => {
