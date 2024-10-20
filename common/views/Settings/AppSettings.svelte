@@ -129,6 +129,15 @@
   </div>
 </SettingCard>
 
+<SettingCard title='Query Complexity' description="Complex queries result in slower loading times but help in reducing the chances of hitting AniList's rate limit. Simple queries split up the requests into multiple queries which are requested as needed.">
+  <div>
+    <select class='form-control bg-dark w-300 mw-full' bind:value={settings.queryComplexity}>
+      <option value='Complex'>Complex (slow)</option>
+      <option value='Simple'>Simple (fast)</option>
+    </select>
+  </div>
+</SettingCard>
+
 <div class='d-inline-flex flex-column'>
   <button use:click={importSettings} class='btn btn-primary mt-10' type='button'>
     Import Settings From Clipboard

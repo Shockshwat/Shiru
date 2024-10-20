@@ -202,6 +202,7 @@ export const defaults = {
   titleLang: 'romaji',
   hideMyAnime: false,
   closeAction: 'Prompt',
+  queryComplexity: 'Complex',
   expandingSidebar: !SUPPORTS.isAndroid,
   torrentPathNew: undefined,
   font: undefined,

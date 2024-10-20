@@ -157,6 +157,23 @@ relations {
   }
 }`
 
+const queryComplexObjects = /* js */`
+studios(sort: NAME, isMain: true) {
+  nodes {
+    name
+  }
+},
+recommendations {
+  edges {
+    node {
+      rating,
+      mediaRecommendation {
+        id
+      }
+    }
+  }
+}`
+
 class AnilistClient {
   limiter = new Bottleneck({
     reservoir: 90,
@@ -187,6 +204,9 @@ class AnilistClient {
 
   /** @type {Record<number, Cache<import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>>>} */
   recommendationCache = {}
+
+  /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{ mediaList: import('./al.d.ts').Following[]}>>>} */
+  followingCache = {}
 
   /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{ airingSchedules: { airingAt: number, episode: number }[]}>>>} */
   episodeCache = {}
@@ -393,7 +413,7 @@ class AnilistClient {
           hasNextPage
         },
         media(type: ANIME, search: $name, sort: $sort, status_in: $status, isAdult: $isAdult, format_not: MUSIC, seasonYear: $year) {
-          ${queryObjects}
+          ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
         }
       }
     }`
@@ -412,7 +432,7 @@ class AnilistClient {
     const query = /* js */` 
     query($id: Int) { 
       Media(id: $id, type: ANIME) {
-        ${queryObjects}
+        ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
       }
     }`
 
@@ -440,7 +460,7 @@ class AnilistClient {
           hasNextPage
         },
         media(id_in: $id, idMal_in: $idMal, id_not_in: $id_not, type: ANIME, status_in: $status, onList: $onList, search: $search, sort: $sort, season: $season, seasonYear: $year, genre_in: $genre, tag_in: $tag, format: $format) {
-          ${queryObjects}
+          ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
         }
       }
     }`
@@ -451,6 +471,40 @@ class AnilistClient {
     await this.updateCache((await res).data.Page.media)
 
     this.idsCache[JSON.stringify(variables)] = { data: res, expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000 }
+
+    return this.idsCache[JSON.stringify(variables)].data
+  }
+
+  /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
+  async searchAllIDS (variables) {
+    debug(`Searching for (ALL) IDs ${JSON.stringify(variables)}`)
+    const cachedEntry = this.idsCache[JSON.stringify(variables)]
+    if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      debug(`Found cached (ALL) IDs ${JSON.stringify(variables)}`)
+      return cachedEntry.data
+    }
+
+    let fetchedIDS = []
+    let currentPage = 1
+
+    // cycle until all paged ids are resolved.
+    while (true) {
+      const res = await this.searchIDS({ page: currentPage, perPage: 50, id: variables.id })
+      if (res?.data?.Page.media) fetchedIDS = fetchedIDS.concat(res?.data?.Page.media)
+      if (!res?.data?.Page.pageInfo.hasNextPage) break
+      currentPage++
+    }
+
+    this.idsCache[JSON.stringify(variables)] = {
+      data: new Promise((resolve) => {
+        resolve({
+          data: {
+            page: {
+              ...fetchedIDS
+            }
+          }
+        })
+      }), expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000 }
 
     return this.idsCache[JSON.stringify(variables)].data
   }
@@ -533,7 +587,7 @@ class AnilistClient {
             status,
             entries {
               media {
-                ${queryObjects}
+                ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
               }
             }
           }
@@ -575,7 +629,7 @@ class AnilistClient {
           timeUntilAiring,
           airingAt,
           media {
-            ${queryObjects}
+            ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
           }
         }
       }
@@ -629,7 +683,7 @@ class AnilistClient {
           hasNextPage
         },
         media(id_not_in: $id_not, idMal_not_in: $idMal_not, idMal_in: $idMal, type: ANIME, search: $search, sort: $sort, onList: $onList, status: $status, status_not: $status_not, season: $season, seasonYear: $year, genre_in: $genre, tag_in: $tag, format: $format, format_not: MUSIC) {
-          ${queryObjects}
+          ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
         }
       }
     }`
@@ -646,7 +700,6 @@ class AnilistClient {
   /** @returns {Promise<import('./al.d.ts').Query<{ AiringSchedule: { airingAt: number }}>>} */
   episodeDate (variables) {
     debug(`Searching for episode date: ${variables.id}, ${variables.ep}`)
-    console.log("hello world!!!!!")
     const query = /* js */`
       query($id: Int, $ep: Int) {
         AiringSchedule(mediaId: $id, episode: $ep) {
@@ -658,8 +711,14 @@ class AnilistClient {
   }
 
   /** @returns {Promise<import('./al.d.ts').PagedQuery<{ mediaList: import('./al.d.ts').Following[]}>>} */
-  following (variables) {
+  async following (variables) {
     debug('Getting following')
+    const cachedEntry = this.followingCache[JSON.stringify(variables)]
+    if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      debug(`Found cached followers ${JSON.stringify(variables)}`)
+      return cachedEntry.data
+    }
+
     const query = /* js */`
       query($id: Int) {
         Page {
@@ -676,12 +735,26 @@ class AnilistClient {
         }
       }`
 
-    return this.alRequest(query, variables)
+    /** @type {Promise<import('./al.d.ts').PagedQuery<{ mediaList: import('./al.d.ts').Following[]}>>} */
+    const res = await this.alRequest(query, variables)
+    this.followingCache[JSON.stringify(variables)] = { data: res, expiry: Date.now() + getRandomInt(50, 80) * 60 * 1000 }
+    return this.followingCache[JSON.stringify(variables)].data
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>>} */
   async recommendations (variables) {
     debug(`Getting recommendations for ${variables.id}`)
+
+    if (settings.value.queryComplexity === 'Complex' && this.mediaCache[variables.id]) {
+      debug(`Complex queries are enabled, returning cached recommendations from media ${variables.id}`)
+      return {
+        data: {
+          Media: {
+            ...this.mediaCache[variables.id]
+          }
+        }
+      }
+    }
 
     const cachedEntry = this.recommendationCache[variables.id]
     if (cachedEntry && Date.now() < cachedEntry.expiry) {
@@ -694,21 +767,7 @@ class AnilistClient {
         Media(id: $id, type: ANIME) {
           id,
           idMal,
-          studios(sort: NAME, isMain: true) {
-            nodes {
-              name
-            }
-          },
-          recommendations {
-            edges {
-              node {
-                rating,
-                mediaRecommendation {
-                  id
-                }
-              }
-            }
-          }
+          ${queryComplexObjects}
         }
       }`
 

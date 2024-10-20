@@ -30,7 +30,7 @@
   function back () {
     if (mediaList.length > 1) {
       const prevMedia = mediaList[mediaList.length - 2]
-      mediaList.splice(mediaList.length - 2, 2);
+      mediaList.splice(mediaList.length - 2, 2)
       $view = prevMedia
     }
   }
@@ -48,7 +48,11 @@
   let container = null
   let mediaList = []
   $: media = anilistClient.mediaCache[$view?.id] || $view
-  $: mediaRecommendation = media && anilistClient.recommendations({ id: media.id })
+  $: recommendations = media && anilistClient.recommendations({ id: media.id })
+  $: searchIDS = media && (async () => {
+    const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
+    return searchIDS.length > 0 ? anilistClient.searchAllIDS({ page: 1, perPage: 50, id: searchIDS }) : Promise.resolve([])
+  })()
   $: media && (modal?.focus(), overlay = 'viewanime', saveMedia(), (container && container.dispatchEvent(new Event('scrolltop'))))
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
@@ -183,7 +187,7 @@
               </div>
             </div>
           </div>
-          <Details {media} alt={mediaRecommendation} />
+          <Details {media} alt={recommendations} />
           <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
             {#each media.tags as tag}
               <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap'>
@@ -208,18 +212,11 @@
               {media.description?.replace(/<[^>]*>/g, '') || ''}
             </div>
           {/if}
-          <ToggleList list={
-            media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
-               const typeComparison = a.relationType.localeCompare(b.relationType)
-               if (typeComparison !== 0) {
-                  return typeComparison
-               }
-               return (a.node.seasonYear || 0) - (b.node.seasonYear || 0)
-            })}   promise={
-            (() => {
-              const ids = media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id)
-              return ids && ids.length > 0 ? anilistClient.searchIDS({ page: 1, perPage: 50, id: ids }) : Promise.resolve([])
-            })() } let:item let:promise title='Relations'>
+          <ToggleList list={ media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
+                const typeComparison = a.relationType.localeCompare(b.relationType)
+                if (typeComparison !== 0) return typeComparison
+                return (a.node.seasonYear || 0) - (b.node.seasonYear || 0)
+              }) } promise={searchIDS} let:item let:promise title='Relations'>
             <div class='small-card'>
               {#await promise}
                 <SkeletonCard />
@@ -230,23 +227,21 @@
               {/await}
             </div>
           </ToggleList>
-          {#await mediaRecommendation then res} <!-- reduces query complexity improving load times -->
-            {@const mediaRecommendation = res?.data?.Media}
-            <ToggleList list={ mediaRecommendation.recommendations?.edges?.filter(({ node }) => node.mediaRecommendation).sort((a, b) => b.node.rating - a.node.rating) }
-              promise={(() => {
-                const ids = mediaRecommendation.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id)
-                return ids && ids.length > 0 ? anilistClient.searchIDS({ page: 1, perPage: 50, id: ids }): Promise.resolve([])
-              })() } let:item let:promise title='Recommendations'>
-              <div class='small-card'>
-                {#await promise}
-                  <SkeletonCard />
-                {:then res }
-                  {#if res}
-                    <SmallCard media={anilistClient.mediaCache[item.node.mediaRecommendation.id]} type={item.node.rating} />
-                  {/if}
-                {/await}
-              </div>
-            </ToggleList>
+          {#await recommendations then res}
+            {@const media = res?.data?.Media}
+            {#if media}
+              <ToggleList list={ media.recommendations?.edges?.filter(({ node }) => node.mediaRecommendation).sort((a, b) => b.node.rating - a.node.rating) } promise={searchIDS} let:item let:promise title='Recommendations'>
+                <div class='small-card'>
+                  {#await promise}
+                    <SkeletonCard />
+                  {:then res}
+                    {#if res}
+                      <SmallCard media={anilistClient.mediaCache[item.node.mediaRecommendation.id]} type={item.node.rating} />
+                    {/if}
+                  {/await}
+                </div>
+              </ToggleList>
+            {/if}
           {/await}
           <Following {media} />
           <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer'>
