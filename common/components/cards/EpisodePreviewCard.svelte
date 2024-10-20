@@ -104,7 +104,7 @@
       </div>
     </div>
     <div class='w-full text-muted description overflow-hidden pt-15'>
-      {data.episodeData?.description || media?.description?.replace(/<[^>]*>/g, '') || ''}
+      {(data.episodeData?.description || media?.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
     </div>
     {#if media}
       <div class='d-flex flex-row pt-15 font-weight-medium justify-content-between w-full text-muted'>

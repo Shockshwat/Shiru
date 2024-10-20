@@ -55,7 +55,7 @@
             </span>
             {#if media.episodes && media.episodes !== 1}
               <span class='text-nowrap d-flex align-items-center'>
-                {#if media.mediaListEntry?.status === 'CURRENT' && media.mediaListEntry?.progress }
+                {#if ['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress }
                   {media.mediaListEntry.progress} / {media.episodes} Episodes
                 {:else}
                   {media.episodes} Episodes
@@ -92,7 +92,7 @@
         </div>
         {#if media.description}
           <div class='overflow-y-auto px-15 pb-5 bg-very-dark card-desc pre-wrap'>
-            {media.description?.replace(/<[^>]*>/g, '') || ''}
+            {media.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
           </div>
         {/if}
         {#if media.genres.length}

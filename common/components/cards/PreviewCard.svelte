@@ -94,7 +94,7 @@
       {/if}
       {#if Helper.isAniAuth()}
         <button class='btn btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
-          <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.5rem' />
+          <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
         </button>
       {/if}
     </div>
@@ -116,7 +116,7 @@
       </span>
       {#if media.episodes && media.episodes !== 1}
         <span class='text-nowrap d-flex align-items-center'>
-          {#if media.mediaListEntry?.status === 'CURRENT' && media.mediaListEntry?.progress }
+          {#if ['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress }
             {media.mediaListEntry.progress} / {media.episodes} Episodes
           {:else}
             {media.episodes} Episodes
@@ -151,7 +151,7 @@
     </div>
     {#if media.description}
       <div class='w-full h-full text-muted description overflow-hidden'>
-        {media.description?.replace(/<[^>]*>/g, '')}
+        {media.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
       </div>
     {/if}
   </div>
