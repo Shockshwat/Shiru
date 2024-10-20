@@ -6,7 +6,7 @@
   import { clientID } from "@/modules/myanimelist.js"
   import { click } from '@/modules/click.js'
   import { toast } from 'svelte-sonner'
-  import { LogOut, Plus } from 'lucide-svelte'
+  import { LogOut, Plus, X } from 'lucide-svelte'
   import IPC from "@/modules/ipc.js"
 
   export const profileView = writable(false)
@@ -99,7 +99,7 @@
     <div class='modal-dialog' on:pointerup|self={close} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
       <div class='modal-content w-auto mw-400 d-flex justify-content-center flex-column'>
         <div class="d-flex justify-content-end align-items-start w-auto">
-          <button type='button' class='btn btn-square text-white font-size-24 font-weight-bold' use:click={close}>&times;</button>
+          <button type='button' class='btn btn-square text-white font-size-24 font-weight-bold' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
         </div>
         <div class='d-flex flex-column align-items-center'>
           {#if $currentProfile}
