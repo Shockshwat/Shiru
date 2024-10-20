@@ -85,8 +85,9 @@ class RSSMediaManager {
     if (!content) return false
 
     const pubDate = +(new Date(content.querySelector('pubDate').textContent)) * page * perPage
+    const pullDate = +(new Date(content.querySelector('pubDate').textContent))
     if (this.resultMap[url]?.date === pubDate) return false
-    return { content, pubDate }
+    return { content, pubDate, pullDate }
   }
 
   async _getMediaForRSS (page, perPage, url) {
@@ -103,7 +104,7 @@ class RSSMediaManager {
     const result = this.structureResolveResults(items)
 
     await this.findNewReleasesAndNotify(result,  mainProfile?.viewer?.data?.Viewer?.rssNotify?.[url]?.date || fallbackNotify?.[url]?.date);
-    (mainProfile?.viewer?.data?.Viewer?.rssNotify ?? (fallbackNotify ??= {}))[url] = { date: changed.pubDate }
+    (mainProfile?.viewer?.data?.Viewer?.rssNotify ?? (fallbackNotify ??= {}))[url] = { date: changed.pullDate }
     localStorage.setItem(mainProfile ? (alToken ? 'ALviewer' : 'MALviewer') : 'rssNotify', JSON.stringify(mainProfile || fallbackNotify))
 
     this.resultMap[url] = {
@@ -117,16 +118,16 @@ class RSSMediaManager {
     if (!oldDate) return
 
     const res = await Promise.all(await results)
-    const newReleases = res.filter(({ date }) => date > oldDate)
+    const newReleases = res.filter(({ date }) => date?.getTime() > oldDate)
     debug(`Found ${newReleases?.length} new releases, notifying...`)
 
-    for (const { media, parseObject, episode } of newReleases) {
+    for (const { media, parseObject, episode, date } of newReleases) {
       const notify = (!media?.mediaListEntry && settings.value.rssNotify?.includes("NOTONLIST")) || (media?.mediaListEntry && settings.value.rssNotify?.includes(media?.mediaListEntry?.status))
       const dubbed = malDubs.isDubMedia(parseObject)
       if (notify && (!settings.value.rssNotifyDubs || dubbed || !malDubs.isDubMedia(media))) {
         const options = {
           title: anilistClient.title(media) || parseObject.anime_title,
-          body: `${episode ? `Episode ${episode}` : media?.format === 'MOVIE' ? `The Movie` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch ${dubbed ? "Dub" : "Sub"}`} ${episode || media?.format === 'MOVIE' ? `is out!` : `is now available to binge!`}`,
+          body: `${episode ? `Episode ${episode}` : media?.format === 'MOVIE' ? `The Movie` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? "Dub" : "Sub"}) ${episode || media?.format === 'MOVIE' ? `is out!` : `is now ready to binge!`}`,
           icon: media?.coverImage.large || media?.coverImage.medium,
           data: {id: media?.id}
         }
