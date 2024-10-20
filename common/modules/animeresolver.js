@@ -106,7 +106,7 @@ export default new class AnimeResolver {
     for (const obj of parseObjs) {
       const key = this.getCacheKeyForTitle(obj)
       if (key in this.animeNameCache) continue // skip already resolved
-      if (obj.anime_type && TYPE_EXCLUSIONS.includes(obj.anime_type.toUpperCase())) continue // skip non-episode media
+      if (obj.anime_type && TYPE_EXCLUSIONS.includes((Array.isArray(obj.anime_type) ? obj.anime_type[0] : obj.anime_type).toUpperCase())) continue // skip non-episode media
       uniq[key] = obj
     }
     await this.findAnimesByTitle(Object.values(uniq))
