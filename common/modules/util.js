@@ -201,6 +201,7 @@ export const defaults = {
   cardAudio: false,
   titleLang: 'romaji',
   hideMyAnime: false,
+  closeAction: 'Prompt',
   expandingSidebar: !SUPPORTS.isAndroid,
   torrentPathNew: undefined,
   font: undefined,

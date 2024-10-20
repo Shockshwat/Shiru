@@ -57,6 +57,7 @@
   import Menubar from './components/Menubar.svelte'
   import { Toaster } from 'svelte-sonner'
   import Profiles from './components/Profiles.svelte'
+  import MinimizeTray from './components/MinimizeTray.svelte'
   import Navbar from './components/Navbar.svelte'
 
   setContext('view', view)
@@ -68,6 +69,7 @@
   <div class='overflow-hidden content-wrapper h-full'>
     <Toaster visibleToasts={6} position='top-right' theme='dark' richColors duration={10000} closeButton />
     <Profiles />
+    <MinimizeTray />
     <ViewAnime bind:overlay={$overlay} />
     <TorrentModal bind:overlay={$overlay} />
     <Router bind:page={$page} bind:overlay={$overlay} />

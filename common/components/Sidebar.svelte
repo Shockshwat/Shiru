@@ -3,6 +3,7 @@
   import { rss } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { media } from '@/views/Player/MediaHandler.svelte'
   import { profileView } from './Profiles.svelte'
+  import { actionPrompt } from './MinimizeTray.svelte'
   import { settings } from '@/modules/settings.js'
   import { toast } from 'svelte-sonner'
   import Helper from '@/modules/helper.js'
@@ -31,23 +32,23 @@
     <SidebarLink click={() => { $profileView = !$profileView }} icon='login' text={Helper.getUser() ? 'Profiles' : 'Login'} css='mt-auto' {page} overlay={$profileView && 'profile'} image={Helper.getUserAvatar()}>
       <LogIn size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' />
     </SidebarLink>
-    <SidebarLink click={() => { page = 'home'; if ($view) $view = null }} _page='home' text='Home' {page} overlay={($view || $profileView || $rss) && 'active'} let:active>
+    <SidebarLink click={() => { page = 'home'; if ($view) $view = null }} _page='home' text='Home' {page} overlay={($view || $profileView || $actionPrompt || $rss) && 'active'} let:active>
       <Home size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
     </SidebarLink>
-    <SidebarLink click={() => { page = 'search'; if ($view) $view = null }} _page='search' text='Search' {page} overlay={($view || $profileView || $rss) && 'active'} let:active>
+    <SidebarLink click={() => { page = 'search'; if ($view) $view = null }} _page='search' text='Search' {page} overlay={($view || $profileView || $actionPrompt || $rss) && 'active'} let:active>
       <MagnifyingGlass size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' stroke-width={active ? '1' : '0'} stroke='currentColor' />
     </SidebarLink>
-    <SidebarLink click={() => { page = 'schedule' }} _page='schedule' icon='schedule' text='Schedule' {page} overlay={($view || $profileView || $rss) && 'active'} let:active>
+    <SidebarLink click={() => { page = 'schedule' }} _page='schedule' icon='schedule' text='Schedule' {page} overlay={($view || $profileView || $actionPrompt || $rss) && 'active'} let:active>
       <Clock size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
     </SidebarLink>
     {#if $media?.media}
       {@const currentMedia = $view}
-      {@const active = $view && !$profileView && 'active'}
+      {@const active = $view && !$profileView && !$actionPrompt && 'active'}
       <SidebarLink click={() => { $view = (currentMedia?.id === $media.media.id && active ? null : $media.media); }} icon='queue_music' text='Now Playing' {page} overlay={active} nowPlaying={$view === $media.media} let:active>
         <ListVideo size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
       </SidebarLink>
     {/if}
-    <SidebarLink click={() => { page = 'watchtogether' }} _page='watchtogether' icon='groups' text='Watch Together' {page} overlay={($view || $profileView || $rss) && 'active'} let:active>
+    <SidebarLink click={() => { page = 'watchtogether' }} _page='watchtogether' icon='groups' text='Watch Together' {page} overlay={($view || $profileView || $actionPrompt || $rss) && 'active'} let:active>
       <Users size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
     </SidebarLink>
     <SidebarLink click={() => { IPC.emit('open', 'https://github.com/sponsors/RockinChaos/') }} icon='favorite' text='Support This App' css='mt-auto' {page} let:active>
@@ -62,7 +63,7 @@
         <Download size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded update' strokeWidth={active ? '3' : '2'} />
       </SidebarLink>
     {/if}
-    <SidebarLink click={() => { page = 'settings' }} _page='settings' icon='settings' text='Settings' {page} overlay={($view || $profileView || $rss) && 'active'} let:active>
+    <SidebarLink click={() => { page = 'settings' }} _page='settings' icon='settings' text='Settings' {page} overlay={($view || $profileView || $actionPrompt || $rss) && 'active'} let:active>
       <Settings size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
     </SidebarLink>
   </div>

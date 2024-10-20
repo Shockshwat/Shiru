@@ -53,19 +53,31 @@ export default class App {
   dialog = new Dialog(this.webtorrentWindow)
   tray = new Tray(join(__dirname, '/logo_filled.png'))
   debug = new Debug()
+  close = false
 
   constructor () {
     this.mainWindow.setMenuBarVisibility(false)
     this.mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
     this.mainWindow.once('ready-to-show', () => this.mainWindow.show())
     this.mainWindow.on('minimize', () => this.mainWindow.webContents.postMessage('visibilitychange', 'hidden'))
+    this.mainWindow.on('hide', () => this.mainWindow.webContents.postMessage('visibilitychange', 'hidden'))
     this.mainWindow.on('restore', () => this.mainWindow.webContents.postMessage('visibilitychange', 'visible'))
+    this.mainWindow.on('show', () => this.mainWindow.webContents.postMessage('visibilitychange', 'visible'))
     ipcMain.on('torrent-devtools', () => this.webtorrentWindow.webContents.openDevTools())
     ipcMain.on('ui-devtools', ({ sender }) => sender.openDevTools())
+    ipcMain.on('window-hide', () => this.mainWindow.hide())
 
     this.mainWindow.on('closed', () => this.destroy())
     this.webtorrentWindow.on('closed', () => this.destroy())
-    ipcMain.on('close', () => this.destroy())
+    ipcMain.on('close', () => { this.close = true; this.destroy() })
+
+    this.mainWindow.on('close', (event) => {
+      if (!this.close) {
+        event.preventDefault()
+        this.mainWindow.webContents.send('window-close')
+      }
+    })
+
     app.on('before-quit', e => {
       if (this.destroyed) return
       e.preventDefault()
@@ -80,11 +92,29 @@ export default class App {
 
     this.tray.setToolTip('Shiru')
     this.tray.setContextMenu(Menu.buildFromTemplate([
-      { label: 'Show', click: () => { this.mainWindow.show() }},
-      { label: 'Quit', click: () => { this.destroy() } }
+      { label: 'Show', click: () => {
+          if (this.mainWindow.isMinimized()) {
+            this.mainWindow.restore()
+          } else if (!this.mainWindow.isVisible()) {
+            this.mainWindow.show()
+          } else {
+            this.mainWindow.moveTop()
+          }
+          this.mainWindow.focus()
+        }
+      },
+      { label: 'Quit', click: () => { this.close = true; this.destroy() } }
     ]))
     this.tray.on('click', () => {
-      this.mainWindow.show()
+      if (this.mainWindow.isMinimized()) {
+        this.mainWindow.restore()
+      } else if (!this.mainWindow.isVisible()) {
+        this.mainWindow.show()
+      } else {
+        this.mainWindow.moveTop()
+      }
+      this.mainWindow.focus()
+    })
     })
 
     ipcMain.on('notification', async (e, opts) => {

@@ -1,0 +1,99 @@
+<script context='module'>
+  import { settings } from '@/modules/settings.js'
+  import { writable } from 'simple-store-svelte'
+  import { click } from '@/modules/click.js'
+  import IPC from '@/modules/ipc.js'
+  import { Minimize2, SquareX, X } from 'lucide-svelte'
+
+  export const actionPrompt = writable(false)
+</script>
+<script>
+  let modal
+  let rememberChoice
+  $: $actionPrompt && modal?.focus()
+
+  function close () {
+    $actionPrompt = false
+    rememberChoice = false
+  }
+
+  function checkClose ({ keyCode }) {
+    if (keyCode === 27) close()
+  }
+
+  function minimizeTray() {
+    if (rememberChoice) $settings.closeAction = 'Minimize'
+    close()
+    IPC.emit('window-hide')
+  }
+
+  function closeWindow() {
+    if (rememberChoice) $settings.closeAction = 'Close'
+    IPC.emit('close')
+  }
+
+  IPC.on('window-close', () => {
+    if ($settings.closeAction === 'Prompt') {
+      $actionPrompt = !$actionPrompt
+    } else if ($settings.closeAction === 'Minimize') {
+      minimizeTray()
+    } else {
+      closeWindow()
+    }
+  })
+
+  window.addEventListener('overlay-check', () => {
+    if ($actionPrompt) {
+      close()
+    }
+  })
+</script>
+
+<div class='modal z-55' class:show={$actionPrompt}>
+  {#if $actionPrompt}
+    <div class='modal-dialog' on:pointerup|self={close} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
+      <div class='modal-content w-600 d-flex flex-column'>
+        <div class='d-flex justify-content-between align-items-start w-auto'>
+          <button type='button' class='btn btn-square text-white font-size-24 font-weight-bold ml-auto' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
+        </div>
+        <h3 class='mb-0 text-center'>Are You Sure You Want To Quit?</h3>
+        <p class='mt-1 text-center text-wrap'>Shiru can be minimized to the system tray instead, useful if you want to receive notifications and seed torrents.</p>
+        <div class='mb-20 modal-body d-flex flex-column justify-content-center align-items-center'>
+          <div class='custom-switch text-center'>
+            <input type='checkbox' id='remember-choice' bind:checked={rememberChoice} />
+            <label for='remember-choice'>{'Remember my choice'}</label>
+          </div>
+        </div>
+        <div class='mt-20 d-flex justify-content-center w-auto'>
+          <button type='button' class='btn btn-primary mr-10 d-flex justify-content-center align-items-center w-130' on:click={minimizeTray}>
+            <span class='mr-10 d-flex align-items-center'>
+              <Minimize2 size='1.7rem' />
+            </span>
+            <span class='align-middle mr-5'>Minimize</span>
+          </button>
+          <button type='button' class='btn btn-danger d-flex justify-content-center align-items-center w-130' on:click={closeWindow}>
+            <span class='mr-10 d-flex align-items-center'>
+              <SquareX size='1.7rem' />
+            </span>
+            <span class='align-middle mr-5'>Close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
+</div>
+
+<style>
+  .z-55 {
+    z-index: 55;
+  }
+  .w-600 {
+    width: 60rem;
+  }
+  .w-130 {
+    width: 13rem;
+  }
+  span.align-middle {
+    margin-top: .2rem !important;
+  }
+</style>

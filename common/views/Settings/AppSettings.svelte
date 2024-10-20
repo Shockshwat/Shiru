@@ -1,53 +1,9 @@
-<script context='module'>
-  import { click } from '@/modules/click.js'
-  import { toast } from 'svelte-sonner'
-  import { resetSettings } from '@/modules/settings.js'
-  import IPC from '@/modules/ipc.js'
-  import { SUPPORTS } from '@/modules/support.js'
-  import SettingCard from './SettingCard.svelte'
-
-  async function importSettings () {
-    try {
-      const settings = JSON.parse(await navigator.clipboard.readText())
-      localStorage.setItem('settings', JSON.stringify(settings))
-      location.reload()
-    } catch (error) {
-      toast.error('Failed to import settings', {
-        description: 'Failed to import settings from clipboard, make sure the copied data is valid JSON.',
-        duration: 5000
-      })
-    }
-  }
-  function exportSettings () {
-    navigator.clipboard.writeText(localStorage.getItem('settings'))
-    toast('Copied to clipboard', {
-      description: 'Copied settings to clipboard',
-      duration: 5000
-    })
-  }
-  function restoreSettigs () {
-    resetSettings()
-    location.reload()
-  }
-  function checkUpdate () {
-    IPC.emit('update')
-  }
-  setInterval(checkUpdate, 1200000)
-
-  IPC.on('log-contents', log => {
-    navigator.clipboard.writeText(log)
-    toast.success('Copied to clipboard', {
-      description: 'Copied log contents to clipboard',
-      duration: 5000
-    })
-  })
-</script>
-
 <script>
   import Debug from '@/modules/debug.js'
   import { persisted } from 'svelte-persisted-store'
   import { client } from '@/modules/torrent.js'
   import { onDestroy } from 'svelte'
+  import SettingCard from './SettingCard.svelte'
 
   const debug = persisted('debug', '', {
     serializer: {
@@ -90,6 +46,50 @@
   IPC.on('device-info', writeAppInfo)
 </script>
 
+<script context='module'>
+  import { click } from '@/modules/click.js'
+  import { toast } from 'svelte-sonner'
+  import { resetSettings } from '@/modules/settings.js'
+  import IPC from '@/modules/ipc.js'
+  import { SUPPORTS } from '@/modules/support.js'
+
+  async function importSettings () {
+    try {
+      const settings = JSON.parse(await navigator.clipboard.readText())
+      localStorage.setItem('settings', JSON.stringify(settings))
+      location.reload()
+    } catch (error) {
+      toast.error('Failed to import settings', {
+        description: 'Failed to import settings from clipboard, make sure the copied data is valid JSON.',
+        duration: 5000
+      })
+    }
+  }
+  function exportSettings () {
+    navigator.clipboard.writeText(localStorage.getItem('settings'))
+    toast('Copied to clipboard', {
+      description: 'Copied settings to clipboard',
+      duration: 5000
+    })
+  }
+  function restoreSettings () {
+    resetSettings()
+    location.reload()
+  }
+  function checkUpdate () {
+    IPC.emit('update')
+  }
+  setInterval(checkUpdate, 1200000)
+
+  IPC.on('log-contents', log => {
+    navigator.clipboard.writeText(log)
+    toast.success('Copied to clipboard', {
+      description: 'Copied log contents to clipboard',
+      duration: 5000
+    })
+  })
+</script>
+
 <h4 class='mb-10 font-weight-bold'>Debug Settings</h4>
 <SettingCard title='Logging Levels' description='Enable logging of specific parts of the app. These logs are saved to %appdata$/Shiru/logs/main.log or ~/config/Shiru/logs/main.log.'>
   <select class='form-control bg-dark w-300 mw-full' bind:value={$debug}>
@@ -119,6 +119,16 @@
 {/if}
 
 <h4 class='mb-10 font-weight-bold'>App Settings</h4>
+<SettingCard title='Close Action' description='Choose the functionality of the close button for the app. You can choose to receive a Prompt to Minimize or Close, default to Minimize, or default to Closing the app.'>
+  <div>
+    <select class='form-control bg-dark w-300 mw-full' bind:value={settings.closeAction}>
+      <option value='Prompt'>Prompt</option>
+      <option value='Minimize'>Minimize</option>
+      <option value='Close'>Close</option>
+    </select>
+  </div>
+</SettingCard>
+
 <div class='d-inline-flex flex-column'>
   <button use:click={importSettings} class='btn btn-primary mt-10' type='button'>
     Import Settings From Clipboard
@@ -132,7 +142,7 @@
     </button>
   {/if}
   <button
-    use:click={restoreSettigs}
+    use:click={restoreSettings}
     class='btn btn-danger mt-10'
     type='button'
     data-toggle='tooltip'
