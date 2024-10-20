@@ -1,15 +1,21 @@
 <script>
   import { formatMap, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
+  import { malDubs } from '@/modules/animedubs.js'
   import { click } from '@/modules/click.js'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
-  import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import Helper from "@/modules/helper.js"
-  import { Heart } from 'lucide-svelte'
+  import { Heart, Eye } from 'lucide-svelte'
+  import { getContext } from 'svelte'
 
   export let mediaList
 
   let current = mediaList[0]
+
+  const view = getContext('view')
+  function viewMedia () {
+    $view = current
+  }
 
   function toggleFavourite () {
     anilistClient.favourite({ id: current.id })
@@ -66,7 +72,7 @@
       </span>
     {/if}
     <span class='text-nowrap d-flex align-items-center'>
-      <AudioLabel media={current} banner={true}/>
+      {malDubs.isDubMedia(current) ? 'Dub' : 'Sub'}
     </span>
     {#if current.isAdult}
       <span class='text-nowrap d-flex align-items-center'>
@@ -80,7 +86,7 @@
     {/if}
   </div>
   <div class='text-muted description overflow-hidden w-600 mw-full'>
-    {current.description?.replace(/<[^>]*>/g, '')}
+    {current.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
   </div>
   <div class='details text-white text-capitalize pt-15 pb-10 d-flex w-600 mw-full'>
     {#each current.genres as genre}
@@ -99,9 +105,12 @@
     {/if}
     {#if Helper.isAniAuth()}
       <button class='btn bg-dark-light btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
-        <Heart fill={current.isFavourite ? 'currentColor' : 'transparent'} size='1.5rem' />
+        <Heart fill={current.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
       </button>
     {/if}
+    <button class='btn bg-dark-light btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={viewMedia}>
+      <Eye size='1.7rem' />
+    </button>
   </div>
   <div class='d-flex'>
     {#each mediaList as media}
