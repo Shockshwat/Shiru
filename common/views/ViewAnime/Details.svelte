@@ -28,7 +28,7 @@
       }
       return countryMap[media.countryOfOrigin] || 'Unknown'
     } else if (detail.property === 'studios') { // has to be manually fetched as studios returned by user lists are broken.
-      return ((await alt)?.data?.Media || media)?.studios?.nodes?.map(node => node.name).filter(name => name).join(', ') || 'Unknown'
+      return ((await alt)?.data?.Media || media)?.studios?.nodes?.map(node => node.name)?.[0] || 'Unknown' // sometimes this can still be wrong, so we just get the first studio in the list and assume that's correct.
     } else {
       return media[detail.property]
     }
