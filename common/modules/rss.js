@@ -121,15 +121,25 @@ class RSSMediaManager {
     const newReleases = res.filter(({ date }) => date?.getTime() > oldDate)
     debug(`Found ${newReleases?.length} new releases, notifying...`)
 
-    for (const { media, parseObject, episode, date } of newReleases) {
-      const notify = (!media?.mediaListEntry && settings.value.rssNotify?.includes("NOTONLIST")) || (media?.mediaListEntry && settings.value.rssNotify?.includes(media?.mediaListEntry?.status))
+    for (const { media, parseObject, episode, link } of newReleases) {
+      const notify = (!media?.mediaListEntry && settings.value.rssNotify?.includes('NOTONLIST')) || (media?.mediaListEntry && settings.value.rssNotify?.includes(media?.mediaListEntry?.status))
       const dubbed = malDubs.isDubMedia(parseObject)
       if (notify && (!settings.value.rssNotifyDubs || dubbed || !malDubs.isDubMedia(media))) {
+        const progress = media?.mediaListEntry?.progress
+        const behind = progress < (episode - 1)
         const options = {
           title: anilistClient.title(media) || parseObject.anime_title,
-          body: `${episode ? `Episode ${episode}` : media?.format === 'MOVIE' ? `The Movie` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? "Dub" : "Sub"}) ${episode || media?.format === 'MOVIE' ? `is out!` : `is now ready to binge!`}`,
-          icon: media?.coverImage.large || media?.coverImage.medium,
-          data: {id: media?.id}
+          message: `${episode ? `Episode ${episode}` : media?.format === 'MOVIE' ? `The Movie` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${episode || media?.format === 'MOVIE' ? `is out!` : `is now ready to binge!`}`,
+          icon: media?.coverImage.medium,
+          heroImg: media?.bannerImage,
+          button: [
+            { text: `${!progress || progress === 0 ? 'Start Watching' : behind ? 'Continue Watching' : 'Watch Now'}`, activation: `${!progress || progress === 0 || behind ? 'shiru://search/' + media?.id : 'shiru://torrent/' + link}` },
+            { text: 'View Anime', activation: `shiru://anime/${media?.id}` }
+          ],
+          activation: {
+            type: 'protocol',
+            launch: `shiru://anime/${media?.id}`
+          }
         }
         IPC.emit('notification', options)
       }
@@ -143,6 +153,7 @@ class RSSMediaManager {
         ...result,
         episodeData: undefined,
         date: undefined,
+        link: undefined,
         onclick: undefined
       }
       if (res.media?.id) {
@@ -153,6 +164,7 @@ class RSSMediaManager {
         }
       }
       res.date = items[i].date
+      res.link = items[i].link
       res.onclick = () => add(items[i].link)
       return res
     })

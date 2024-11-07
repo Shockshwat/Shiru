@@ -1,7 +1,11 @@
 import { join } from 'node:path'
 import process from 'node:process'
 
-import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, app, dialog, ipcMain, nativeImage, powerMonitor, shell } from 'electron'
+import { toXmlString } from 'powertoast'
+import Jimp from 'jimp'
+import fs from 'fs'
+
+import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, nativeImage, app, dialog, ipcMain, powerMonitor, shell } from 'electron'
 import electronShutdownHandler from '@paymoapp/electron-shutdown-handler'
 
 import { development } from './util.js'
@@ -52,8 +56,10 @@ export default class App {
   updater = new Updater(this.mainWindow, this.webtorrentWindow)
   dialog = new Dialog(this.webtorrentWindow)
   tray = new Tray(join(__dirname, '/logo_filled.png'))
+  cacheDir = join(app.getPath('userData'), 'Cache', 'Cache_Data')
   debug = new Debug()
   close = false
+  notifications = {}
 
   constructor () {
     this.mainWindow.setMenuBarVisibility(false)
@@ -66,6 +72,7 @@ export default class App {
     ipcMain.on('torrent-devtools', () => this.webtorrentWindow.webContents.openDevTools())
     ipcMain.on('ui-devtools', ({ sender }) => sender.openDevTools())
     ipcMain.on('window-hide', () => this.mainWindow.hide())
+    ipcMain.on('window-show', () => this.showAndFocus())
 
     this.mainWindow.on('closed', () => this.destroy())
     this.webtorrentWindow.on('closed', () => this.destroy())
@@ -92,44 +99,16 @@ export default class App {
 
     this.tray.setToolTip('Shiru')
     this.tray.setContextMenu(Menu.buildFromTemplate([
-      { label: 'Show', click: () => {
-          if (this.mainWindow.isMinimized()) {
-            this.mainWindow.restore()
-          } else if (!this.mainWindow.isVisible()) {
-            this.mainWindow.show()
-          } else {
-            this.mainWindow.moveTop()
-          }
-          this.mainWindow.focus()
-        }
-      },
+      { label: 'Show', click: () => this.showAndFocus() },
       { label: 'Quit', click: () => { this.close = true; this.destroy() } }
     ]))
-    this.tray.on('click', () => {
-      if (this.mainWindow.isMinimized()) {
-        this.mainWindow.restore()
-      } else if (!this.mainWindow.isVisible()) {
-        this.mainWindow.show()
-      } else {
-        this.mainWindow.moveTop()
-      }
-      this.mainWindow.focus()
-    })
-    })
-
+    this.tray.on('click', () => this.showAndFocus())
     ipcMain.on('notification', async (e, opts) => {
-      if (opts.icon) {
-        const res = await fetch(opts.icon)
-        const buffer = await res.arrayBuffer()
-        opts.icon = nativeImage.createFromBuffer(Buffer.from(buffer))
-      }
-      const notification = new Notification(opts)
-      notification.on('click', () => {
-        if (opts.data.id) {
-          this.mainWindow.show()
-          this.protocol.protocolMap.anime(opts.data.id)
-        }
-      })
+      opts.icon &&= await this.getImage(opts.icon)
+      opts.heroImg &&= await this.getImage(opts.heroImg, true)
+      opts.inlineImg &&= await this.getImage(opts.inlineImg)
+      //const id = Symbol()
+      const notification = new Notification({toastXml: toXmlString(opts) })
       notification.show()
     })
 
@@ -197,5 +176,43 @@ export default class App {
     })
     this.destroyed = true
     if (!this.updater.install(forceRunAfter)) app.quit()
+  }
+
+  async getImage(url, wideScreen) {
+    const res = await fetch(url)
+    const arrayBuffer = await res.arrayBuffer()
+    const urlParts = url.split('/')
+    const imagePath = join(this.cacheDir, urlParts[urlParts.length - 1])
+    const image = await Jimp.read(Buffer.from(arrayBuffer))
+    const { width, height } = image.bitmap
+    if (wideScreen) {
+      let adjWidth, adjHeight
+      if (width / height > (16 / 9)) {
+        adjWidth = Math.floor(height * (16 / 9))
+        image.crop((width - adjWidth) / 2, 0, adjWidth, height)
+      } else {
+        adjHeight = Math.floor(width / (16 / 9))
+        image.crop(0, (height - adjHeight) / 2, width, adjHeight)
+      }
+      await image.resize(adjWidth || width, adjHeight || height, Jimp.RESIZE_BEZIER).writeAsync(imagePath)
+    } else {
+      const squareRatio = Math.min(width, height)
+      await image.crop((width - squareRatio) / 2, (height - squareRatio) / 2, squareRatio, squareRatio).resize(128, 128, Jimp.RESIZE_BEZIER).writeAsync(imagePath)
+    }
+    setTimeout(() => {
+      fs.unlink(imagePath, (err) => {})
+    }, 10000)
+    return imagePath
+  }
+
+  showAndFocus () {
+    if (this.mainWindow.isMinimized()) {
+      this.mainWindow.restore()
+    } else if (!this.mainWindow.isVisible()) {
+      this.mainWindow.show()
+    } else {
+      this.mainWindow.moveTop()
+    }
+    this.mainWindow.focus()
   }
 }

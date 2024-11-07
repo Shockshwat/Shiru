@@ -26,6 +26,8 @@
   },
   "dependencies": {
     "@paymoapp/electron-shutdown-handler": "^1.1.2",
+    "jimp": "0.22.12",
+    "powertoast": "^3.0.0",
     "utp-native": "^2.5.3"
   },
   "standard": {

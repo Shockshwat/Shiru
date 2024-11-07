@@ -2,6 +2,7 @@
   import { getContext } from 'svelte'
   import { getMediaMaxEp, formatMap, playMedia } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
+  import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
   import { anilistClient } from '@/modules/anilist.js'
   import { click } from '@/modules/click.js'
@@ -96,6 +97,37 @@
     if (media) {
       close()
     }
+  })
+
+  function handlePlay(id, episode, torrentOnly) {
+    const mediaCache = anilistClient.mediaCache.value[id]
+    const cachedEpisode = episode || mediaCache?.mediaListEntry?.progress
+    const desiredEpisode = (episode ? episode : cachedEpisode && cachedEpisode !== 0 ? cachedEpisode + 1 : cachedEpisode)
+    if (torrentOnly) {
+      if (desiredEpisode) return playAnime(mediaCache, desiredEpisode)
+      if (mediaCache?.status === 'NOT_YET_RELEASED') return
+      playMedia(mediaCache)
+    } else {
+      $view = mediaCache
+      setTimeout(() => {
+        play(desiredEpisode)
+        IPC.emit('overlay-check')
+      }, 500)
+    }
+  }
+
+  IPC.on('play-anime', (id, episode, torrentOnly) => {
+    handlePlay(id, episode, torrentOnly)
+  })
+
+  window.addEventListener('play-anime', (event) => {
+    const { id, episode, torrentOnly } = event.detail
+    handlePlay(id, episode, torrentOnly)
+  })
+
+  IPC.on('play-torrent', magnet => {
+    add(magnet)
+    IPC.emit('overlay-check')
   })
 </script>
 

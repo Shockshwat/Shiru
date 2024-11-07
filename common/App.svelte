@@ -9,6 +9,7 @@
   export const overlay = writable('none')
   export const view = writable(null)
   export async function handleAnime (anime) {
+    IPC.emit('window-show')
     view.set(null)
     view.set((await anilistClient.searchIDSingle({ id: anime })).data.Media)
   }

@@ -16,6 +16,8 @@ export default class Protocol {
     alauth: token => this.sendToken(token),
     malauth: token => this.sendMalToken(token),
     anime: id => this.window.webContents.send('open-anime', id),
+    torrent: magnet => this.add(magnet),
+    search: id => this.play(id),
     w2g: link => this.window.webContents.send('w2glink', link),
     schedule: () => this.window.webContents.send('schedule'),
     donate: () => shell.openExternal('https://github.com/sponsors/RockinChaos/')
@@ -84,6 +86,22 @@ export default class Protocol {
       if (state.includes('%')) state = decodeURIComponent(state)
       this.window.webContents.send('maltoken', code, state)
     } 
+  }
+
+  /**
+   * @param {string} id - The media id.
+   */
+  play(id) {
+    this.window.webContents.send('play-anime', id)
+    this.window.webContents.send('window-show')
+  }
+
+  /**
+   * @param {string} magnet - The magnet link.
+   */
+  add(magnet) {
+    this.window.webContents.send('play-torrent', magnet)
+    this.window.webContents.send('window-show')
   }
 
   /**

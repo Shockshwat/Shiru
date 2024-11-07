@@ -329,9 +329,16 @@ class AnilistClient {
         if (!settings.value.aniNotifyLimited || type !== 'AIRING') {
           const options = {
             title: media.title.userPreferred,
-            body: type === 'AIRING' ? `Episode ${episode} is out in Japan, it should be available soon.` : 'Was recently announced!',
-            icon: media.coverImage.extraLarge || media.coverImage.medium,
-            data: { id: media.id }
+            message: type === 'AIRING' ? `Episode ${episode} is out in Japan, it should be available soon.` : 'Was recently announced!',
+            icon: media.coverImage.medium,
+            heroImg: media?.bannerImage,
+            button: [
+              { text: 'View Anime', activation: `shiru://anime/${media?.id}` },
+            ],
+            activation: {
+              type: 'protocol',
+              launch: `shiru://anime/${media?.id}`
+            }
           }
           IPC.emit('notification', options)
         }
