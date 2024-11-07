@@ -54,9 +54,16 @@ export default new class AnimeResolver {
     }
 
     // remove (TV)
-    const tvMatch = modified.match(/\(TV\)/)
+    const tvMatch = modified.match(/\(tv\)/i)
     if (tvMatch) {
-      modified = modified.replace('(TV)', '')
+      modified = modified.replace(/\(tv\)/i, '')
+      titles.add(modified)
+    }
+
+    // Remove (Movie)
+    const movieMatch = modified.match(/\(movie\)/i) || modified.match(/movie/i)
+    if (movieMatch) {
+      modified = modified.replace(/\(movie\)/i, '').replace(/movie/i, '')
       titles.add(modified)
     }
 
