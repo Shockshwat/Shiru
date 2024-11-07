@@ -30,7 +30,7 @@
     <FullSkeletonCard />
   {:then media}
     {#if media}
-      <FullCard media={anilistClient.mediaCache[media.id]} {variables} />
+      <FullCard media={anilistClient.mediaCache.value[media.id]} {variables} />
     {/if}
   {/await}
 
@@ -40,7 +40,7 @@
     <SkeletonCard />
   {:then media}
     {#if media}
-      <SmallCard media={anilistClient.mediaCache[media.id]} {variables} />
+      <SmallCard media={anilistClient.mediaCache.value[media.id]} {variables} />
     {/if}
   {/await}
 

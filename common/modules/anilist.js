@@ -192,8 +192,8 @@ class AnilistClient {
 
   currentProfile = writable(alToken)
 
-  /** @type {Record<number, import('./al.d.ts').Media>} */
-  mediaCache = {}
+  /** @type {import('simple-store-svelte').Writable<Record<number, import('./al.d.ts').Media>>} */
+  mediaCache = writable({})
 
   /**
    * @template T
@@ -745,12 +745,12 @@ class AnilistClient {
   async recommendations (variables) {
     debug(`Getting recommendations for ${variables.id}`)
 
-    if (settings.value.queryComplexity === 'Complex' && this.mediaCache[variables.id]) {
+    if (settings.value.queryComplexity === 'Complex' && this.mediaCache.value[variables.id]) {
       debug(`Complex queries are enabled, returning cached recommendations from media ${variables.id}`)
       return {
         data: {
           Media: {
-            ...this.mediaCache[variables.id]
+            ...this.mediaCache.value[variables.id]
           }
         }
       }
@@ -841,15 +841,16 @@ class AnilistClient {
 
   /** @param {import('./al.d.ts').Media} media */
   title(media) {
-    const preferredTitle = media?.title.userPreferred
+    const cachedMedia = this.mediaCache.value[media?.id] || media
+    const preferredTitle = cachedMedia?.title.userPreferred
     if (alToken) {
       return preferredTitle
     }
 
     if (settings.value.titleLang === 'romaji') {
-      return media?.title.romaji || preferredTitle
+      return cachedMedia?.title.romaji || preferredTitle
     } else {
-      return media?.title.english || preferredTitle
+      return cachedMedia?.title.english || preferredTitle
     }
   }
 
@@ -867,7 +868,9 @@ class AnilistClient {
         await Helper.fillEntry(media)
       }
       // Update the cache
-      this.mediaCache[media.id] = media
+      this.mediaCache.update(currentCache => {
+        return { ...currentCache, [media.id]: media }
+      })
     }
   }
 }

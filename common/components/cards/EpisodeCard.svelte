@@ -13,10 +13,14 @@
 
   let preview = false
   let prompt = writable(false)
-  /** @type {import('@/modules/al.d.ts').Media | null} */
-  const media = data.media && anilistClient.mediaCache[data.media.id]
 
-  const episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
+  let mediaCache
+  anilistClient.mediaCache.subscribe(value => mediaCache = value)
+
+  /** @type {import('@/modules/al.d.ts').Media | null} */
+  $: media = data.media && mediaCache[data.media.id]
+
+  $: episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
 
   const view = getContext('view')
   function viewMedia () {
@@ -33,9 +37,9 @@
     preview = state
   }
 
-  const progress = liveAnimeEpisodeProgress(media?.id, data?.episode)
-  const watched = media?.mediaListEntry?.status === 'COMPLETED'
-  const completed = !watched && media?.mediaListEntry?.progress >= data?.episode
+  $: progress = liveAnimeEpisodeProgress(media?.id, data?.episode)
+  $: watched = media?.mediaListEntry?.status === 'COMPLETED'
+  $: completed = !watched && media?.mediaListEntry?.progress >= data?.episode
 </script>
 
 <div class='d-flex p-20 pb-10 position-relative episode-card' use:hoverChange={() => prompt.set(false)} use:hoverClick={[setClickState, setHoverState]} on:contextmenu|preventDefault={viewMedia} role='none'>
@@ -67,7 +71,7 @@
           {#if media?.mediaListEntry?.status}
             <div style:--statusColor={statusColorMap[media.mediaListEntry.status]} class='list-status-circle d-inline-flex overflow-hidden mr-5' title={media.mediaListEntry.status} />
           {/if}
-          {anilistClient.title(media) || data.parseObject.anime_title}
+          {anilistClient.title(media) || data.parseObject?.anime_title}
         </div>
         <div class='text-muted font-size-12 title overflow-hidden'>
           {data.episodeData?.title?.en || ''}

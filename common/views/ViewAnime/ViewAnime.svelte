@@ -47,7 +47,7 @@
   let modal
   let container = null
   let mediaList = []
-  $: media = anilistClient.mediaCache[$view?.id] || $view
+  $: media = anilistClient.mediaCache.value[$view?.id] || $view
   $: recommendations = media && anilistClient.recommendations({ id: media.id })
   $: searchIDS = media && (async () => {
     const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
@@ -222,7 +222,7 @@
                 <SkeletonCard />
               {:then res }
                 {#if res}
-                  <SmallCard media={anilistClient.mediaCache[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
+                  <SmallCard media={anilistClient.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
                 {/if}
               {/await}
             </div>
@@ -236,7 +236,7 @@
                     <SkeletonCard />
                   {:then res}
                     {#if res}
-                      <SmallCard media={anilistClient.mediaCache[item.node.mediaRecommendation.id]} type={item.node.rating} />
+                      <SmallCard media={anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
                     {/if}
                   {/await}
                 </div>

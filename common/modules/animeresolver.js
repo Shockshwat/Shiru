@@ -116,7 +116,7 @@ export default new class AnimeResolver {
    * @param {number} id
    */
   async getAnimeById (id) {
-    if (anilistClient.mediaCache[id]) return anilistClient.mediaCache[id]
+    if (anilistClient.mediaCache.value[id]) return anilistClient.mediaCache.value[id]
     const res = await anilistClient.searchIDSingle({ id })
 
     return res.data.Media
