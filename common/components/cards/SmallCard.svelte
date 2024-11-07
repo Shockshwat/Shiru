@@ -2,6 +2,7 @@
   import { getContext } from 'svelte'
   import PreviewCard from './PreviewCard.svelte'
   import { formatMap, statusColorMap } from '@/modules/anime.js'
+  import { createListener } from '@/modules/util.js'
   import { hoverClick } from '@/modules/click.js'
   import { countdown } from '@/modules/util.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
@@ -24,9 +25,12 @@
   function setHoverState (state) {
     preview = state
   }
+
+  const { reactive, init } = createListener(['btn', 'scoring'])
+  $: init(preview)
 </script>
 
-<div class='d-flex p-md-20 p-15 position-relative first-check' use:hoverClick={[viewMedia, setHoverState]}>
+<div class='d-flex p-md-20 p-15 position-relative first-check {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState]}>
   {#if preview}
     <PreviewCard {media} {type} />
   {/if}

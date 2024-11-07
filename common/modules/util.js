@@ -1,5 +1,6 @@
 import { SUPPORTS } from '@/modules/support.js'
 import levenshtein from 'js-levenshtein'
+import { writable } from 'svelte/store'
 
 export function countdown (s) {
   const d = Math.floor(s / (3600 * 24))
@@ -165,6 +166,46 @@ export function debounce (fn, time) {
     timeout.unref?.()
   }
 }
+
+/**
+ * General work-around for preventing the reactive animations for specific classes when they are not needed.
+ * Importing this and adding {$reactive ? `` : `not-reactive`} will disable reactivity for the added element when a trigger class is clicked.
+ *
+ * @param {[string]} triggerClasses The classes which need to be clicked to prevent reactivity.
+ * @returns { { reactive: Writable<boolean>, init: (create: boolean) => void } } The initializer and reactive listener.
+ */
+export function createListener(triggerClasses = []) {
+  const reactive = writable(true)
+  let handling = false
+
+  function handleDown({ target }) {
+    if (triggerClasses.some(className => target.closest(`.${className}`))) reactive.set(false)
+  }
+
+  function handleUp() {
+    reactive.set(true)
+  }
+
+  function addListeners() {
+    document.addEventListener('mousedown', handleDown, true)
+    document.addEventListener('touchstart', handleDown, true)
+    document.addEventListener('mouseup', handleUp, true)
+    document.addEventListener('touchend', handleUp, true)
+    handling = true
+  }
+
+  function removeListeners() {
+    document.removeEventListener('mousedown', handleDown, true)
+    document.removeEventListener('touchstart', handleDown, true)
+    document.removeEventListener('mouseup', handleUp, true)
+    document.removeEventListener('touchend', handleUp, true)
+    handling = false
+  }
+
+  function init(create) {
+    if (create && !handling) addListeners()
+    else if (handling) removeListeners()
+  }
 
 export const defaults = {
   volume: 1,

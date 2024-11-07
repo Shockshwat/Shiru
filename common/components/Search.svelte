@@ -11,6 +11,7 @@
 </script>
 
 <script>
+  import { createListener } from "@/modules/util.js"
   import { traceAnime } from '@/modules/anime.js'
   import { settings } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
@@ -19,6 +20,9 @@
   import Helper from '@/modules/helper.js'
   import { MagnifyingGlass, Image } from 'svelte-radix'
   import { BookUser, Type, Drama, Leaf, CalendarRange, MonitorPlay, Tv, ArrowDownWideNarrow, Filter, FilterX, Tags, Hash, SlidersHorizontal, Mic, Grid3X3, Grid2X2 } from 'lucide-svelte'
+
+  const { reactive, init } = createListener(['x-filter'])
+  $: init($page === 'search' || $page === 'schedule')
 
   export let search
   let searchTextInput = {
@@ -574,7 +578,7 @@
   </div>
   <div class='w-full px-10 pt-10 h-50 d-flex flex-colum align-items-center'>
     <form>
-      <div role="button" tabindex="0">
+      <div class='{$reactive ? `` : `not-reactive`}' role="button" tabindex="0">
         {#if sanitisedSearch?.length}
           {@const filteredBadges = sanitisedSearch.filter(badge => badge.key !== 'hideStatus' && (search.userList || badge.key !== 'title'))}
           <div class='d-flex flex-row align-items-center'>
@@ -589,7 +593,7 @@
                   <svelte:component this={badgeDisplayNames[badge.key]} class='mr-5' size='1.8rem' />
                   <div class='font-size-12 mr-5'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</div>
                   {#if !search.scheduleList || (badge.key !== 'season' && badge.key !== 'year')}
-                    <button on:click={() => removeBadge(badge)} class='pointer bg-transparent border-0 text-white font-size-12 position-relative ml-5 pr-0 pt-0' title='Remove Filter' type='button'>x</button>
+                    <button on:click={() => removeBadge(badge)} class='pointer bg-transparent border-0 text-white font-size-12 position-relative ml-5 pr-0 pt-0 x-filter' title='Remove Filter' type='button'>x</button>
                   {/if}
                 </div>
               {/if}
