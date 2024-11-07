@@ -1228,17 +1228,30 @@
     <span class='icon ctrl h-full align-items-center justify-content-end w-150 mw-full mr-auto' on:click={rewind}>
       <Rewind size='3rem' />
     </span>
-    <span class='icon ctrl' data-name='playPause' use:click={playPause}>
-      {#if ended}
-        <RotateCw size='3rem' />
-      {:else}
-        {#if paused}
-          <Play size='3rem' fill='white' />
-        {:else}
-          <Pause size='3rem' fill='white' />
-        {/if}
+    <!-- miniplayer buttons -->
+    <div class='d-flex align-items-center position-relative' style='width: 100%'>
+      {#if hasLast}
+        <span class='icon ctrl position-absolute' style='left: 20%' title='Last [B]' data-name='playPause' use:click={playLast}>
+          <SkipBack size='3rem' fill='white' />
+        </span>
       {/if}
-    </span>
+      <span class='icon ctrl position-absolute' data-name='playPause' style='left: 50%; transform: translateX(-50%)' use:click={playPause}>
+        {#if ended}
+          <RotateCw size='3rem' />
+        {:else}
+          {#if paused}
+            <Play size='3rem' fill='white' />
+          {:else}
+            <Pause size='3rem' fill='white' />
+          {/if}
+        {/if}
+      </span>
+      {#if hasNext}
+        <span class='icon ctrl position-absolute' style='right: 20%' title='Next [N]' data-name='playPause' use:click={playNext}>
+          <SkipForward size='3rem' fill='white' />
+        </span>
+      {/if}
+    </div>
     <!-- eslint-disable-next-line svelte/valid-compile -->
     <span class='icon ctrl h-full align-items-center w-150 mw-full ml-auto' on:click={forward}>
       <FastForward size='3rem' />
