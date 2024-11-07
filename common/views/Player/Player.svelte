@@ -204,24 +204,14 @@
 
   export let media
 
-  $: checkAvail(current)
+  $: checkAvail(media, current)
   let hasNext = false
   let hasLast = false
-  function checkAvail (current) {
-    if ((media?.media?.nextAiringEpisode?.episode - 1 || media?.media?.episodes) > media?.episode) {
-      hasNext = true
-    } else if (videos.indexOf(current) !== videos.length - 1) {
-      hasNext = true
-    } else {
-      hasNext = false
-    }
-    if (media?.episode > 1) {
-      hasLast = true
-    } else if (videos.indexOf(current) > 0) {
-      hasLast = true
-    } else {
-      hasLast = false
-    }
+  function checkAvail (media, current) {
+    if ((media?.media?.nextAiringEpisode?.episode - 1 || media?.media?.episodes) > media?.episode) hasNext = true
+    else hasNext = videos.indexOf(current) !== videos.length - 1;
+    if (media?.episode > 1) hasLast = true
+    else hasLast = videos.indexOf(current) > 0;
   }
 
   async function loadAnimeProgress () {
