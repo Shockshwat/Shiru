@@ -1,6 +1,6 @@
 import { anilistClient } from './anilist.js'
 import { anitomyscript } from './anime.js'
-import { chunks } from './util.js'
+import { chunks, matchKeys } from './util.js'
 import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:animeresolver')
@@ -77,12 +77,15 @@ export default new class AnimeResolver {
     }).flat()
 
     debug(`Finding ${titleObjects?.length} titles: ${titleObjects?.map(obj => obj.title).join(', ')}`)
-
     for (const chunk of chunks(titleObjects, 60)) {
-      // single title has a complexity of 8.1, al limits complexity to 500, so this can be at most 62, undercut it to 60, al pagination is 50, but at most we'll do 30 titles since isAduld duplicates each title
+      // single title has a complexity of 8.1, al limits complexity to 500, so this can be at most 62, undercut it to 60, al pagination is 50, but at most we'll do 30 titles since isAdult duplicates each title
       for (const [key, media] of await anilistClient.alSearchCompound(chunk)) {
-        debug(`Found ${key} as ${media?.id}: ${media?.title?.userPreferred}`)
-        this.animeNameCache[key] = media
+        if (!this.animeNameCache[key]) {
+          debug(`Found ${key} as ${media?.id}: ${media?.title?.userPreferred}`)
+          this.animeNameCache[key] = media
+        } else {
+          debug(`Duplicate key found ${key} as ${this.animeNameCache[key]?.id}: ${this.animeNameCache[key]?.title?.userPreferred}, skipping new value [${media?.id}: ${media?.title?.userPreferred}]`)
+        }
       }
     }
   }
@@ -154,9 +157,11 @@ export default new class AnimeResolver {
 
     const fileAnimes = []
     for (const parseObj of parseObjs) {
+
       let failed = false
       let episode
       let media = this.animeNameCache[this.getCacheKeyForTitle(parseObj)]
+      let needsVerification = !media || !matchKeys(media, parseObj?.anime_title, ['title.userPreferred', 'title.english', 'title.romaji', 'title.native'], 0.3)
       // resolve episode, if movie, dont.
       let maxep = media?.nextAiringEpisode?.episode || media?.episodes
       debug(`Resolving ${parseObj?.anime_title} ${parseObj?.episode_number} ${maxep} ${media?.title?.userPreferred} ${media?.format}`)
@@ -201,7 +206,7 @@ export default new class AnimeResolver {
         } else {
           let offset = 0
           // media is missing! Likely a horribly named title for a sequel... try fetching the root.
-          if (!media) {
+          if (needsVerification) {
             debug(`Media failed to resolve, attempting to fetch root media for ${parseObj.anime_title}`)
             const parseNew = await this.findAndCacheTitle(parseObj.anime_title.replace(/S\d+(E\d+)?/, ''))
             media = this.animeNameCache[this.getCacheKeyForTitle(parseNew[0])]
@@ -215,12 +220,20 @@ export default new class AnimeResolver {
             const root = prequel && (await this.resolveSeason({ media: await this.getAnimeById(prequel.id), force: true, offset })).media
             debug(`Root ${root?.id}:${root?.title?.userPreferred}`)
 
+            // check that anime_title is similar to the resolved media title, if it's not then we likely already are at the root level... resolves issues with niche series like MF GHOST.
+            let isRoot = false
+            if (root && !matchKeys(root, parseObj?.anime_title, ['title.userPreferred', 'title.english', 'title.romaji', 'title.native'], 0.3)) {
+              debug(`Detect incorrect Root for ${parseObj?.anime_title}, assuming the title is already root from ${media.id}:${media.title?.userPreferred}`)
+              isRoot = true
+            }
+
             // value bigger than episode count
-            let result = await this.resolveSeason({ media: root || media, episode: parseInt(parseObj.episode_number), increment: !parseObj.anime_season ? null : true, offset })
+            let result = await this.resolveSeason({ media: (!isRoot ? root : media) || media, episode: parseInt(parseObj.episode_number), increment: !parseObj.anime_season && !isRoot ? null : true, offset })
 
             // last ditch attempt, see above
             if (result.failed && parseObj.anime_season) {
-              result = await this.resolveSeason({ media: root || media, episode: parseInt(parseObj.episode_number), offset })
+              debug(`Attempting last ditch effort for failed result ${parseObj.anime_title}: ${result.rootMedia?.id}:${result.rootMedia?.title?.userPreferred} from ${media.id}:${media.title?.userPreferred}`)
+              result = await this.resolveSeason({ media: (!isRoot ? root : media) || media, episode: parseInt(parseObj.episode_number), offset })
             }
 
             debug(`Found rootMedia for ${parseObj.anime_title}: ${result.rootMedia?.id}:${result.rootMedia?.title?.userPreferred} from ${media.id}:${media.title?.userPreferred}`)
