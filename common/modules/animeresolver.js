@@ -67,6 +67,13 @@ export default new class AnimeResolver {
       titles.add(modified)
     }
 
+    // Detect and add alternate title within parentheses
+    const multiTitleMatch = modified.match(/^(.+?)\s*\((.+?)\)$/)
+    if (multiTitleMatch) {
+      const [_, mainTitle, altTitle] = multiTitleMatch
+      titles.add(mainTitle.trim())
+      titles.add(altTitle.trim())
+    }
     return [...titles]
   }
 
