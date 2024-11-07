@@ -149,7 +149,7 @@
           {:else if $profiles.length < 5}
             <button type='button' class='box pointer border-0 pt-10 pb-10 d-flex align-items-center justify-content-center text-center {$profiles.length > 0 && $currentProfile ? "" : !$currentProfile ? "rounded-bottom-10" : "rounded-top-10"}' on:click={() => { $profileAdd = true }}>
               <Plus class='mr-10' size='2.2rem' />
-              <div class='mt-2'>
+              <div class='mt-4'>
                 Add Profile
               </div>
             </button>
@@ -165,7 +165,7 @@
             {/if}
             <button type='button' class='box pointer border-0 rounded-bottom-10 pt-10 pb-10 d-flex align-items-center justify-content-center text-center' on:click={currentLogout}>
               <LogOut class='mr-10' size='2.2rem' />
-              <div class='mt-2'>
+              <div class='mt-4'>
                 Sign Out
               </div>
             </button>
@@ -183,7 +183,7 @@
   .h-3 {
     height: 3rem !important;
   }
-  .mt-2 {
+  .mt-4 {
     margin-top: .4rem;
   }
   .z-55 {

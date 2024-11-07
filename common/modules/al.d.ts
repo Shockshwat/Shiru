@@ -10,6 +10,7 @@ export type Media = {
   description?: string
   season?: string
   seasonYear?: string
+  type: string
   format: string
   status: string
   episodes?: number
@@ -18,13 +19,13 @@ export type Media = {
   genres?: string[]
   tags?: {
     name: string
-    rank: integer
+    rank: number
   }[]
   isFavourite: boolean
   coverImage?: {
     extraLarge: string
-    color: string
     medium: string
+    color: string
   }
   source?: string
   countryOfOrigin?: string

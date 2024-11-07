@@ -16,8 +16,8 @@
     "paths": {
       "@/*": ["./*"],
       "three": ["./types.d.ts"],
-      "rxjs": ["./types.d.ts"],
-    },
+      "rxjs": ["./types.d.ts"]
+    }
   },
   "exclude": [
     "node_modules", "dist", "build", "git_modules", ".svelte-kit", "public", "android", "@types/three",
