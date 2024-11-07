@@ -23,7 +23,10 @@
   let playFile
 
   media.subscribe((media) => {
-    handleMedia(media || {})
+      // calling this persistently when data is null or missing the necessary parseObject to play the media causes the player to get stuck on previous media.
+      if (media?.parseObject) {
+          handleMedia(media)
+      }
     return noop
   })
 
@@ -52,8 +55,8 @@
     return true
   }
 
-  function handleMedia ({ media, episode, parseObject }) {
-    if (media) {
+  async function handleMedia ({ media, episode, parseObject }) {
+    if (media || episode || parseObject) {
       const ep = Number(episode || parseObject?.episode_number) || null
 
       // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
@@ -104,7 +107,7 @@
       if (lowestUnwatched) return lowestUnwatched
     }
 
-    // highest occurence if all else fails - unlikely
+    // highest occurrence if all else fails - unlikely
 
     const max = highestOccurence(videoFiles, file => file.media.media?.id).media
     if (max?.media) {
@@ -178,7 +181,7 @@
     playFile(file || 0)
   }
 
-  // find element with most occurences in array according to map function
+  // find element with most occurrences in array according to map function
   const highestOccurence = (arr = [], mapfn = a => a) => arr.reduce((acc, el) => {
     const mapped = mapfn(el)
     acc.sums[mapped] = (acc.sums[mapped] || 0) + 1
