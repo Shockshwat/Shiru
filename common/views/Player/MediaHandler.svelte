@@ -55,10 +55,13 @@
   function handleMedia ({ media, episode, parseObject }) {
     if (media) {
       const ep = Number(episode || parseObject?.episode_number) || null
-      const streamingEpisode = media?.streamingEpisodes.find(episode => {
-        const match = episodeRx.exec(episode.title)
-        return match && Number(match[1]) === ep
-      })
+
+      // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
+      const res = await fetch('https://api.ani.zip/mappings?anilist_id=' + media?.id)
+      const { episodes, specialCount, episodeCount } = await res.json()
+      const needsValidation = !(!specialCount || (media?.episodes === episodeCount && episodes && episodes[Number(episode)]))
+      const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
+      const streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en)) ? { title: (`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en) } : streamingTitle
 
       const np = {
         media,
