@@ -1,10 +1,11 @@
 import { settings } from '@/modules/settings.js'
-import { sleep } from '../util.js'
-import { anilistClient } from '../anilist.js'
-import { anitomyscript } from '../anime.js'
+import { sleep } from '@/modules/util.js'
+import { anilistClient } from '@/modules/anilist.js'
+import { anitomyscript } from '@/modules/anime.js'
 import { client } from '@/modules/torrent.js'
 import { extensionsWorker } from '@/views/Settings/TorrentSettings.svelte'
 import { toast } from 'svelte-sonner'
+import AnimeResolver from '@/modules/animeresolver.js'
 import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:extensions')
@@ -29,7 +30,7 @@ video.remove()
 /** @typedef {import('@thaunknown/ani-resourced/sources/types.d.ts').Result} Result */
 
 /**
- * @param {{media: import('../al.js').Media, episode?: number, batch: boolean, movie: boolean, resolution: string}} opts
+ * @param {{media: import('@/modules/al.js').Media, episode?: number, batch: boolean, movie: boolean, resolution: string}} opts
  * @returns {Promise<(Result & { parseObject: import('anitomyscript').AnitomyResult })[]>}
  * **/
 export default async function getResultsFromExtensions ({ media, episode, batch, movie, resolution }) {
@@ -70,9 +71,7 @@ export default async function getResultsFromExtensions ({ media, episode, batch,
   }
 
   const deduped = dedupe(results)
-
   if (!deduped?.length) throw new Error('No results found. Try specifying a torrent manually.')
-
   const parseObjects = await anitomyscript(deduped.map(({ title }) => title))
   // @ts-ignore
   for (const i in parseObjects) deduped[i].parseObject = parseObjects[i]
@@ -110,7 +109,7 @@ async function updatePeerCounts (entries) {
   return entries
 }
 
-/** @param {import('../al.js').Media} media */
+/** @param {import('@/modules/al.js').Media} media */
 async function ALToAniDB (media) {
   const mappingsResponse = await fetch('https://api.ani.zip/mappings?anilist_id=' + media.id)
   const json = await mappingsResponse.json()
@@ -123,7 +122,7 @@ async function ALToAniDB (media) {
   return parentResponse.json()
 }
 
-/** @param {import('../al.js').Media} media */
+/** @param {import('@/modules/al.js').Media} media */
 function getParentForSpecial (media) {
   if (!['SPECIAL', 'OVA', 'ONA'].some(format => media.format === format)) return false
   const animeRelations = media.relations.edges.filter(({ node }) => node.type === 'ANIME')
@@ -137,7 +136,7 @@ function getRelation (list, type) {
 
 // TODO: https://anilist.co/anime/13055/
 /**
-  * @param {{media: import('../al.js').Media, episode: number}} param0
+  * @param {{media: import('@/modules/al.js').Media, episode: number}} param0
   * @param {{episodes: any, episodeCount: number, specialCount: number}} param1
   * */
 async function ALtoAniDBEpisode ({ media, episode }, { episodes, episodeCount, specialCount }) {
@@ -186,7 +185,7 @@ export function episodeByAirDate (alDate, episodes, episode) {
   })
 }
 
-/** @param {import('../al.js').Media} media */
+/** @param {import('@/modules/al.js').Media} media */
 function createTitles (media) {
   // group and de-duplicate
   const grouped = [...new Set(
@@ -225,7 +224,7 @@ function dedupe (entries) {
   for (const entry of entries) {
     if (deduped[entry.hash]) {
       const dupe = deduped[entry.hash]
-      dupe.title ??= entry.title
+      dupe.title ??= AnimeResolver.cleanFileName(entry.title)
       dupe.link ??= entry.link
       dupe.id ||= entry.id
       dupe.seeders ||= entry.seeders >= 30000 ? 0 : entry.seeders
@@ -236,6 +235,7 @@ function dedupe (entries) {
       dupe.date ||= entry.date
       dupe.type ??= entry.type
     } else {
+      entry.title = AnimeResolver.cleanFileName(entry.title)
       deduped[entry.hash] = entry
     }
   }
