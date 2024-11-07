@@ -74,7 +74,7 @@ export default class Discord {
   }
 
   loginRPC () {
-    this.discord.login({ clientId: '954855428355915797' }).catch(() => {
+    this.discord.login({ clientId: '1301772260780019742' }).catch(() => {
       setTimeout(() => this.loginRPC(), 5000).unref()
     })
   }

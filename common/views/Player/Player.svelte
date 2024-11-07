@@ -288,13 +288,15 @@
     muted = !muted
   }
   const handleVisibility = visibility => {
-    if (!video?.ended && $settings.playerPause && !pip) {
+    if ($settings.playerPause && !pip) {
       hidden = (visibility === 'hidden')
-      if (hidden) {
-        visibilityPaused = paused
-        paused = true
-      } else {
-        if (!visibilityPaused) paused = false
+      if (!video?.ended) {
+        if (hidden) {
+          visibilityPaused = paused
+          paused = true
+        } else {
+          if (!visibilityPaused) paused = false
+        }
       }
     }
   }
