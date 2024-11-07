@@ -305,11 +305,6 @@
 
   function toggleSubs() {
     search.hideSubs = !search.hideSubs
-    if (search.scheduleList) {
-      search.status = ''
-      search.season = ''
-      search.year = null
-    }
     form.dispatchEvent(new Event('input', { bubbles: true }))
   }
 
@@ -435,28 +430,30 @@
         {/each}
       </datalist>
     </div>
-    <div class='col-lg col-4 p-10 d-flex flex-column justify-content-end'>
-      <div class='pb-10 font-size-24 font-weight-semi-bold d-flex'>
-        <CalendarRange class='mr-10' size='3rem' />
-        <div>Season</div>
+    {#if !search.scheduleList}
+      <div class='col-lg col-4 p-10 d-flex flex-column justify-content-end'>
+        <div class='pb-10 font-size-24 font-weight-semi-bold d-flex'>
+          <CalendarRange class='mr-10' size='3rem' />
+          <div>Season</div>
+        </div>
+        <div class='input-group'>
+          <select class='form-control bg-dark-light border-right-dark' required bind:value={search.season} disabled={search.disableSearch}>
+            <option value selected>Any</option>
+            <option value='WINTER'>Winter</option>
+            <option value='SPRING'>Spring</option>
+            <option value='SUMMER'>Summer</option>
+            <option value='FALL'>Fall</option>
+          </select>
+          <datalist id='search-year'>
+            {#each Array(new Date().getFullYear() - 1940 + 2) as _, i}
+              {@const year = new Date().getFullYear() + 2 - i}
+              <option>{year}</option>
+            {/each}
+          </datalist>
+          <input type='number' inputmode='numeric' pattern='[0-9]*' placeholder='Any' min='1940' max='2100' list='search-year' class='bg-dark-light form-control' disabled={search.disableSearch} bind:value={search.year} />
+        </div>
       </div>
-      <div class='input-group'>
-        <select class='form-control bg-dark-light border-right-dark' required bind:value={search.season} disabled={search.disableSearch || (search.scheduleList && search.hideSubs)}>
-          <option value selected>Any</option>
-          <option value='WINTER'>Winter</option>
-          <option value='SPRING'>Spring</option>
-          <option value='SUMMER'>Summer</option>
-          <option value='FALL'>Fall</option>
-        </select>
-        <datalist id='search-year'>
-          {#each Array(new Date().getFullYear() - 1940 + 2) as _, i}
-            {@const year = new Date().getFullYear() + 2 - i}
-            <option>{year}</option>
-          {/each}
-        </datalist>
-        <input type='number' inputmode='numeric' pattern='[0-9]*' placeholder='Any' min='1940' max='2100' list='search-year' class='bg-dark-light form-control' disabled={search.disableSearch || (search.scheduleList && search.hideSubs)} bind:value={search.year} />
-      </div>
-    </div>
+    {/if}
     <div class='col p-10 d-flex flex-column justify-content-end'>
       <div class='pb-10 font-size-24 font-weight-semi-bold d-flex'>
         <Tv class='mr-10' size='3rem' />
@@ -473,52 +470,54 @@
         </select>
       </div>
     </div>
-    <div class='col p-10 d-flex flex-column justify-content-end'>
-      <div class='pb-10 font-size-24 font-weight-semi-bold d-flex'>
-        <MonitorPlay class='mr-10' size='3rem' />
-        <div>Status</div>
+    {#if !search.scheduleList}
+      <div class='col p-10 d-flex flex-column justify-content-end'>
+        <div class='pb-10 font-size-24 font-weight-semi-bold d-flex'>
+          <MonitorPlay class='mr-10' size='3rem' />
+          <div>Status</div>
+        </div>
+        <div class='input-group'>
+          <select class='form-control bg-dark-light' required bind:value={search.status} disabled={search.disableSearch}>
+            <option value selected>Any</option>
+            <option value='RELEASING'>Releasing</option>
+            <option value='FINISHED'>Finished</option>
+            <option value='NOT_YET_RELEASED'>Not Yet Released</option>
+            <option value='CANCELLED'>Cancelled</option>
+          </select>
+        </div>
       </div>
-      <div class='input-group'>
-        <select class='form-control bg-dark-light' required bind:value={search.status} disabled={search.disableSearch || (search.scheduleList && search.hideSubs)}>
-          <option value selected>Any</option>
-          <option value='RELEASING'>Releasing</option>
-          <option value='FINISHED'>Finished</option>
-          <option value='NOT_YET_RELEASED'>Not Yet Released</option>
-          <option value='CANCELLED'>Cancelled</option>
-        </select>
+      <div class='col p-10 d-flex flex-column justify-content-end'>
+        <div class='pb-10 font-size-24 font-weight-semi-bold d-flex'>
+          <ArrowDownWideNarrow class='mr-10' size='3rem' />
+          <div>Sort</div>
+        </div>
+        <div class='input-group'>
+          <select class='form-control bg-dark-light' required bind:value={search.sort} on:change={clearTags} disabled={search.disableSearch}>
+            <option value selected>Trending</option>
+            <option value='POPULARITY_DESC'>Popularity</option>
+            <option value='TITLE_ROMAJI'>Title</option>
+            <option value='SCORE_DESC'>Score</option>
+            <option value='START_DATE_DESC'>Release Date</option>
+            <option value='UPDATED_AT_DESC'>Updated Date</option>
+            {#if search.userList && search.title && !search.missedList}
+              {#if search.completedList}
+                <option value='FINISHED_ON_DESC'>Completed Date</option>
+              {/if}
+              {#if !search.planningList}
+                <option value='STARTED_ON_DESC'>Start Date</option>
+              {/if}
+              <option value='UPDATED_TIME_DESC'>Last Updated</option>
+              {#if !search.completedList && !search.planningList}
+                <option value='PROGRESS_DESC'>Your Progress</option>
+              {/if}
+              {#if search.completedList || search.droppedList}
+                <option value='USER_SCORE_DESC'>Your Score</option>
+              {/if}
+            {/if}
+          </select>
+        </div>
       </div>
-    </div>
-    <div class='col p-10 d-flex flex-column justify-content-end'>
-      <div class='pb-10 font-size-24 font-weight-semi-bold d-flex'>
-        <ArrowDownWideNarrow class='mr-10' size='3rem' />
-        <div>Sort</div>
-      </div>
-      <div class='input-group'>
-        <select class='form-control bg-dark-light' required bind:value={search.sort} on:change={clearTags} disabled={search.disableSearch}>
-          <option value selected>Trending</option>
-          <option value='POPULARITY_DESC'>Popularity</option>
-          <option value='TITLE_ROMAJI'>Title</option>
-          <option value='SCORE_DESC'>Score</option>
-          <option value='START_DATE_DESC'>Release Date</option>
-          <option value='UPDATED_AT_DESC'>Updated Date</option>
-          {#if search.userList && search.title && !search.missedList}
-            {#if search.completedList}
-              <option value='FINISHED_ON_DESC'>Completed Date</option>
-            {/if}
-            {#if !search.planningList}
-              <option value='STARTED_ON_DESC'>Start Date</option>
-            {/if}
-            <option value='UPDATED_TIME_DESC'>Last Updated</option>
-            {#if !search.completedList && !search.planningList}
-              <option value='PROGRESS_DESC'>Your Progress</option>
-            {/if}
-            {#if search.completedList || search.droppedList}
-              <option value='USER_SCORE_DESC'>Your Score</option>
-            {/if}
-          {/if}
-        </select>
-      </div>
-    </div>
+    {/if}
     <div class='col-auto p-10 d-flex'>
       <div class='align-self-end'>
         <button
@@ -549,16 +548,18 @@
         </button>
       </div>
     </div>
-    <input type='file' class='d-none' id='search-image' accept='image/*' on:input|preventDefault|stopPropagation={handleFile} />
-    <div class='col-auto p-10 d-flex'>
-      <div class='align-self-end'>
-        <button class='btn btn-square bg-dark-light px-5 align-self-end border-0' type='button' title='Image Search'>
-          <label for='search-image' class='pointer mb-0 d-flex align-items-center justify-content-center'>
-            <Image size='1.625rem' />
-          </label>
-        </button>
+    {#if !search.scheduleList}
+      <input type='file' class='d-none' id='search-image' accept='image/*' on:input|preventDefault|stopPropagation={handleFile} />
+      <div class='col-auto p-10 d-flex'>
+        <div class='align-self-end'>
+          <button class='btn btn-square bg-dark-light px-5 align-self-end border-0' type='button' title='Image Search'>
+            <label for='search-image' class='pointer mb-0 d-flex align-items-center justify-content-center'>
+              <Image size='1.625rem' />
+            </label>
+          </button>
+        </div>
       </div>
-    </div>
+    {/if}
     <div class='col-auto p-10 d-flex'>
       <div class='align-self-end'>
         <button class='btn btn-square bg-dark-light d-flex align-items-center justify-content-center px-5 align-self-end border-0' type='button' use:click={searchClear} disabled={sanitisedSearch.length <= 0} class:text-danger={!!sanitisedSearch?.length || search.disableSearch || search.clearNext}>
@@ -584,10 +585,12 @@
             {@const matchingBadges = filteredBadges.filter(badge => badge.key === key)}
             {#each matchingBadges as badge}
               {#if badge.key === key && (badge.key !== 'hideStatus' && (search.userList || badge.key !== 'title')) }
-                <div class='badge bg-light border-0 py-5 px-10 text-capitalize mr-20 text-white text-nowrap d-flex align-items-center'>
+                <div class='badge bg-light border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center'>
                   <svelte:component this={badgeDisplayNames[badge.key]} class='mr-5' size='1.8rem' />
-                  <div class='font-size-12'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</div>
-                  <button on:click={() => removeBadge(badge)} class='pointer bg-transparent border-0 text-white font-size-12 position-relative ml-10 pt-0' title='Remove Filter' type='button'>x</button>
+                  <div class='font-size-12 mr-5'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</div>
+                  {#if !search.scheduleList || (badge.key !== 'season' && badge.key !== 'year')}
+                    <button on:click={() => removeBadge(badge)} class='pointer bg-transparent border-0 text-white font-size-12 position-relative ml-5 pr-0 pt-0' title='Remove Filter' type='button'>x</button>
+                  {/if}
                 </div>
               {/if}
             {/each}
