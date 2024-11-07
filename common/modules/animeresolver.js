@@ -71,7 +71,15 @@ export default new class AnimeResolver {
     if (!parseObjects.length) return
     const titleObjects = parseObjects.map(obj => {
       const key = this.getCacheKeyForTitle(obj)
-      const titleObjects = this.alternativeTitles(obj.anime_title).map(title => ({ title, year: obj.anime_year, key, isAdult: false }))
+      const titles = this.alternativeTitles(obj.anime_title)
+      const titleObjects = titles.flatMap(title => {
+        const titleObject = { title, key, isAdult: false }
+        const titleVariants = [{ ...titleObject }]
+        if (obj.anime_year) {
+          titleVariants.push({ ...titleObject, year: obj.anime_year })
+        }
+        return titleVariants
+      })
       titleObjects.push({ ...titleObjects.at(-1), isAdult: true })
       return titleObjects
     }).flat()
