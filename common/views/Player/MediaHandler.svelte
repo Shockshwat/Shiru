@@ -136,7 +136,7 @@
     const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => file.name))
 
     videoFiles.map(file => {
-      file.media = resolved.find(({ parseObject }) => file.name.includes(parseObject.file_name))
+      file.media = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(file.name).includes(parseObject.file_name))
       return file
     })
 

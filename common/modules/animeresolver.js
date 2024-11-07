@@ -113,6 +113,36 @@ export default new class AnimeResolver {
     return parseObjs
   }
 
+  /**
+   * Fixes issues with awful file names from groups like ToonsHub.
+   * Because.They.Cant.Take.Two.Seconds.To.Design.A.Better.Name.Scheme.
+   *
+   * @param fileName Array or fileNames or a single fileName to be cleansed.
+   * @returns {*}
+   */
+  cleanFileName(fileName) {
+    const cleanName = (name) => {
+      // Preserve specific patterns
+      name = name
+          .replace(/\b([A-Za-z]{3}\d)\.(\d)\b/g, '<<AUDIO_$1_$2>>')     // For AAC2.0, DDP2.0, etc.
+          .replace(/\b(H|X)\.(\d{3})\b/g, '<<RES_$1_$2>>')              // For H.264, H.265, X.265, etc.
+          .replace(/\b5\.1\b/g, '<<CHANNEL_5_1>>')                      // For 5.1 channels
+          .replace(/\bVol\.(\d+)\b/g, '<<VOL_$1>>')                     // For Vol. followed by any digits
+
+      // Remove file extensions and replace all remaining periods with spaces
+      name = name.replace(/\.(mkv|mp4|avi|mov|wmv|flv|webm|m4v|mpeg|mpg|3gp|ogg|ogv)$/i, '').replace(/\./g, ' ')
+
+      // Restore preserved patterns by converting markers back
+      name = name
+          .replace(/<<AUDIO_([A-Za-z]{3}\d)_(\d)>>/g, '$1.$2')          // For AAC2.0, DDP2.0, etc.
+          .replace(/<<RES_([HX])_(\d{3})>>/g, '$1.$2')                  // For H.264, H.265, X.265, etc.
+          .replace(/<<CHANNEL_5_1>>/g, '5.1')                           // For 5.1 channels
+          .replace(/<<VOL_(\d+)>>/g, 'Vol.$1')                          // For Vol. followed by any digits
+      return name
+    }
+    return typeof fileName === 'string' ? cleanName(fileName) : fileName?.map(name => cleanName(name))
+  }
+
   // TODO: anidb aka true episodes need to be mapped to anilist episodes a bit better, shit like mushoku offsets caused by episode 0's in between seasons
   /**
    * @param {string | string[]} fileName
@@ -120,7 +150,7 @@ export default new class AnimeResolver {
    */
   async resolveFileAnime (fileName) {
     if (!fileName) return [{}]
-    const parseObjs = await this.findAndCacheTitle(fileName)
+    const parseObjs = await this.findAndCacheTitle(this.cleanFileName(fileName))
 
     const fileAnimes = []
     for (const parseObj of parseObjs) {
