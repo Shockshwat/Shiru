@@ -43,6 +43,7 @@
     "cordova-plugin-navigationbar": "^1.0.31",
     "cordova-plugin-pip": "^0.0.2",
     "cordova-plugin-screen-orientation": "^3.0.4",
-    "es6-promise-plugin": "^4.2.2"
+    "es6-promise-plugin": "^4.2.2",
+    "fsctl": "^2.0.0"
   }
 }
