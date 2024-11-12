@@ -10,7 +10,7 @@
     "comlink": "^4.4.1",
     "jassub": "^1.7.17",
     "js-levenshtein": "^1.1.6",
-    "lucide-svelte": "^0.429.0",
+    "lucide-svelte": "^0.455.0",
     "p2pt": "github:ThaUnknown/p2pt#modernise",
     "perfect-seekbar": "^1.1.0",
     "quartermoon": "^1.2.3",
