@@ -6,10 +6,9 @@ import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:settings')
 
-export let profiles = writable(JSON.parse(localStorage.getItem('profiles')) || [])
 /** @type {{viewer: import('./al').Query<{Viewer: import('./al').Viewer}>, token: string} | null} */
 export let alToken = JSON.parse(localStorage.getItem('ALviewer')) || null
-/** @type {{viewer: import('./mal').Query<{Viewer: import('./mal').Viewer}>, token: string} | null} */
+/** @type {{viewer: import('./mal').Query<{Viewer: import('./mal').Viewer}>, token: string, refresh: string, refresh_in: number, reauth: boolean} | null} */
 export let malToken = JSON.parse(localStorage.getItem('MALviewer')) || null
 
 let storedSettings = { ...defaults }
@@ -78,14 +77,14 @@ window.addEventListener('paste', ({ clipboardData }) => {
 })
 IPC.on('altoken', handleToken)
 async function handleToken (token) {
-  const { anilistClient} = await import('./anilist.js')
+  const { anilistClient } = await import('./anilist.js')
   const viewer = await anilistClient.viewer({token})
   if (!viewer.data?.Viewer) {
     toast.error('Failed to sign in with AniList. Please try again.', {description: JSON.stringify(viewer)})
     debug(`Failed to sign in with AniList: ${JSON.stringify(viewer)}`)
     return
   }
-  swapProfiles({token, viewer})
+  swapProfiles({token, viewer}, true)
   location.reload()
 }
 
@@ -123,13 +122,13 @@ async function handleMalToken (code, state) {
   } else if (!viewer?.data?.Viewer?.picture) {
     viewer.data.Viewer.picture = 'https://cdn.myanimelist.net/images/kaomoji_mal_white.png' // set default image if user doesn't have an image.
   }
-  swapProfiles({ token: oauth.access_token, refresh: oauth.refresh_token, viewer })
-  location.reload()
+  swapProfiles({ token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: Math.floor((Date.now() + 14 * 24 * 60 * 60 * 1000) / 1000), reauth: false, viewer }, true)
 }
 
 export async function refreshMalToken (token) {
   const { clientID } = await import('./myanimelist.js')
-  const refresh = malToken?.token === token ? malToken.refresh : get(profiles).find(profile => profile.token === token)?.refresh
+  const currentProfile = malToken?.token === token
+  const refresh = currentProfile ? malToken.refresh : get(profiles).find(profile => profile.token === token)?.refresh
   debug(`Attempting to refresh authorization token ${token} with the refresh token ${refresh}`)
   let response
   if (refresh && refresh.length > 0) {
@@ -146,50 +145,52 @@ export async function refreshMalToken (token) {
     })
   }
   if (!refresh || refresh.length <= 0 || !response?.ok) {
-    toast.error('Failed to re-authenticate with MyAnimeList. You will need to log in again.', { description: JSON.stringify(response?.status || response) })
-    debug(`Failed to refresh MyAnimeList User Token ${ !refresh || refresh.length <= 0 ? 'as the refresh token could not be fetched!' : ': ' + JSON.stringify(response)}`)
-    if (malToken?.token === token) {
-      swapProfiles(null)
-      location.reload()
+    if (currentProfile && !malToken.reauth) {
+      toast.error('Failed to re-authenticate with MyAnimeList. You will need to log in again.', {description: JSON.stringify(response?.status || response)})
+    }
+    debug(`Failed to refresh MyAnimeList User Token ${ !refresh || refresh.length <= 0 ? 'as the refresh token could not be fetched!' : 'the refresh token has likely expired: ' + JSON.stringify(response)}`)
+    if (currentProfile) {
+      malToken.reauth = true
+      localStorage.setItem('MALviewer', JSON.stringify(malToken))
     } else {
-      profiles.update(profiles =>
-          profiles.filter(profile => profile.token !== token)
-      )
+      profiles.update(profiles => profiles.map(profile => profile.token === token ? { ...profile, reauth: true } : profile))
     }
     return
   }
   const oauth = await response.json()
+  const { malClient } = await import('./myanimelist.js')
+  const viewer = await malClient.viewer(oauth.access_token)
+  const refresh_in = Math.floor((Date.now() + 14 * 24 * 60 * 60 * 1000) / 1000)
   if (malToken?.token === token) {
-    const viewer = malToken.viewer
-    malToken = { token: oauth.access_token, refresh: oauth.refresh_token, viewer: viewer }
-    localStorage.setItem('MALviewer', JSON.stringify({ token: oauth.access_token, refresh: oauth.refresh_token, viewer }))
+    const profile = copyConstants({ viewer: viewer }, malToken)
+    malToken = { viewer: profile.viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }
+    localStorage.setItem('MALviewer', JSON.stringify({ viewer: profile.viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }))
   } else {
     profiles.update(profiles =>
         profiles.map(profile => {
           if (profile.token === token) {
-            return { ...profile, token: oauth.access_token, refresh: oauth.refresh_token }
+            return { viewer: copyConstants({ viewer: viewer }, profile).viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }
           }
           return profile
         })
     )
   }
+  debug(`Successfully refreshed authorization token, updated to token ${oauth.access_token} with the refresh token ${oauth.refresh_token}`)
   return oauth
 }
 
-export function swapProfiles(profile) {
+export function swapProfiles(profile, newProfile) {
   const currentProfile = isAuthorized()
-  const newProfile = profile !== null && !get(profiles).some(p => p.viewer?.data?.Viewer?.id === currentProfile?.viewer?.data?.Viewer?.id)
-
-  if (currentProfile) {
+  const swapProfile = profile !== null && !get(profiles).some(p => (p.viewer?.data?.Viewer?.id === currentProfile?.viewer?.data?.Viewer?.id))
+  if (currentProfile && swapProfile && !newProfile) {
     const torrent = localStorage.getItem('torrent')
     const lastFinished = localStorage.getItem('lastFinished')
     const settings = localStorage.getItem('settings')
     if (torrent) currentProfile.viewer.data.Viewer.torrent = torrent
     if (lastFinished) currentProfile.viewer.data.Viewer.lastFinished = lastFinished
     if (settings) currentProfile.viewer.data.Viewer.settings = settings
-    if (newProfile) profiles.update(currentProfiles => [currentProfile, ...currentProfiles])
+    profiles.update(currentProfiles => [currentProfile, ...currentProfiles])
   }
-  localStorage.removeItem(alToken ? 'ALviewer' : 'MALviewer')
 
   if (profile === null && get(profiles).length > 0) {
     let firstProfile
@@ -199,11 +200,26 @@ export function swapProfiles(profile) {
         return profiles.slice(1)
     })
   } else if (profile !== null) {
-    setViewer(profile)
-    profiles.update(profiles =>
-        profiles.filter(p => p.viewer?.data?.Viewer?.id !== profile.viewer?.data?.Viewer?.id)
-    )
+    if (profile?.viewer?.data?.Viewer?.id === currentProfile?.viewer?.data?.Viewer?.id && newProfile) {
+      localStorage.setItem(alToken ? 'ALviewer' : 'MALviewer', JSON.stringify(copyConstants(profile, (alToken ? alToken : malToken))))
+      location.reload()
+    } else if (get(profiles).some(p => p.viewer?.data?.Viewer?.id === profile?.viewer?.data?.Viewer?.id && newProfile)) {
+      profiles.update(profiles => {
+        return profiles.map(p => {
+          if (p.viewer?.data?.Viewer?.id === profile?.viewer?.data?.Viewer?.id) {
+            p = copyConstants(profile, p)
+          }
+          return p
+        })
+      })
+    } else {
+      setViewer(profile)
+      profiles.update(profiles =>
+          profiles.filter(p => p.viewer?.data?.Viewer?.id !== profile.viewer?.data?.Viewer?.id)
+      )
+    }
   } else {
+    localStorage.removeItem(alToken ? 'ALviewer' : 'MALviewer')
     alToken = null
     malToken = null
   }
@@ -226,6 +242,7 @@ function setViewer (profile) {
   } else if (isAuthorized()) {
     localStorage.setItem('settings', writable({ ...defaults, ...scopedDefaults}))
   }
+  localStorage.removeItem(alToken ? 'ALviewer' : 'MALviewer')
   if (profile?.viewer?.data?.Viewer?.avatar) {
     alToken = profile
     malToken = null
@@ -234,4 +251,12 @@ function setViewer (profile) {
     alToken = null
   }
   localStorage.setItem(profile.viewer?.data?.Viewer?.avatar ? 'ALviewer' : 'MALviewer', JSON.stringify(profile))
+}
+
+function copyConstants(newProfile, oldProfile) {
+  newProfile.viewer.data.Viewer.sync = oldProfile.viewer.data.Viewer.sync
+  newProfile.viewer.data.Viewer.settings = oldProfile.viewer.data.Viewer.settings
+  newProfile.viewer.data.Viewer.torrent = oldProfile.viewer.data.Viewer.torrent
+  newProfile.viewer.data.Viewer.lastFinished = oldProfile.viewer.data.Viewer.lastFinished
+  return newProfile
 }

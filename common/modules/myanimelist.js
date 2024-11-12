@@ -96,7 +96,7 @@ class MALClient {
     const options = {
       method: `${query.type}`,
       headers: {
-        'Authorization': `Bearer ${query.token ? query.token : this.userID.token}`,
+        'Authorization': `Bearer ${query.eToken ? query.eToken : query.token ? query.token : this.userID.token}`,
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }
@@ -106,6 +106,8 @@ class MALClient {
     return this.handleRequest(query, options)
   }
 
+  failedRefresh = []
+
   /**
    * @param {Record<string, any>} query
    * @param {Record<string, any>} options
@@ -114,7 +116,17 @@ class MALClient {
   handleRequest = this.limiter.wrap(async (query, options) => {
     await this.rateLimitPromise
     let res = {}
+    if (!query.eToken && (this.failedRefresh.includes(query.token ? query.token : this.userID.token) || (!query.token && this.userID.reauth))) return {}
     try {
+      if (!query.eToken && (Math.floor(Date.now() / 1000) >= ((query.token ? query.refresh_in : this.userID.refresh_in) || 0))) {
+        const oauth = await this.refreshToken(query)
+        if (oauth) {
+          options.headers = {
+            'Authorization': `Bearer ${oauth.access_token}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        } else return {}
+      }
       res = await fetch(`https://api.myanimelist.net/v2/${query.path}`, options)
     } catch (e) {
       if (!res || res.status !== 404) throw e
@@ -138,18 +150,14 @@ class MALClient {
               break
             case 'invalid_token':
               code = 401
-              const oauth = await refreshMalToken(query.token ? query.token : this.userID.token) // refresh authorization token as it typically expires every 31 days.
+              const oauth = await this.refreshToken(query)
               if (oauth) {
-                if (!query.token) {
-                  this.userID = malToken
-                }
                 options.headers = {
                   'Authorization': `Bearer ${oauth.access_token}`,
                   'Content-Type': 'application/x-www-form-urlencoded'
                 }
                 return this.handleRequest(query, options)
-              }
-              break
+              } else return {}
             case 'invalid_content':
               code = 422
               break
@@ -164,6 +172,18 @@ class MALClient {
     }
     return json
   })
+
+  async refreshToken(query) {
+    const oauth = await refreshMalToken(query.token ? query.token : this.userID.token) // refresh authorization token as it typically expires every 31 days. Refresh token also expires every 31 days, so we refresh every two weeks.
+    if (oauth) {
+      if (!query.token) {
+        this.userID = malToken
+      }
+      return oauth
+    }
+    this.failedRefresh.push(query.token ? query.token : this.userID.token)
+    return oauth
+  }
 
   async malEntry (media, variables) {
     variables.idMal = media.idMal
@@ -186,34 +206,31 @@ class MALClient {
       variables.originalSort = variables.sort
       variables.sort = 'list_updated_at'
     }
-
     while (hasNextPage) {
       const query = {
         type: 'GET',
         path: `users/@me/animelist?fields=${queryFields}&nsfw=true&limit=${limit}&offset=${offset}&sort=${variables.sort}`
       }
-
       const res = await this.malRequest(query)
-      allMediaList = allMediaList.concat(res?.data)
+      allMediaList = res?.data ? allMediaList.concat(res.data) : []
 
-      if (res?.data?.length < limit) {
+      if ((res?.data?.length < limit) || !res?.data) {
         hasNextPage = false
       } else {
         offset += limit
       }
     }
-
     // Custom sorting based on original variables.sort value
     if (variables.originalSort === 'list_start_date_nan') {
-      allMediaList.sort((a, b) => {
+      allMediaList?.sort((a, b) => {
         return new Date(b.node.my_list_status.start_date) - new Date(a.node.my_list_status.start_date)
       })
     } else if (variables.originalSort === 'list_finish_date_nan') {
-      allMediaList.sort((a, b) => {
+      allMediaList?.sort((a, b) => {
         return new Date(b.node.my_list_status.finish_date) - new Date(a.node.my_list_status.finish_date)
       })
     } else if (variables.originalSort === 'list_progress_nan') {
-      allMediaList.sort((a, b) => {
+      allMediaList?.sort((a, b) => {
         return b.node.my_list_status.num_episodes_watched - a.node.my_list_status.num_episodes_watched
       })
     }
@@ -231,7 +248,7 @@ class MALClient {
     const query = {
       type: 'GET',
       path: 'users/@me',
-      token
+      eToken: token
     }
     return {
       data: {
@@ -245,7 +262,8 @@ class MALClient {
     const query = {
       type: 'PUT',
       path: `anime/${variables.idMal}/my_list_status`,
-      token: variables.token
+      token: variables.token,
+      refresh_in: variables.refresh_in
     }
     const padNumber = (num) => num !== undefined && num !== null ? String(num).padStart(2, '0') : null
     const start_date = variables.startedAt?.year && variables.startedAt.month && variables.startedAt.day ? `${variables.startedAt.year}-${padNumber(variables.startedAt.month)}-${padNumber(variables.startedAt.day)}` : null
@@ -287,7 +305,8 @@ class MALClient {
     const query = {
       type: 'DELETE',
       path: `anime/${variables.idMal}/my_list_status`,
-      token: variables.token
+      token: variables.token,
+      refresh_in: variables.refresh_in
     }
     const res = await this.malRequest(query)
     if (!variables.token) this.userLists.value = this.getUserLists({ sort: 'list_updated_at' })
