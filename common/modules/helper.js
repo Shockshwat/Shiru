@@ -179,7 +179,7 @@ export default class Helper {
    * This exists to fill in any queried AniList media with the user list media data from alternate authorizations.
    */
   static async fillEntry(media) {
-    if (this.isMalAuth()) {
+    if (this.isMalAuth() && !malToken.reauth) {
       debug(`Filling MyAnimeList entry data for ${media?.id} (AniList)`)
       const userLists = await malClient.userLists.value
       const malEntry = userLists.data.MediaList.find(({ node }) => node.id === media.idMal)
@@ -214,78 +214,82 @@ export default class Helper {
     // check if values exist
     if (filemedia.media && this.isAuthorized()) {
       const { media, failed } = filemedia
-      debug(`Checking entry for ${media?.title?.userPreferred}`)
+      const cachedMedia = anilistClient.mediaCache.value[media?.id] || media
+      debug(`Checking entry for ${cachedMedia?.title?.userPreferred}`)
 
-      debug(`Media viability: ${media?.status}, Is from failed resolve: ${failed}`)
+      debug(`Media viability: ${cachedMedia?.status}, Is from failed resolve: ${failed}`)
       if (failed) return
-      if (media.status !== 'FINISHED' && media.status !== 'RELEASING') return
+      if (cachedMedia.status !== 'FINISHED' && cachedMedia.status !== 'RELEASING') return
 
       // check if media can even be watched, ex: it was resolved incorrectly
       // some anime/OVA's can have a single episode, or some movies can have multiple episodes
-      const singleEpisode = ((!media.episodes && (Number(filemedia.episode) === 1 || isNaN(Number(filemedia.episode)))) || (media.format === 'MOVIE' && media.episodes === 1)) && 1 // movie check
+      const singleEpisode = ((!cachedMedia.episodes && (Number(filemedia.episode) === 1 || isNaN(Number(filemedia.episode)))) || (cachedMedia.format === 'MOVIE' && cachedMedia.episodes === 1)) && 1 // movie check
       const videoEpisode = Number(filemedia.episode) || singleEpisode
-      const mediaEpisode = media.episodes || media.nextAiringEpisode?.episode || singleEpisode
+      const mediaEpisode = cachedMedia.episodes || cachedMedia.nextAiringEpisode?.episode || singleEpisode
 
       debug(`Episode viability: ${videoEpisode}, ${mediaEpisode}, ${singleEpisode}`)
       if (!videoEpisode || !mediaEpisode) return
       // check episode range, safety check if `failed` didn't catch this
       if (videoEpisode > mediaEpisode) return
 
-      const lists = media.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || []
+      const lists = cachedMedia.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || []
 
-      const status = media.mediaListEntry?.status === 'REPEATING' ? 'REPEATING' : 'CURRENT'
-      const progress = media.mediaListEntry?.progress
+      const status = cachedMedia.mediaListEntry?.status === 'REPEATING' ? 'REPEATING' : 'CURRENT'
+      const progress = cachedMedia.mediaListEntry?.progress
 
       debug(`User's progress: ${progress}, Media's progress: ${videoEpisode}`)
       // check user's own watch progress
       if (progress > videoEpisode) return
       if (progress === videoEpisode && videoEpisode !== mediaEpisode && !singleEpisode) return
 
-      debug(`Updating entry for ${media.title.userPreferred}`)
+      debug(`Updating entry for ${cachedMedia.title.userPreferred}`)
       const variables = {
-        repeat: media.mediaListEntry?.repeat || 0,
-        id: media.id,
+        repeat: cachedMedia.mediaListEntry?.repeat || 0,
+        id: cachedMedia.id,
         status,
-        score: (media.mediaListEntry?.score ? media.mediaListEntry?.score : 0),
+        score: (cachedMedia.mediaListEntry?.score ? (this.isAniAuth() ? (cachedMedia.mediaListEntry?.score * 10) : cachedMedia.mediaListEntry?.score) : 0),
         episode: videoEpisode,
         lists
       }
       if (videoEpisode === mediaEpisode) {
         variables.status = 'COMPLETED'
-        if (media.mediaListEntry?.status === 'REPEATING') variables.repeat = media.mediaListEntry.repeat + 1
+        if (cachedMedia.mediaListEntry?.status === 'REPEATING') variables.repeat = cachedMedia.mediaListEntry.repeat + 1
       }
 
-      Object.assign(variables, this.getFuzzyDate(media, status))
-      if (media.mediaListEntry?.status !== variables.status || media.mediaListEntry?.progress !== variables.episode || media.mediaListEntry?.score !== variables.score || media.mediaListEntry?.repeat !== variables.repeat) {
+      Object.assign(variables, this.getFuzzyDate(cachedMedia, status))
+      if (cachedMedia.mediaListEntry?.status !== variables.status || cachedMedia.mediaListEntry?.progress !== variables.episode || cachedMedia.mediaListEntry?.score !== (this.isAniAuth() ? (variables.score / 10) : variables.score) || cachedMedia.mediaListEntry?.repeat !== variables.repeat) {
         let res
-        const description = `Title: ${anilistClient.title(media)}\nStatus: ${this.statusName[variables.status]}\nEpisode: ${videoEpisode} / ${media.episodes ? media.episodes : '?'}`
+        const description = `Title: ${anilistClient.title(cachedMedia)}\nStatus: ${this.statusName[variables.status]}\nEpisode: ${videoEpisode} / ${cachedMedia.episodes ? cachedMedia.episodes : '?'}${variables.score !== 0 ? `\nYour Score: ${this.isAniAuth() ? (variables.score / 10) : variables.score}` : ''}`
         if (this.isAniAuth()) {
           res = await anilistClient.alEntry(lists, variables)
         } else if (this.isMalAuth()) {
-          res = await malClient.malEntry(media, variables)
+          res = await malClient.malEntry(cachedMedia, variables)
         }
         this.listToast(res, description, false)
 
-        if (this.getUser().sync) { // handle profile entry syncing
-          const mediaId = media.id
+        const mainSync = this.getUser().sync
+        if (Array.isArray(mainSync) && mainSync.length > 0) { // handle profile entry syncing
+          const mediaId = cachedMedia.id
           for (const profile of get(profiles)) {
-            if (profile.viewer?.data?.Viewer.sync) {
+            if (mainSync.includes(profile?.viewer?.data?.Viewer?.id)) {
               let res
               if (profile.viewer?.data?.Viewer?.avatar) {
+                variables.score = (cachedMedia.mediaListEntry?.score ? (cachedMedia.mediaListEntry?.score * 10) : 0)
                 const currentLists = (await anilistClient.getUserLists({
                   userID: profile.viewer.data.Viewer.id,
                   token: profile.token
-                }))?.data?.MediaListCollection?.lists?.flatMap(list => list.entries).find(({media}) => media.id === mediaId)?.media?.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || []
+                }))?.data?.MediaListCollection?.lists?.flatMap(list => list.entries).find(({cachedMedia}) => cachedMedia.id === mediaId)?.media?.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || []
                 res = await anilistClient.alEntry(currentLists, {...variables, token: profile.token})
               } else {
-                res = await malClient.malEntry(media, {...variables, token: profile.token})
+                variables.score = (cachedMedia.mediaListEntry?.score ? cachedMedia.mediaListEntry?.score : 0)
+                res = await malClient.malEntry(cachedMedia, {...variables, token: profile.token, refresh_in: profile.refresh_in})
               }
               this.listToast(res, description, profile)
             }
           }
         }
       } else {
-        debug(`No entry changes detected for ${media.title.userPreferred}`)
+        debug(`No entry changes detected for ${cachedMedia.title.userPreferred}`)
       }
     }
   }
@@ -331,7 +335,7 @@ export default class Helper {
           (!variables.year || variables.year === node.start_season?.year) &&
           (!variables.format || (variables.format !== 'TV_SHORT' && variables.format === node.media_type.toUpperCase()) || (variables.format === 'TV_SHORT' && node.average_episode_duration < 1200)) &&
           (!variables.status || variables.status === 'CANCELLED' || variables.status === this.airingMap(node.status))) {
-          // api does provide airing episode or tags, additionally genres are inaccurate and tags do not exist.
+          // api does not provide airing episode or tags, additionally genres are inaccurate and tags do not exist.
           return true
         }
       }).map(({ node }) => node.id)

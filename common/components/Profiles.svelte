@@ -6,7 +6,7 @@
   import { clientID } from "@/modules/myanimelist.js"
   import { click } from '@/modules/click.js'
   import { toast } from 'svelte-sonner'
-  import { LogOut, Plus, X } from 'lucide-svelte'
+  import { ClockAlert, LogOut, Plus, X } from 'lucide-svelte'
   import IPC from "@/modules/ipc.js"
 
   export const profileView = writable(false)
@@ -39,19 +39,14 @@
 
   function toggleSync(profile) {
     const mainProfile = get(currentProfile)
-    if (profile.viewer.data.Viewer.id === mainProfile.viewer.data.Viewer.id) {
-      mainProfile.viewer.data.Viewer.sync = !mainProfile.viewer.data.Viewer.sync
-      localStorage.setItem(isAniProfile(mainProfile) ? 'ALviewer' : 'MALviewer', JSON.stringify(mainProfile))
-    } else {
-      profiles.update(profiles => {
-        return profiles.map(p => {
-          if (p.viewer.data.Viewer.id === profile.viewer.data.Viewer.id) {
-            p.viewer.data.Viewer.sync = !p.viewer.data.Viewer.sync
-          }
-          return p
-        })
-      })
-    }
+    let syncList = Array.isArray(mainProfile.viewer.data.Viewer.sync) ? mainProfile.viewer.data.Viewer.sync : []
+
+    const profileID = profile.viewer.data.Viewer.id
+    if (syncList.includes(profileID)) syncList = syncList.filter(id => id !== profileID)
+    else syncList.push(profileID)
+
+    mainProfile.viewer.data.Viewer.sync = syncList
+    localStorage.setItem(isAniProfile(mainProfile) ? 'ALviewer' : 'MALviewer', JSON.stringify(mainProfile))
   }
 
   function confirmAnilist () {
@@ -115,18 +110,25 @@
         {/if}
         <div class='d-flex flex-column align-items-start'>
           {#each $profiles as profile}
-            <button type='button' class='profile-item box text-left pointer border-0 d-flex align-items-center justify-content-between position-relative flex-wrap' on:click={() => switchProfile(profile)}>
+            <button type='button' class='profile-item {profile.reauth ? `authenticate` : ``} box text-left pointer border-0 d-flex align-items-center justify-content-between position-relative flex-wrap' on:click={() => switchProfile(profile)}>
               <div class='d-flex align-items-center flex-wrap'>
                 <img class='h-50 ml-10 mt-5 mb-5 mr-10 rounded-circle bg-transparent' src={profile.viewer.data.Viewer.avatar?.large || profile.viewer.data.Viewer.avatar?.medium || profile.viewer.data.Viewer.picture} alt={profile.viewer.data.Viewer.name}>
                 <img class='ml-5 auth-icon rounded-circle' src={isAniProfile(profile) ? './anilist_icon.png' : './myanimelist_icon.png'} alt={isAniProfile(profile) ? 'Logged in with AniList' : 'Logged in with MyAnimeList'} title={isAniProfile(profile) ? 'Logged in with AniList' : 'Logged in with MyAnimeList'}>
                 <p class='text-wrap'>{profile.viewer.data.Viewer.name}</p>
               </div>
               <div class='controls d-flex align-items-center flex-wrap ml-10'>
-                <button type='button' class='custom-switch bg-transparent border-0' title='Sync List Entries' on:click|stopPropagation>
-                  <input type='checkbox' id='sync-{profile.viewer.data.Viewer.id}' bind:checked={profile.viewer.data.Viewer.sync} on:click={() => toggleSync(profile)} />
-                  <label for='sync-{profile.viewer.data.Viewer.id}'><br/></label>
-                </button>
-                <button type='button' class='button logout pt-5 pb-5 pl-5 pr-5 bg-transparent border-0 d-flex align-items-center justify-content-center' title='Logout' on:click|stopPropagation={() => dropProfile(profile)}>
+                {#if !profile.reauth}
+                  {@const isSync = Array.isArray($currentProfile?.viewer?.data?.Viewer?.sync) && $currentProfile.viewer.data.Viewer.sync.includes(profile?.viewer?.data?.Viewer?.id)}
+                  <button type='button' class='custom-switch bg-transparent border-0' title='Sync List Entries' on:click|stopPropagation>
+                    <input type='checkbox' id='sync-{profile.viewer.data.Viewer.id}' checked={isSync} on:click={() => toggleSync(profile)} />
+                    <label for='sync-{profile.viewer.data.Viewer.id}'><br/></label>
+                  </button>
+                {:else}
+                  <button type='button' class='button {profile.reauth ? `pa-button` : `p-button`} pt-5 pb-5 pl-5 pr-5 mr-15 bg-transparent border-0 d-flex align-items-center justify-content-center' title='Authenticate' on:click|stopPropagation={confirmMAL}>
+                    <ClockAlert size='2.2rem' />
+                  </button>
+                {/if}
+                <button type='button' class='button {profile.reauth ? `pa-button` : `p-button`} pt-5 pb-5 pl-5 pr-5 bg-transparent border-0 d-flex align-items-center justify-content-center' title='Logout' on:click|stopPropagation={() => dropProfile(profile)}>
                   <LogOut size='2.2rem' />
                 </button>
               </div>
@@ -155,13 +157,13 @@
             </button>
           {/if}
           {#if $currentProfile}
-            {#if $profiles.length > 0}
-              <div class='box pointer border-0 pt-10 pb-10 d-flex align-items-center justify-content-center text-center'>
-                <div class='custom-switch' title='Must be enabled to sync list entries with other sync enabled profiles.'>
-                  <input type='checkbox' id='sync-{$currentProfile.viewer.data.Viewer.id}' bind:checked={$currentProfile.viewer.data.Viewer.sync} on:click={() => toggleSync($currentProfile)} />
-                  <label for='sync-{$currentProfile.viewer.data.Viewer.id}'>Sync Entries</label>
+            {#if $currentProfile.reauth}
+              <button type='button' class='box authenticate pointer border-0 pt-10 pb-10 d-flex align-items-center justify-content-center text-center' on:click={confirmMAL}>
+                <ClockAlert class='mr-10' size='2.2rem' />
+                <div class='mt-4'>
+                  Authenticate
                 </div>
-              </div>
+              </button>
             {/if}
             <button type='button' class='box pointer border-0 rounded-bottom-10 pt-10 pb-10 d-flex align-items-center justify-content-center text-center' on:click={currentLogout}>
               <LogOut class='mr-10' size='2.2rem' />
@@ -177,8 +179,17 @@
 </div>
 
 <style>
-  .logout:hover {
+  .p-button:hover {
     background: #393838 !important;
+  }
+  .pa-button:hover {
+    background: #6c363c !important;
+  }
+  .authenticate:hover {
+    background: #4e272c !important;
+  }
+  .authenticate {
+    background: #2e171a !important;
   }
   .h-3 {
     height: 3rem !important;
