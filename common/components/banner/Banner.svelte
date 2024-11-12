@@ -1,6 +1,7 @@
 <script>
   import FullBanner from './FullBanner.svelte'
   import SkeletonBanner from './SkeletonBanner.svelte'
+  import ErrorCard from '@/components/cards/ErrorCard.svelte'
   export let data
 
   function shuffle (array) {
@@ -26,8 +27,12 @@
   <div class='position-absolute top-0 transparent h-450 opacity-0'>.</div>
   {#await data}
     <SkeletonBanner />
-  {:then { data }}
-    <FullBanner mediaList={shuffleAndFilter(data.Page.media)} />
+  {:then res}
+    {#if !res.errors}
+      <FullBanner mediaList={shuffleAndFilter(res?.data?.Page?.media)} />
+    {:else}
+      <ErrorCard promise={res} />
+    {/if}
   {/await}
 </div>
 

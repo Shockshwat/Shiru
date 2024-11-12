@@ -209,6 +209,9 @@ class AnilistClient {
   /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>>} */
   searchCache = {}
 
+  /** @type {Record<string, Cache<any[]>>} */
+  compoundCache = {}
+
   /** @type {Record<number, Cache<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>>} */
   idsCache = {}
 
@@ -236,9 +239,22 @@ class AnilistClient {
       this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC' })
       this.findNewNotifications()
       // update userLists every 15 mins
-      setInterval(() => this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC' }), 1000 * 60 * 15)
+      setInterval(async () => {
+        try {
+          const updatedLists = await this.getUserLists({sort: 'UPDATED_TIME_DESC'})
+          this.userLists.value = Promise.resolve(updatedLists) // no need to have userLists await the entire query process while we already have previous values, (it's awful to wait 15+ seconds for the query to succeed with large lists)
+        } catch (error) {
+          debug(`Failed to update user lists at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`)
+        }
+      }, 1000 * 60 * 15)
       // check notifications every 5 mins
-      setInterval(() => { this.findNewNotifications() }, 1000 * 60 * 5)
+      setInterval(() => {
+        try {
+          this.findNewNotifications()
+        } catch (error) {
+          debug(`Failed to get new anilist notifications at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`)
+        }
+      }, 1000 * 60 * 5)
     }
   }
 
@@ -269,7 +285,7 @@ class AnilistClient {
         printError(res)
       }
     }
-    return json
+    return json || res
   })
 
   /**
@@ -277,6 +293,16 @@ class AnilistClient {
    * @param {Record<string, any>} variables
    */
   alRequest (query, variables) {
+    const vars =  {
+      variables: {
+        page: 1,
+        perPage: 50,
+        sort: 'TRENDING_DESC',
+        ...variables
+      }
+    }
+    if (vars?.variables?.sort === 'OMIT') { delete vars.variables.sort}
+
     /** @type {RequestInit} */
     const options = {
       method: 'POST',
@@ -287,13 +313,7 @@ class AnilistClient {
       },
       body: JSON.stringify({
         query: query.replace(/\s/g, '').replaceAll('&nbsp;', ' '),
-        variables: {
-          page: 1,
-          perPage: 50,
-          sort: 'TRENDING_DESC',
-          status_in: '[CURRENT,PLANNING,COMPLETED,DROPPED,PAUSED,REPEATING]',
-          ...variables
-        }
+        ...vars
       })
     }
     if (variables?.token) options.headers.Authorization = variables.token
@@ -321,7 +341,7 @@ class AnilistClient {
 
       debug(`Found ${newNotifications?.length} new notifications`)
       for (const {media, episode, type} of newNotifications) {
-        if (!settings.value.aniNotifyLimited || type !== 'AIRING') {
+        if ((!settings.value.aniNotifyLimited || type !== 'AIRING') && media.type === 'ANIME' && media.format !== 'MUSIC') {
           const options = {
             title: media.title.userPreferred,
             message: type === 'AIRING' ? `Episode ${episode} is out in Japan, it should be available soon.` : 'Was recently announced!',
@@ -346,6 +366,12 @@ class AnilistClient {
    **/
   async alSearchCompound (flattenedTitles) {
     debug(`Searching for ${flattenedTitles?.length} titles via compound search`)
+    const cachedEntry = this.compoundCache[JSON.stringify(flattenedTitles)]
+    if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      debug(`Found cached compound search ${JSON.stringify(flattenedTitles)}`)
+      return cachedEntry.data
+    }
+
     if (!flattenedTitles.length) return []
     // isAdult doesn't need an extra variable, as the title is the same regardless of type, so we re-use the same variable for adult and non-adult requests
     /** @type {Record<`v${number}`, string>} */
@@ -387,6 +413,8 @@ class AnilistClient {
      * @returns {Promise<[string, import('./al.d.ts').Media][]>}
      * */
     const res = await this.alRequest(query, requestVariables)
+    const data = this.compoundCache?.[JSON.stringify(flattenedTitles)]?.data
+    if (!res?.data) return data && Object.keys(await data).length > 0 ? data : res
 
     /** @type {Record<string, number>} */
     const searchResults = {}
@@ -398,8 +426,11 @@ class AnilistClient {
     }
 
     const ids = Object.values(searchResults)
-    const search = await this.searchIDS({ id: ids, perPage: 50 })
-    return Object.entries(searchResults).map(([filename, id]) => [filename, search.data.Page.media.find(media => media.id === id)])
+    const search = await this.searchIDS({ id: ids, perPage: 50, sort: 'OMIT' })
+    const mappedResults = Object.entries(searchResults)?.map(([filename, id]) => [filename, search?.data?.Page?.media?.find(media => media.id === id)])
+    if (mappedResults) this.compoundCache[JSON.stringify(flattenedTitles)] = { data: Promise.resolve(mappedResults), expiry: Date.now() + getRandomInt(60, 90) * 60 * 1000 }
+
+    return this.compoundCache?.[JSON.stringify(flattenedTitles)]?.data
   }
 
   async alEntry (lists, variables) {
@@ -424,7 +455,7 @@ class AnilistClient {
 
     /** @type {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
     const res = await this.alRequest(query, variables)
-    await this.updateCache(res.data.Page.media)
+    await this.updateCache(res?.data?.Page?.media)
 
     return res
   }
@@ -439,15 +470,16 @@ class AnilistClient {
     }`
 
     /** @type {import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>} */
-    const res = await this.alRequest(query, variables)
+    const res = await this.alRequest(query, {...variables, sort: 'OMIT'})
 
-    await this.updateCache([res.data.Media])
+    await this.updateCache([res?.data?.Media])
 
     return res
   }
 
   /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
   async searchIDS (variables) {
+    variables.sort = variables.sort || 'OMIT'
     debug(`Searching for IDs ${JSON.stringify(variables)}`)
     const cachedEntry = this.idsCache[JSON.stringify(variables)]
     if (cachedEntry && Date.now() < cachedEntry.expiry) {
@@ -470,15 +502,18 @@ class AnilistClient {
     /** @type {Promise<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>} */
     const res = await this.alRequest(query, variables)
 
-    await this.updateCache((await res).data.Page.media)
-
-    this.idsCache[JSON.stringify(variables)] = { data: res, expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000 }
-
-    return this.idsCache[JSON.stringify(variables)].data
+    // prevent updating the cache if the request fails (usually only occurs when the api is down).
+    if (res?.data?.Page?.media) {
+      await this.updateCache(res.data.Page.media)
+      this.idsCache[JSON.stringify(variables)] = {data: res, expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000}
+    }
+    const data = this.idsCache?.[JSON.stringify(variables)]?.data
+    return data && Object.keys(await data).length > 0 ? data : res
   }
 
   /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
   async searchAllIDS (variables) {
+    variables.sort = variables.sort || 'OMIT'
     debug(`Searching for (ALL) IDs ${JSON.stringify(variables)}`)
     const cachedEntry = this.idsCache[JSON.stringify(variables)]
     if (cachedEntry && Date.now() < cachedEntry.expiry) {
@@ -490,25 +525,31 @@ class AnilistClient {
     let currentPage = 1
 
     // cycle until all paged ids are resolved.
+    let failedRes
     while (true) {
-      const res = await this.searchIDS({ page: currentPage, perPage: 50, id: variables.id })
+      const res = await this.searchIDS({ page: currentPage, perPage: 50, id: variables.id, sort: variables.sort })
+      if (!res?.data && res?.errors) { failedRes = res }
       if (res?.data?.Page.media) fetchedIDS = fetchedIDS.concat(res?.data?.Page.media)
       if (!res?.data?.Page.pageInfo.hasNextPage) break
       currentPage++
     }
 
-    this.idsCache[JSON.stringify(variables)] = {
-      data: new Promise((resolve) => {
-        resolve({
-          data: {
-            page: {
-              ...fetchedIDS
+    if (!failedRes) {
+      this.idsCache[JSON.stringify(variables)] = {
+        data: new Promise((resolve) => {
+          resolve({
+            data: {
+              page: {
+                ...fetchedIDS
+              }
             }
-          }
-        })
-      }), expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000 }
+          })
+        }), expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000
+      }
+    }
 
-    return this.idsCache[JSON.stringify(variables)].data
+    const data = this.idsCache?.[JSON.stringify(variables)]?.data
+    return failedRes ? (data ? data : failedRes) : data
   }
 
   /** @returns {Promise<import('./al.d.ts').PagedQuery<{ notifications: { id: number, type: string, createdAt: number, episode: number, media: import('./al.d.ts').Media}[] }>>} */
@@ -525,6 +566,8 @@ class AnilistClient {
             createdAt,
             media {
               id,
+              type,
+              format,
               title {
                 userPreferred
               },
@@ -539,6 +582,8 @@ class AnilistClient {
             createdAt,
             media {
               id,
+              type,
+              format,
               title {
                 userPreferred
               },
@@ -596,14 +641,61 @@ class AnilistClient {
         }
       }`
 
-    const res = await this.alRequest(query, variables)
-    if (!variables.token) await this.updateCache(res.data.MediaListCollection.lists.flatMap(list => list.entries.map(entry => entry.media)))
-    return res
+    let res
+    for (let attempt = 1; attempt < 3; attempt++) { // large user lists can sometimes result in a timeout, typically trying again succeeds.
+      res = await this.alRequest(query, variables)
+      if (res?.data?.MediaListCollection) break
+      if (attempt < 3) {
+        debug(`Error fetching user lists, attempt ${attempt} failed. Retrying in 5 seconds...`)
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      } else {
+        debug("Failed fetching user lists. Maximum of 3 attempts reached, giving up.")
+      }
+    }
+
+    if (!variables.token) await this.updateCache(res?.data?.MediaListCollection?.lists?.flatMap(list => list.entries.map(entry => entry.media)))
+    const userLists = res?.data?.MediaListCollection ? res : (this.userLists?.value && Object.keys(await this.userLists?.value).length > 0) ? this.userLists.value : res // return the cached user lists if fetching fails. Better to keep old data than none at all.
+    if (!res?.data?.MediaListCollection) {
+      await new Promise(resolve => setTimeout(resolve, 30000))
+    }
+    return userLists
+  }
+
+  async updateListEntry(mediaId, listEntry) {
+    const lists = (await this.userLists.value).data.MediaListCollection.lists?.map(list => { return { ...list, entries: list.entries.filter(entry => entry.media.id !== mediaId) } })
+    let targetList = lists.find(list => list.status === listEntry?.status)
+    if (!targetList) {
+      targetList = { status: listEntry?.status, entries: [] }
+      lists.push(targetList)
+    }
+    await this.updateCache([{ ...this.mediaCache.value[mediaId], mediaListEntry: listEntry }])
+    targetList.entries.unshift({ media: this.mediaCache.value[mediaId] })
+    this.userLists.value = Promise.resolve({
+      data: {
+        MediaListCollection: {
+          lists: lists
+        }
+      }
+    })
+  }
+
+  async deleteListEntry(mediaId) {
+    await this.updateCache([{ ...this.mediaCache.value[mediaId], mediaListEntry: null }])
+    this.userLists.value = Promise.resolve({
+      data: {
+        MediaListCollection: {
+          lists: (await this.userLists.value)?.data?.MediaListCollection?.lists?.map(list => {
+            return {...list, entries: list.entries.filter(entry => entry.media.id !== mediaId)}
+          })
+        }
+      }
+    })
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{ MediaList: { status: string, progress: number, repeat: number }}>>} */
   async searchIDStatus (variables = {}) {
     variables.id = this.userID?.viewer?.data?.Viewer.id
+    variables.sort = variables.sort || 'OMIT'
     debug(`Searching for ID status: ${variables.id}`)
     const query = /* js */` 
       query($id: Int, $mediaId: Int) {
@@ -640,7 +732,7 @@ class AnilistClient {
     /** @type {import('./al.d.ts').PagedQuery<{ airingSchedules: { timeUntilAiring: number, airingAt: number, episode: number, media: import('./al.d.ts').Media}[]}>} */
     const res = await this.alRequest(query, variables)
 
-    await this.updateCache(res.data.Page.airingSchedules?.map(({media}) => media))
+    await this.updateCache(res?.data?.Page?.airingSchedules?.map(({media}) => media))
 
     return res
   }
@@ -693,10 +785,14 @@ class AnilistClient {
     /** @type {Promise<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>} */
     const res = await this.alRequest(query, variables)
 
-    await this.updateCache((await res).data.Page.media)
-    this.searchCache[JSON.stringify(variables)] = { data: res, expiry: Date.now() + getRandomInt(16, 28) * 60 * 1000 }
+    // prevent updating the cache if the request fails (usually only occurs when the api is down).
+    if (res?.data?.Page?.media) {
+      await this.updateCache(res.data.Page.media)
+      this.searchCache[JSON.stringify(variables)] = { data: res, expiry: Date.now() + getRandomInt(16, 28) * 60 * 1000 }
+    }
 
-    return this.searchCache[JSON.stringify(variables)].data
+    const data = this.searchCache?.[JSON.stringify(variables)]?.data
+    return data && Object.keys(await data).length > 0 ? data : res
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{ AiringSchedule: { airingAt: number }}>>} */
@@ -802,7 +898,7 @@ class AnilistClient {
       }`
 
     const res = await this.alRequest(query, variables)
-    if (!variables.token) this.userLists.value = this.getUserLists({sort: 'UPDATED_TIME_DESC'})
+    if (!variables.token) await this.updateListEntry(variables.id, res?.data?.SaveMediaListEntry)
     return res
   }
 
@@ -815,7 +911,7 @@ class AnilistClient {
         }
       }`
     const res = await this.alRequest(query, variables)
-    if (!variables.token) this.userLists.value = this.getUserLists({sort: 'UPDATED_TIME_DESC'})
+    if (!variables.token) await this.deleteListEntry(variables.idAni)
     return res
   }
 
@@ -864,7 +960,9 @@ class AnilistClient {
 
   /** @param {import('./al.d.ts').Media[]} medias */
   async updateCache (medias) {
+    if (!medias) return
     for (const media of medias) {
+      if (!media) return
       if (!alToken) {
         // attach any alternative authorization userList information
         await Helper.fillEntry(media)

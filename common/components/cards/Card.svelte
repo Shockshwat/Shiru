@@ -17,10 +17,10 @@
 {#if type === 'episode'}
 
   {#await card.data}
-    <EpisodeSkeletonCard />
+    <EpisodeSkeletonCard section={variables?.section} />
   {:then data}
     {#if data}
-      <EpisodeCard {data} />
+      <EpisodeCard {data} section={variables?.section} />
     {/if}
   {/await}
 

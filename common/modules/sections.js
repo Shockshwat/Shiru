@@ -1,9 +1,13 @@
 import { anilistClient, currentSeason, currentYear } from '@/modules/anilist.js'
+import { animeSchedule } from '@/modules/animeschedule.js'
 import { malDubs } from "@/modules/animedubs.js"
 import { writable } from 'simple-store-svelte'
 import { settings } from '@/modules/settings.js'
 import { RSSManager } from '@/modules/rss.js'
 import Helper from '@/modules/helper.js'
+import Debug from '@/modules/debug.js'
+
+const debug = Debug('ui:sections')
 
 export const hasNextPage = writable(true)
 
@@ -28,6 +32,7 @@ export default class SectionsManager {
     return (page = 1, perPage = 50, search = variables) => {
       const hideSubs = search.hideSubs ? { idMal: malDubs.dubLists.value.dubbed } : {}
       const res = (search.hideMyAnime && Helper.isAuthorized()) ? Helper.userLists(search).then(res => {
+        if (!res?.data && res?.errors) throw res.errors[0]
         // anilist queries do not support mix and match, you have to use the same id includes as excludes, id_not_in cannot be used with idMal_in.
         const hideMyAnime = Helper.isAniAuth() ? { [Object.keys(hideSubs).length > 0 ? 'idMal_not' : 'id_not']: Array.from(new Set(res.data.MediaListCollection.lists.filter(({ status }) => search.hideStatus.includes(status)).flatMap(list => list.entries.map(({ media }) => (Object.keys(hideSubs).length > 0 ? media.idMal : media.id))))) }
               : {idMal_not: res.data.MediaList.filter(({ node }) => search.hideStatus.includes(Helper.statusMap(node.my_list_status.status))).map(({ node }) => node.id)}
@@ -45,7 +50,8 @@ export default class SectionsManager {
   }
 
   static async fromPending (arr, i) {
-    const { data } = await arr
+    const { data, errors } = await arr
+    if (!data && errors) throw errors[0]
     return data?.Page.media[i]
   }
 
@@ -55,10 +61,10 @@ export default class SectionsManager {
 // list of all possible home screen sections
 export let sections = []
 
-settings.subscribe(() => {
+//settings.subscribe(() => { // need a better method for this as this just doesn't work, horrible implementation.
   for (const section of sections) clearInterval(section.interval)
   sections = createSections()
-})
+//})
 
 function createSections () {
   return [
@@ -74,8 +80,12 @@ function createSections () {
 
       // update every 30 seconds
       section.interval = setInterval(async () => {
-        if (await RSSManager.getContentChanged(1, 12, url)) {
-          section.preview.value = RSSManager.getMediaForRSS(1, 12, url, true)
+        try {
+          if (await RSSManager.getContentChanged(1, 12, url)) {
+            section.preview.value = RSSManager.getMediaForRSS(1, 12, url, true)
+          }
+        } catch (error) {
+          debug(`Failed to update RSS feed for ${url} at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`)
         }
       }, 30000)
 
@@ -87,6 +97,7 @@ function createSections () {
       load: (page = 1, perPage = 50, variables = {}) => {
         if (Helper.isMalAuth()) return {} // not going to bother handling this, see below.
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = res.data.MediaListCollection.lists.find(({ status }) => status === 'COMPLETED')?.entries
           const excludeIds = res.data.MediaListCollection.lists.reduce((filtered, { status, entries }) => { return (['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED', 'PAUSED'].includes(status)) ? filtered.concat(entries) : filtered}, []).map(({ media }) => media.id) || []
           if (!mediaList) return {}
@@ -105,6 +116,7 @@ function createSections () {
       load: (page = 1, perPage = 50, variables = {}) => {
         if (Helper.isMalAuth()) return {} // same as Sequels You Missed
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = res.data.MediaListCollection.lists.find(({ status }) => status === 'COMPLETED')?.entries
           const excludeIds = res.data.MediaListCollection.lists.reduce((filtered, { status, entries }) => { return (['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED', 'PAUSED'].includes(status)) ? filtered.concat(entries) : filtered}, []).map(({ media }) => media.id) || []
           if (!mediaList) return {}
@@ -122,6 +134,7 @@ function createSections () {
       title: 'Continue Watching', variables: { sort: 'UPDATED_TIME_DESC', userList: true, continueWatching: true, disableHide: true },
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = Helper.isAniAuth() ? res.data.MediaListCollection.lists.reduce((filtered, { status, entries }) => {
             return (status === 'CURRENT' || status === 'REPEATING') ? filtered.concat(entries) : filtered
           }, []) : res.data.MediaList.filter(({ node }) => (node.my_list_status.status === Helper.statusMap('CURRENT') || node.my_list_status.is_rewatching))
@@ -136,6 +149,7 @@ function createSections () {
       title: 'Watching List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, disableHide: true },
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = Helper.isAniAuth()
             ? res.data.MediaListCollection.lists.find(({ status }) => status === 'CURRENT')?.entries
             : res.data.MediaList.filter(({ node }) => node.my_list_status.status === Helper.statusMap('CURRENT'))
@@ -150,6 +164,7 @@ function createSections () {
       title: 'Completed List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, completedList: true, disableHide: true },
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = Helper.isAniAuth()
             ? res.data.MediaListCollection.lists.find(({ status }) => status === 'COMPLETED')?.entries
             : res.data.MediaList.filter(({ node }) => node.my_list_status.status === Helper.statusMap('COMPLETED'))
@@ -164,6 +179,7 @@ function createSections () {
       title: 'Planning List', variables : { sort: 'POPULARITY_DESC', userList: true, planningList: true, disableHide: true },
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = Helper.isAniAuth()
             ? res.data.MediaListCollection.lists.find(({ status }) => status === 'PLANNING')?.entries
             : res.data.MediaList.filter(({ node }) => node.my_list_status.status === Helper.statusMap('PLANNING'))
@@ -178,6 +194,7 @@ function createSections () {
       title: 'Paused List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, disableHide: true },
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = Helper.isAniAuth()
             ? res.data.MediaListCollection.lists.find(({ status }) => status === 'PAUSED')?.entries
             : res.data.MediaList.filter(({ node }) => node.my_list_status.status === Helper.statusMap('PAUSED'))
@@ -192,6 +209,7 @@ function createSections () {
       title: 'Dropped List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, droppedList: true, disableHide: true },
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
+          if (!res?.data && res?.errors) throw res.errors[0]
           const mediaList = Helper.isAniAuth()
             ? res.data.MediaListCollection.lists.find(({ status }) => status === 'DROPPED')?.entries
             : res.data.MediaList.filter(({ node }) => node.my_list_status.status === Helper.statusMap('DROPPED'))

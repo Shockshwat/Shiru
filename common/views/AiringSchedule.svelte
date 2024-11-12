@@ -15,12 +15,14 @@
     const hideSubs = variables.hideSubs ? { idMal: airingLists.map(result => result.media?.idMal).filter(idMal => idMal !== undefined) } : {}
     const hideMyAnime = (variables.hideMyAnime && Helper.isAuthorized()) ? {[Helper.isAniAuth() ? 'id_not' : 'idMal_not']:
             await Helper.userLists(variables).then(res => {
+                if (!res?.data && res?.errors) throw res.errors[0]
                 return Helper.isAniAuth()
                     ? Array.from(new Set(res.data.MediaListCollection.lists.filter(({ status }) => variables.hideStatus.includes(status)).flatMap(list => list.entries.map(({ media }) => media.id))))
                     : res.data.MediaList.filter(({ node }) => variables.hideStatus.includes(Helper.statusMap(node.my_list_status.status))).map(({ node }) => node.id)
             })} : {}
     for (let page = 1, hasNextPage = true; hasNextPage && page < 5; ++page) {
       const res = await anilistClient.search({ ...opts, ...hideSubs, ...hideMyAnime, page, perPage: 50 })
+      if (!res?.data && res?.errors) throw res.errors[0]
       hasNextPage = res.data.Page.pageInfo.hasNextPage
       results.data.Page.media = results.data.Page.media.concat(res.data.Page.media)
     }
@@ -31,6 +33,7 @@
         status: 'RELEASING'
     } : {}
     const res = await anilistClient.search({ ...hideSubs, ...hideMyAnime, ...SectionsManager.sanitiseObject(variables), ...schedule, page: 1, perPage: 50 })
+    if (!res?.data && res?.errors) throw res.errors[0]
     results.data.Page.media = results.data.Page.media.concat(res.data.Page.media)
     if (variables.hideSubs) {
       // filter out entries without airing schedule, duplicates [only allow first occurrence], and completed dubs, then sort entries from first airing to last airing.

@@ -254,7 +254,9 @@
                 <SkeletonCard />
               {:then res }
                 {#if res}
-                  <SmallCard media={anilistClient.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
+                  {#if anilistClient.mediaCache.value[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                    <SmallCard media={anilistClient.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
+                  {/if}
                 {/if}
               {/await}
             </div>
@@ -268,7 +270,9 @@
                     <SkeletonCard />
                   {:then res}
                     {#if res}
-                      <SmallCard media={anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
+                      {#if anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                        <SmallCard media={anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
+                      {/if}
                     {/if}
                   {/await}
                 </div>
