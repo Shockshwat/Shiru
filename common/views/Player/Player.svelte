@@ -330,7 +330,7 @@
         currentTime = currentTime + 85
       } else {
         const endtime = current.end / 1000
-        if ((safeduration - endtime | 0) === 0) return playNext()
+        if ((safeduration - endtime | 0) === 0 && hasNext) return playNext()
         currentTime = endtime
         currentSkippable = null
       }
@@ -1105,7 +1105,7 @@
   }
 </script>
 
-<!-- <svelte:window bind:innerWidth bind:innerHeight /> -->
+<!-- <svelte:window bind:innerWidth bind:innerHeight /> --> <!-- class:hideLayers={overlay === 'torrent'} ==> hack to prevent player from visibly appearing behind torrent modal -->
 <div
   class='player w-full h-full d-flex flex-column overflow-hidden position-relative'
   class:pointer={miniplayer}
@@ -1114,6 +1114,7 @@
   class:immersed={immersed}
   class:buffering={src && buffering}
   class:fitWidth
+  class:hideLayers={overlay === 'torrent'}
   bind:this={container}
   role='none'
   on:pointermove={resetImmerse}
@@ -1225,7 +1226,7 @@
           <SkipBack size='3rem' fill='white' />
         </span>
       {/if}
-      <span class='icon ctrl position-absolute' data-name='playPause' style='left: 50%; transform: translateX(-50%)' use:click={playPause}>
+      <span class='icon ctrl position-absolute' data-name='playPause' style='left: 50%; margin-left: -3rem;' use:click={playPause}>
         {#if ended}
           <RotateCw size='3rem' />
         {:else}
@@ -1475,6 +1476,10 @@
 
   .custom-range:focus {
     outline: none;
+  }
+
+  .hideLayers {
+    display: none !important;
   }
 
   .bind {
