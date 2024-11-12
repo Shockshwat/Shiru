@@ -1,4 +1,4 @@
-import { files, media } from '../views/Player/MediaHandler.svelte'
+import { files, nowPlaying as media } from '../views/Player/MediaHandler.svelte'
 import { page } from '@/App.svelte'
 import { toast } from 'svelte-sonner'
 import clipboard from './clipboard.js'

@@ -3,16 +3,14 @@
   import AnimeResolver from '@/modules/animeresolver.js'
   import { videoRx } from '@/modules/util.js'
   import { tick } from 'svelte'
-  import { anilistClient } from "@/modules/anilist.js"
+  import { anilistClient } from '@/modules/anilist.js'
   import Debug from '@/modules/debug.js'
 
   const debug = Debug('ui:mediahandler')
 
   const episodeRx = /Episode (\d+) - (.*)/
 
-  export const media = writable(null)
-
-  const nowPlaying = writable({})
+  export const nowPlaying = writable({})
 
   export const files = writable([])
 
@@ -22,16 +20,12 @@
 
   let playFile
 
-  media.subscribe((media) => {
-      // calling this persistently when data is null or missing the necessary parseObject to play the media causes the player to get stuck on previous media.
-      if (media?.parseObject) {
-          handleMedia(media)
-      }
-    return noop
-  })
-
   function handleCurrent ({ detail }) {
-    media.set(detail.media)
+      const nextMedia = detail?.media
+      debug(`Handling current media: ${JSON.stringify(nextMedia?.parseObject)}`)
+      if (nextMedia?.parseObject) {
+          handleMedia(nextMedia)
+      }
   }
 
   export function findInCurrent (obj) {
@@ -46,8 +40,7 @@
     )
     if (!targetFile) return false
     if (oldNowPlaying.media?.id !== obj.media.id) {
-      // mediachange, filelist change
-      media.set({ media: obj.media, episode: obj.episode })
+      nowPlaying.set({ media: obj.media, episode: obj.episode })
       handleFiles(fileList)
     } else {
       playFile(targetFile)
@@ -64,7 +57,7 @@
       const { episodes, specialCount, episodeCount } = await res.json()
       const needsValidation = !(!specialCount || (media?.episodes === episodeCount && episodes && episodes[Number(episode)]))
       const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
-      const streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en)) ? { title: (`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en) } : streamingTitle
+      const streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en)) ? { title: (`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en) } : (needsValidation && media?.status === 'FINISHED') ? { title: (`Episode ${episode} - ` + (episodes[Number(episode)]?.title?.en || episodes[1])) } : streamingTitle
 
       const np = {
         media,
@@ -93,23 +86,23 @@
     }
 
     let lowestPlanning
-    for (const { media, episode } of videoFiles) {
-      if (media.media?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || episode > lowestPlanning.episode)) lowestPlanning = { media: media.media, episode }
+    for (const { media } of videoFiles) {
+        if (media.media?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || lowestPlanning.episode > media?.episode || lowestPlanning.season > media?.season)) lowestPlanning = { media: media.media, episode: media?.episode, season: media?.season }
     }
     if (lowestPlanning) return lowestPlanning
 
     // unwatched
     for (const format of ['TV', 'MOVIE', 'ONA', 'OVA']) {
       let lowestUnwatched
-      for (const { media, episode } of videoFiles) {
-        if (media.media?.format === format && !media.media.mediaListEntry && (!lowestUnwatched || episode > lowestUnwatched.episode)) lowestUnwatched = { media: media.media, episode }
+      for (const { media } of videoFiles) {
+        if (media.media?.format === format && !media.media.mediaListEntry && (!lowestUnwatched || lowestUnwatched.episode > media?.episode || lowestUnwatched.season > media?.season)) lowestUnwatched = { media: media.media, episode: media?.episode, season: media?.season }
       }
       if (lowestUnwatched) return lowestUnwatched
     }
 
     // highest occurrence if all else fails - unlikely
 
-    const max = highestOccurence(videoFiles, file => file.media.media?.id).media
+    const max = highestOccurrence(videoFiles, file => file.media.media?.id).media
     if (max?.media) {
       return { media: max.media, episode: (max.media.mediaListEntry?.progress + 1 || 1) }
     }
@@ -131,7 +124,7 @@
         otherFiles.push(file)
       }
     }
-    let nowPlaying = media.value
+    let newPlaying = nowPlaying.value
 
     const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => file.name))
 
@@ -142,20 +135,20 @@
 
     videoFiles = videoFiles.filter(file => !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type?.toUpperCase()))
 
-    if (nowPlaying?.verified && videoFiles.length === 1) {
+    if (newPlaying?.verified && videoFiles.length === 1) {
       debug('Media was verified, skipping verification')
-      videoFiles[0].media.media = nowPlaying.media
-      if (nowPlaying.episode) videoFiles[0].media.episode = nowPlaying.episode
+      videoFiles[0].media.media = newPlaying.media
+      if (newPlaying.episode) videoFiles[0].media.episode = newPlaying.episode
     }
 
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
-    if (!nowPlaying) {
-      nowPlaying = findPreferredPlaybackMedia(videoFiles)
-      debug(`Found preferred playback media: ${nowPlaying?.media?.id}:${nowPlaying?.media?.title?.userPreferred} ${nowPlaying?.episode}`)
+    if (!newPlaying) {
+      newPlaying = findPreferredPlaybackMedia(videoFiles)
+      debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
     }
 
-    const filtered = nowPlaying?.media && videoFiles.filter(file => file.media?.media?.id && file.media?.media?.id === nowPlaying.media.id)
+    const filtered = newPlaying?.media && videoFiles.filter(file => file.media?.media?.id && file.media?.media?.id === newPlaying.media.id)
 
     debug(`Filtered ${filtered?.length} files based on media`, fileListToDebug(filtered))
 
@@ -163,7 +156,7 @@
     if (filtered?.length) {
       result = filtered
     } else {
-      const max = highestOccurence(videoFiles, file => file.media.parseObject.anime_title).media.parseObject.anime_title
+      const max = highestOccurrence(videoFiles, file => file.media.parseObject.anime_title).media.parseObject.anime_title
       debug(`Highest occurrence anime title: ${max}`)
       result = videoFiles.filter(file => file.media.parseObject.anime_title === max)
     }
@@ -175,14 +168,14 @@
 
     processed.set([...result, ...otherFiles])
     await tick()
-    const file = (nowPlaying?.episode && (result.find(({ media }) => media.episode === nowPlaying.episode) || result.find(({ media }) => media.episode === 1))) || result[0]
-    if (nowPlaying) nowPlaying.episode = file.media.parseObject.episode_number
-    media.set(nowPlaying)
+    const file = (newPlaying?.episode && (result.find(({ media }) => media.episode === newPlaying.episode) || result.find(({ media }) => media.episode === 1))) || result[0]
+    if (newPlaying) newPlaying.episode = file.media.parseObject.episode_number
+    nowPlaying.set(newPlaying)
     playFile(file || 0)
   }
 
   // find element with most occurrences in array according to map function
-  const highestOccurence = (arr = [], mapfn = a => a) => arr.reduce((acc, el) => {
+  const highestOccurrence = (arr = [], mapfn = a => a) => arr.reduce((acc, el) => {
     const mapped = mapfn(el)
     acc.sums[mapped] = (acc.sums[mapped] || 0) + 1
     acc.max = (acc.max !== undefined ? acc.sums[mapfn(acc.max)] : -1) > acc.sums[mapped] ? acc.max : el

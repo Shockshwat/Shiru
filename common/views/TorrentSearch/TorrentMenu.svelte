@@ -56,7 +56,7 @@
 </script>
 
 <script>
-  import { media as currentMedia } from '../Player/MediaHandler.svelte'
+  import { nowPlaying as currentMedia } from '../Player/MediaHandler.svelte'
   import TorrentCard from './TorrentCard.svelte'
   import { add } from '@/modules/torrent.js'
   import TorrentSkeletonCard from './TorrentSkeletonCard.svelte'

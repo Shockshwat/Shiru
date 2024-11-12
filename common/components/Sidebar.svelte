@@ -1,7 +1,7 @@
 <script>
   import { getContext } from 'svelte'
   import { rss } from '@/views/TorrentSearch/TorrentModal.svelte'
-  import { media } from '@/views/Player/MediaHandler.svelte'
+  import { nowPlaying as media } from '@/views/Player/MediaHandler.svelte'
   import { profileView } from './Profiles.svelte'
   import { actionPrompt } from './MinimizeTray.svelte'
   import { settings } from '@/modules/settings.js'
