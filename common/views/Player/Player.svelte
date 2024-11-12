@@ -816,8 +816,12 @@
     }
   }
   const skippableChaptersRx = [
+    ['Intro', /^intro$/mi],
     ['Opening', /^op$|opening$|^ncop/mi],
+    ['Outro', /^outro$/mi],
     ['Ending', /^ed$|ending$|^nced/mi],
+    ['Credits', /^credits$/mi],
+    ['Preview', /^preview$|previews$|pv$/mi],
     ['Recap', /recap/mi]
   ]
   function isChapterSkippable (chapter) {
