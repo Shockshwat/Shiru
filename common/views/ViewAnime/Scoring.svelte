@@ -40,12 +40,12 @@
 
   async function toggleModal (state) {
     if (state.save || state.delete) {
+      showModal.set(false)
       if (state.save) {
         await saveEntry()
       } else if (state.delete) {
         await deleteEntry()
       }
-      showModal.set(false)
     } else {
       score = (media.mediaListEntry?.score ? media.mediaListEntry?.score : 0)
       status = (media.mediaListEntry?.status ? media.mediaListEntry?.status : 'NOT IN LIST')
@@ -60,20 +60,21 @@
     episode = 0
     status = 'NOT IN LIST'
     if (media.mediaListEntry) {
-      const res = await Helper.delete(Helper.isAniAuth() ? {id: media.mediaListEntry.id} : {idMal: media.idMal})
+      const res = await Helper.delete(Helper.isAniAuth() ? {id: media.mediaListEntry.id, idAni: media.id} : {idMal: media.idMal})
       const description = `${anilistClient.title(media)} has been deleted from your list.`
       printToast(res, description, false, false)
 
       if (res) media.mediaListEntry = undefined
 
-      if (Helper.getUser().sync) { // handle profile syncing
+      const mainSync = Helper.getUser().sync
+      if (Array.isArray(mainSync) && mainSync.length > 0) { // handle profile syncing
         const mediaId = media.id
         for (const profile of get(profiles)) {
-          if (profile.viewer?.data?.Viewer.sync) {
+          if (mainSync.includes(profile?.viewer?.data?.Viewer?.id)) {
             const anilist = profile.viewer?.data?.Viewer?.avatar
             const listId = (anilist ? {id: (await anilistClient.getUserLists({userID: profile.viewer.data.Viewer.id, token: profile.token}))?.data?.MediaListCollection?.lists?.flatMap(list => list.entries).find(({ media }) => media.id === mediaId)?.media?.mediaListEntry?.id} : {idMal: media.idMal})
             if (listId?.id || listId?.idMal) {
-              const res = await Helper.delete({...listId, token: profile.token, anilist})
+              const res = await Helper.delete({...listId, token: profile.token, refresh_in: profile.refresh_in, anilist})
               printToast(res, description, false, profile)
             }
           }
@@ -104,15 +105,17 @@
 
         const description = `Title: ${anilistClient.title(media)}\nStatus: ${Helper.statusName[status]}\nEpisode: ${episode} / ${totalEpisodes}${score !== 0 ? `\nYour Score: ${score}` : ''}`
         printToast(res, description, true, false)
-        if (Helper.getUser().sync) { // handle profile syncing
+        const mainSync = Helper.getUser().sync
+        if (Array.isArray(mainSync) && mainSync.length > 0) { // handle profile syncing
           for (const profile of get(profiles)) {
-            if (profile.viewer?.data?.Viewer.sync) {
+            if (mainSync.includes(profile?.viewer?.data?.Viewer?.id)) {
               const anilist = profile.viewer?.data?.Viewer?.avatar
               const res = await Helper.entry(media, {
                 ...variables,
                 lists: media.mediaListEntry?.customLists?.filter(list => list.enabled).map(list => list.name) || [],
                 score: (anilist ? (score * 10) : score),
                 token: profile.token,
+                refresh_in: profile.refresh_in,
                 anilist
               })
               printToast(res, description, true, profile)
@@ -175,24 +178,26 @@
   }
 
   async function handleClick({target}) {
-    if (modal && !modal.contains(target)) {
-      await new Promise(resolve => setTimeout(resolve))
+    if (modal && !modal.contains(target) && !target.closest('.scoring-btn')) {
       showModal.set(false)
-      document.removeEventListener('click', handleClick, true)
+      document.removeEventListener('mousedown', handleClick, true)
+      document.removeEventListener('touchstart', handleClick, true)
     }
   }
 
   $: {
     if ($showModal) {
-      document.addEventListener('click', handleClick, true)
+      document.addEventListener('mousedown', handleClick, true)
+      document.addEventListener('touchstart', handleClick, true) //maybe replace with utils.addlisteners()?
     } else {
-      document.removeEventListener('click', handleClick, true)
+      document.removeEventListener('mousedown', handleClick, true)
+      document.removeEventListener('touchstart', handleClick, true)
     }
   }
 </script>
 
 
-<button type='button' id='list-btn' class='btn { viewAnime ? "bg-dark btn-lg font-size-20" : (previewAnime ? "btn-square" : "bg-dark-light") + " font-size-16" } btn-square ml-10 shadow-none border-0 d-flex align-items-center justify-content-center' use:click={() => toggleModal({ toggle: !$showModal })} disabled={!Helper.isAuthorized()}>
+<button type='button' id='list-btn' class='btn scoring-btn { viewAnime ? "bg-dark btn-lg font-size-20" : (previewAnime ? "btn-square" : "bg-dark-light") + " font-size-16" } btn-square ml-10 shadow-none border-0 d-flex align-items-center justify-content-center' use:click={() => toggleModal({ toggle: !$showModal })} disabled={!Helper.isAuthorized()}>
   {#if media.mediaListEntry}
     <PencilLine size='1.7rem' />
   {:else}
@@ -284,10 +289,10 @@
     margin-left: 14.5rem;
   }
   .visible {
-    animation: 0.3s ease 0s 1 load-in;
+    animation: 0.15s ease 0s 1 load-in;
   }
   .invisible {
-    animation: load-out 0.3s ease-out forwards;
+    animation: load-out 0.15s ease-out forwards;
   }
   @keyframes load-in {
     from {
