@@ -10,6 +10,7 @@
   import { anilistClient } from '@/modules/anilist.js'
   import { Play } from 'lucide-svelte'
   export let data
+  export let section = false
 
   let preview = false
   let prompt = writable(false)
@@ -42,7 +43,7 @@
   $: completed = !watched && media?.mediaListEntry?.progress >= data?.episode
 </script>
 
-<div class='d-flex p-20 pb-10 position-relative episode-card' use:hoverChange={() => prompt.set(false)} use:hoverClick={[setClickState, setHoverState]} on:contextmenu|preventDefault={viewMedia} role='none'>
+<div class='d-flex p-20 pb-10 position-relative episode-card {section ? `mb-100` : ``}' use:hoverChange={() => prompt.set(false)} use:hoverClick={[setClickState, setHoverState]} on:contextmenu|preventDefault={viewMedia} role='none'>
   {#if preview}
     <EpisodePreviewCard {data} bind:prompt={$prompt} />
   {/if}
@@ -116,8 +117,11 @@
 
 <style>
   .episode-card:hover {
-    z-index: 30;
+    z-index: 30 !important;
     /* fixes transform scaling on click causing z-index issues */
+  }
+  .mb-100 {
+    margin-bottom: 10rem !important;
   }
   .opacity-half {
     opacity: 30%;

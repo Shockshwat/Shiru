@@ -22,7 +22,7 @@
       if (!value) return
       for (const section of manager.sections) {
         // remove preview value, to force UI to re-request data, which updates it once in viewport
-        if (userSections.includes(section.title)) section.preview.value = section.load(1, 15, section.variables)
+        if (userSections.includes(section.title)) section.preview.value = section.load(1, 50, section.variables)
       }
     })
   }
@@ -36,10 +36,10 @@
 
 <div class='h-full w-full overflow-y-scroll root overflow-x-hidden' use:smoothScroll>
   <Banner data={bannerData} />
-  <div class='d-flex flex-column h-full w-full'>
+  <div class='d-flex flex-column h-full w-full mt-15'>
     {#each manager.sections as section, i (i)}
       {#if !section.hide}
-        <Section bind:opts={section} />
+        <Section bind:opts={section} lastEpisode={manager.sections[i - 1]?.isRSS}/>
       {/if}
     {/each}
   </div>
