@@ -1,6 +1,7 @@
 import { SUPPORTS } from '@/modules/support.js'
 import levenshtein from 'js-levenshtein'
 import { writable } from 'svelte/store'
+import Fuse from 'fuse.js'
 
 export function countdown (s) {
   const d = Math.floor(s / (3600 * 24))
@@ -52,8 +53,8 @@ export function since (date) {
 
 /**
  * @param {Date} episodeDate
- * @param {number} weeks - the number of weeks past the episodeDate
- * @param {boolean} skip - Add the specified number of weeks regardless of the episodeDate having past.
+ * @param {number} weeks The number of weeks past the episodeDate
+ * @param {boolean} skip Add the specified number of weeks regardless of the episodeDate having past.
  * @returns {Date}
  */
 export function past(episodeDate, weeks = 0, skip) {
@@ -121,6 +122,25 @@ export function getRandomInt(min, max) {
   min = Math.ceil(min)
   max = Math.floor(max)
   return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+/**
+ * @param {Object} nest The nested Object to use for looking up the keys.
+ * @param {String} phrase The key phrase to look for.
+ * @param {Array} keys Add the specified number of weeks regardless of the episodeDate having past.
+ * @param {number} threshold The allowed tolerance, typically for misspellings.
+ * @returns {boolean} If the target phrase has been found.
+ */
+export function matchKeys(nest, phrase, keys, threshold = 0.4) {
+  if (!phrase) {
+    return true
+  }
+  const options = {
+    includeScore: true,
+    threshold,
+    keys: keys
+  }
+  return new Fuse([nest], options).search(phrase).length > 0
 }
 
 export function matchPhrase(search, phrase, threshold) {
@@ -206,6 +226,9 @@ export function createListener(triggerClasses = []) {
     if (create && !handling) addListeners()
     else if (handling) removeListeners()
   }
+
+  return { reactive, init }
+}
 
 export const defaults = {
   volume: 1,

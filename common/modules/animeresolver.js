@@ -101,7 +101,10 @@ export default new class AnimeResolver {
     debug(`Finding ${titleObjects?.length} titles: ${titleObjects?.map(obj => obj.title).join(', ')}`)
     for (const chunk of chunks(titleObjects, 60)) {
       // single title has a complexity of 8.1, al limits complexity to 500, so this can be at most 62, undercut it to 60, al pagination is 50, but at most we'll do 30 titles since isAdult duplicates each title
-      for (const [key, media] of await anilistClient.alSearchCompound(chunk)) {
+      const search = await anilistClient.alSearchCompound(chunk)
+      if (search?.errors) throw search.errors[0]
+      if (!search) throw {error: {message:'Failed to perform compound search as it returned undefined!'}}
+      for (const [key, media] of search) {
         if (!this.animeNameCache[key]) {
           debug(`Found ${key} as ${media?.id}: ${media?.title?.userPreferred}`)
           this.animeNameCache[key] = media
@@ -152,6 +155,7 @@ export default new class AnimeResolver {
           .replace(/\b([A-Za-z]{3}\d)\.(\d)\b/g, '<<AUDIO_$1_$2>>')     // For AAC2.0, DDP2.0, etc.
           .replace(/\b(H|X)\.(\d{3})\b/g, '<<RES_$1_$2>>')              // For H.264, H.265, X.265, etc.
           .replace(/\b5\.1\b/g, '<<CHANNEL_5_1>>')                      // For 5.1 channels
+          .replace(/\bFLAC5\.1\b/g, '<<AUDIO_FLAC_5_1>>')               // For FLAC5.1
           .replace(/\bVol\.(\d+)\b/g, '<<VOL_$1>>')                     // For Vol. followed by any digits
 
       // Remove file extensions and replace all remaining periods with spaces
@@ -162,6 +166,7 @@ export default new class AnimeResolver {
           .replace(/<<AUDIO_([A-Za-z]{3}\d)_(\d)>>/g, '$1.$2')          // For AAC2.0, DDP2.0, etc.
           .replace(/<<RES_([HX])_(\d{3})>>/g, '$1.$2')                  // For H.264, H.265, X.265, etc.
           .replace(/<<CHANNEL_5_1>>/g, '5.1')                           // For 5.1 channels
+          .replace(/<<AUDIO_FLAC_5_1>>/g, 'FLAC5.1')                    // For FLAC5.1
           .replace(/<<VOL_(\d+)>>/g, 'Vol.$1')                          // For Vol. followed by any digits
       return name
     }
@@ -272,6 +277,7 @@ export default new class AnimeResolver {
       debug(`${failed || !(media?.title?.userPreferred) ? `Failed to resolve` : `Resolved`} ${parseObj.anime_title} ${parseObj.episode_number} ${episode} ${media?.id}:${media?.title?.userPreferred}`)
       fileAnimes.push({
         episode: episode || parseObj.episode_number,
+        season: parseObj?.anime_season ? Number(parseObj.anime_season) : 1,
         parseObject: parseObj,
         media,
         failed
