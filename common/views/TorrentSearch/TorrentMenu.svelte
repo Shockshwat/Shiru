@@ -38,11 +38,11 @@
   async function getBest(promise, audioLang) {
     const results = await promise
 
-    const bestRequestedAudio = audioLang !== 'jpn' && results.find(result => (result.type === 'best' || result.type === 'alt') && getRequestedAudio(result.parseObject, audioLang))
-    const livingRequestedAudio = audioLang !== 'jpn' && results.find(result => getRequestedAudio(result.parseObject, audioLang) && result.seeders > 4)
+    const bestRequestedAudio = audioLang !== 'jpn' && results.find(result => (result.type === 'best' || result.type === 'alt') && getRequestedAudio(result.parseObject, audioLang) && result.seeders > 9)
+    const altRequestedAudio = audioLang !== 'jpn' && results.find(result => getRequestedAudio(result.parseObject, audioLang) && result.seeders > 1)
     const bestGenericAudio = results.find(result => result.type === 'best' || result.type === 'alt' && result.seeders > 9)
 
-    return bestRequestedAudio || livingRequestedAudio || bestGenericAudio || results[0]
+    return bestRequestedAudio || altRequestedAudio || bestGenericAudio || results[0]
   }
 
   function filterResults (results, searchText) {
