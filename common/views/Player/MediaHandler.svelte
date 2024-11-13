@@ -59,15 +59,19 @@
       const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
       const streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en)) ? { title: (`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en) } : (needsValidation && media?.status === 'FINISHED') ? { title: (`Episode ${episode} - ` + (episodes[Number(episode)]?.title?.en || episodes[1])) } : streamingTitle
 
+      const details = {
+          title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
+          episode: ep,
+          episodeTitle: streamingEpisode && episodeRx.exec(streamingEpisode.title)[2],
+          thumbnail: media?.coverImage.extraLarge || streamingEpisode?.thumbnail
+      }
       const np = {
         media,
-        title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
-        episode: ep,
-        episodeTitle: streamingEpisode && episodeRx.exec(streamingEpisode.title)[2],
-        thumbnail: media?.coverImage.extraLarge || streamingEpisode?.thumbnail
+        ...details
       }
       setMediaSession(np)
       nowPlaying.set(np)
+      debug(`Now playing as been set to: ${JSON.stringify(details)}`)
     }
   }
 
@@ -143,7 +147,7 @@
 
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
-    if (!newPlaying) {
+    if (!newPlaying || Object.keys(newPlaying).length === 0) {
       newPlaying = findPreferredPlaybackMedia(videoFiles)
       debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
     }
