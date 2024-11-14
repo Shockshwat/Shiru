@@ -1315,10 +1315,10 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Audio Tracks'>
             <ListMusic size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize'>
+          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto mh-40 text-nowrap'>
             {#each video.audioTracks as track}
               <input name='audio-radio-set' type='radio' id='audio-{track.id}-radio' value={track.id} checked={track.enabled} />
-              <label for='audio-{track.id}-radio' use:click={() => selectAudio(track.id)} class='text-truncate pb-5'>
+              <label for='audio-{track.id}-radio' use:click={() => selectAudio(track.id)} class='pb-5'>
                 {(track.language || (!Object.values(video.audioTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
               </label>
             {/each}
@@ -1330,10 +1330,10 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Video Tracks'>
             <ListVideo size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize'>
+          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto mh-40 text-nowrap'>
             {#each video.videoTracks as track}
               <input name='video-radio-set' type='radio' id='video-{track.id}-radio' value={track.id} checked={track.selected} />
-              <label for='video-{track.id}-radio' use:click={() => selectVideo(track.id)} class='text-truncate pb-5'>
+              <label for='video-{track.id}-radio' use:click={() => selectVideo(track.id)} class='pb-5'>
                 {(track.language || (!Object.values(video.videoTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
               </label>
             {/each}
@@ -1343,15 +1343,15 @@
       {#if subHeaders?.length}
         <div class='subtitles dropdown dropup with-arrow' use:click={toggleDropdown}>
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Subtitles [C]'>
-            <Captions size='2.5rem'strokeWidth={2.5} />
+            <Captions size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl custom-radio p-10 pb-5 text-capitalize'>
+          <div class='dropdown-menu dropdown-menu-right ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto mh-40 text-nowrap'>
             <input name='subtitle-radio-set' type='radio' id='subtitle-off-radio' value='off' checked={subHeaders && subs?.current === -1} />
-            <label for='subtitle-off-radio' use:click={() => subs.selectCaptions(-1)} class='text-truncate pb-5'> OFF </label>
+            <label for='subtitle-off-radio' use:click={() => subs.selectCaptions(-1)} class='pb-5'> OFF </label>
             {#each subHeaders as track}
               {#if track}
-                <input name='subtitle-radio-set' type='radio' id='subtitle-{track.number}-radio' value={track.numer} checked={track.number === subs.current} />
-                <label for='subtitle-{track.nubmer}-radio' use:click={() => subs.selectCaptions(track.number)} class='text-truncate pb-5'>
+                <input name='subtitle-radio-set' type='radio' id='subtitle-{track.number}-radio' value={track.number} checked={track.number === subs.current} />
+                <label for='subtitle-{track.number}-radio' use:click={() => subs.selectCaptions(track.number)} class='pb-5'>
                   {(track.language || (!Object.values(subs.headers).some(header => header.language === 'eng' || header.language === 'en') ? 'eng' : track.type)) + (track.name ? ' - ' + track.name : '')}
                 </label>
               {/if}
@@ -1655,6 +1655,9 @@
   .top {
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4) 25%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.1) 75%, transparent);
     transition: 0.5s opacity ease 0.2s;
+  }
+  .mh-40 {
+    max-height: 40rem;
   }
 
   .ctrl {
