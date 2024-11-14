@@ -20,6 +20,7 @@ export default new class AnimeResolver {
   getCacheKeyForTitle (obj) {
     let key = obj.anime_title
     if (obj.anime_year) key += obj.anime_year
+    if (obj.release_information) key += obj.release_information
     return key
   }
 
@@ -90,7 +91,13 @@ export default new class AnimeResolver {
         const titleObject = { title, key, isAdult: false }
         const titleVariants = [{ ...titleObject }]
         if (obj.anime_year) {
-          titleVariants.push({ ...titleObject, year: obj.anime_year })
+          titleVariants.unshift({ ...titleObject, year: obj.anime_year })
+        }
+        if (obj.release_information?.length > 0) {
+          if (obj.anime_year) {
+            titleVariants.unshift({...titleObject, title: title + " " + obj.release_information, year: obj.anime_year})
+          }
+          titleVariants.unshift({...titleObject, title: title + " " + obj.release_information})
         }
         return titleVariants
       })
@@ -160,6 +167,9 @@ export default new class AnimeResolver {
 
       // Remove file extensions and replace all remaining periods with spaces
       name = name.replace(/\.(mkv|mp4|avi|mov|wmv|flv|webm|m4v|mpeg|mpg|3gp|ogg|ogv)$/i, '').replace(/\./g, ' ')
+
+      name = name
+          .replace("1-2", "1/2").replace("1_2", "1/2") // Ranma 1/2 fix.
 
       // Restore preserved patterns by converting markers back
       name = name
