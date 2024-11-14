@@ -1056,6 +1056,9 @@
         details,
         state: (details && (np.media?.format === 'MOVIE' ? 'The Movie' : (np.episode ? 'Episode: ' + np.episode + (np.media?.episodes ? ' of ' + np.media.episodes : '') : 'Streaming the Universe'))),
         timestamps,
+        party: {
+          size: (np.episode && np.media?.episodes && [np.episode, np.media.episodes]) || undefined
+        },
         assets: {
           large_text: np.title,
           large_image: np.thumbnail,
