@@ -62,7 +62,7 @@
       const details = {
           title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
           episode: ep,
-          episodeTitle: streamingEpisode && episodeRx.exec(streamingEpisode.title)[2],
+          episodeTitle: streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title)),
           thumbnail: media?.coverImage.extraLarge || streamingEpisode?.thumbnail
       }
       const np = {
@@ -129,22 +129,17 @@
       }
     }
     let newPlaying = nowPlaying.value
-
     const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => file.name))
-
     videoFiles.map(file => {
       file.media = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(file.name).includes(parseObject.file_name))
       return file
     })
-
     videoFiles = videoFiles.filter(file => !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type?.toUpperCase()))
-
     if (newPlaying?.verified && videoFiles.length === 1) {
       debug('Media was verified, skipping verification')
       videoFiles[0].media.media = newPlaying.media
       if (newPlaying.episode) videoFiles[0].media.episode = newPlaying.episode
     }
-
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
     if (!newPlaying || Object.keys(newPlaying).length === 0) {
@@ -164,7 +159,6 @@
       debug(`Highest occurrence anime title: ${max}`)
       result = videoFiles.filter(file => file.media.parseObject.anime_title === max)
     }
-
     result.sort((a, b) => a.media.episode - b.media.episode)
     result.sort((a, b) => (b.media.parseObject.anime_season ?? 1) - (a.media.parseObject.anime_season ?? 1))
 

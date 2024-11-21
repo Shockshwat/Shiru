@@ -802,7 +802,7 @@
     if (detail.length) chapters = detail
   })
   async function findChapters () {
-    if (!chapters.length && current.media.media) {
+    if (!chapters.length && current?.media?.media) {
       chapters = await getChaptersAniSkip(current, safeduration)
     }
   }
@@ -1198,12 +1198,12 @@
   <div class='top z-40 row'>
     <div class='stats col-4 pl-20'>
       <div class='font-weight-bold overflow-hidden text-truncate d-none d-md-block'>
-        {#if media.title}{media.title}{/if}
+        {#if media?.title}{media.title}{/if}
       </div>
       <div class='font-weight-normal overflow-hidden text-truncate font-size-16 text-muted d-none d-md-block'>
-        {#if media.episode}Episode {media.episode}{/if}
-        {#if media.episode && media.episodeTitle}{' - '}{/if}
-        {#if media.episodeTitle}{media.episodeTitle}{/if}
+        {#if media?.episode}Episode {media.episode}{/if}
+        {#if media?.episode && media?.episodeTitle}{' - '}{/if}
+        {#if media?.episodeTitle}{media.episodeTitle}{/if}
       </div>
     </div>
     <div class='d-flex col-4 justify-content-center'>
