@@ -112,7 +112,7 @@
                 <img src={notification.icon} alt='icon' class='notification-icon w-auto' />
               </div>
               <div class='notification-content z-10 w-full'>
-                <p class='notification-title overflow-hidden font-size-18 font-weight-bold mt-0 mb-0 mr-5'>{notification.title}</p>
+                <p class='notification-title overflow-hidden font-size-18 font-weight-bold mt-0 mb-0 mr-40'>{notification.title}</p>
                 <button type='button' class='position-absolute right-0 top-0 mr-5 mt-5 btn btn-square d-flex align-items-center justify-content-center' class:not-allowed={watched} class:not-reactive={watched} use:click={() => { if (!watched) notification.prompt = false; delete notification.prompt; notification.read = !notification.read } }>
                   {#if notification.read}
                     <MailOpen size='1.7rem' strokeWidth='3'/>
@@ -176,6 +176,9 @@
   }
   .h-33 {
     height: 3.3rem !important;
+  }
+  .mr-40 {
+    margin-right: 4rem;
   }
   .mw-500 {
     min-width: 50rem;
