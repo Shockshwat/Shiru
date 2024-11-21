@@ -3,6 +3,7 @@
   import { matchPhrase } from "@/modules/util.js"
   import { fastPrettyBytes, since } from '@/modules/util.js'
   import { Database, BadgeCheck } from 'lucide-svelte'
+  import { toast } from 'svelte-sonner'
 
   /** @typedef {import('@thaunknown/ani-resourced/sources/types.d.ts').Result} Result */
   /** @typedef {import('anitomyscript').AnitomyResult} AnitomyResult */
@@ -82,6 +83,14 @@
     for (const term of audio) simpleName = simpleName.replace(term, '')
     return simpleName.replace(/[[{(]\s*[\]})]/g, '').replace(/\s+/g, ' ').trim()
   }
+
+  function copyToClipboard (text) {
+    navigator.clipboard.writeText(text)
+    toast('Copied to clipboard', {
+      description: 'Copied magnet URL to clipboard',
+      duration: 5000
+    })
+  }
 </script>
 
 <script>
@@ -95,7 +104,7 @@
   export let play
 </script>
 
-<div class='card bg-dark p-15 d-flex mx-0 overflow-hidden pointer mb-10 mt-0 position-relative scale' use:click={() => play(result)} title={result.parseObject.file_name}>
+<div class='card bg-dark p-15 d-flex mx-0 overflow-hidden pointer mb-10 mt-0 position-relative scale' role='button' tabindex='0' use:click={() => play(result)} on:contextmenu|preventDefault={() => copyToClipboard(result.link)} title={result.parseObject.file_name}>
   {#if media.bannerImage}
     <div class='position-absolute top-0 left-0 w-full h-full'>
       <img src={media.bannerImage} alt='bannerImage' class='img-cover w-full h-full' style='border-radius: 5px;' />
