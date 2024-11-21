@@ -14,6 +14,7 @@
     view.set((await anilistClient.searchIDSingle({ id: anime })).data.Media)
   }
   IPC.on('open-anime', handleAnime)
+  window.addEventListener('open-anime', (event) => handleAnime(event.detail.id))
   IPC.on('schedule', () => {
     page.set('schedule')
   })
@@ -58,6 +59,7 @@
   import Menubar from './components/Menubar.svelte'
   import { Toaster } from 'svelte-sonner'
   import Profiles from './components/Profiles.svelte'
+  import Notifications from './components/Notifications.svelte'
   import MinimizeTray from './components/MinimizeTray.svelte'
   import Navbar from './components/Navbar.svelte'
 
@@ -68,8 +70,9 @@
   <Menubar bind:page={$page} />
   <Sidebar bind:page={$page} />
   <div class='overflow-hidden content-wrapper h-full'>
-    <Toaster visibleToasts={6} position='top-right' theme='dark' richColors duration={10000} closeButton />
+    <Toaster visibleToasts={2} position='top-right' theme='dark' richColors duration={10000} closeButton />
     <Profiles />
+    <Notifications />
     <MinimizeTray />
     <ViewAnime bind:overlay={$overlay} />
     <TorrentModal bind:overlay={$overlay} />

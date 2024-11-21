@@ -217,7 +217,7 @@ class AnilistClient {
 
   constructor () {
     debug('Initializing Anilist Client for ID ' + this.userID?.viewer?.data?.Viewer?.id)
-    this.limiter.on('failed', async (error, jobInfo) => {
+    this.limiter.on('failed', async (error) => {
       printError(error)
 
       if (error.status === 500) return 1
@@ -231,13 +231,9 @@ class AnilistClient {
       return time
     })
 
-    profiles.subscribe(() => {
-      this.currentProfile.set(alToken)
-    })
-
     if (this.userID?.viewer?.data?.Viewer) {
       this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC' })
-      this.findNewNotifications()
+      this.findNewNotifications().catch((error) => debug(`Failed to get new anilist notifications at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`))
       // update userLists every 15 mins
       setInterval(async () => {
         try {
@@ -249,11 +245,7 @@ class AnilistClient {
       }, 1000 * 60 * 15)
       // check notifications every 5 mins
       setInterval(() => {
-        try {
-          this.findNewNotifications()
-        } catch (error) {
-          debug(`Failed to get new anilist notifications at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`)
-        }
+        this.findNewNotifications().catch((error) => debug(`Failed to get new anilist notifications at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`))
       }, 1000 * 60 * 5)
     }
   }
@@ -330,35 +322,46 @@ class AnilistClient {
   }
 
   async findNewNotifications () {
-    if (settings.value.aniNotify) {
+    if (settings.value.aniNotify !== 'none') {
       debug('Checking for new AniList notifications')
       const res = await this.getNotifications()
-      const mainProfile = get(this.currentProfile)
-      const notifications = res.data.Page.notifications
-      const newNotifications = notifications.filter(({createdAt}) => createdAt > (mainProfile.viewer.data.Viewer.aniNotify))
-      mainProfile.viewer.data.Viewer.aniNotify = Date.now() / 1000
-      localStorage.setItem(alToken ? 'ALviewer' : 'MALviewer', JSON.stringify(mainProfile))
-
+      const notifications = res?.data?.Page?.notifications
+      const lastNotified = notify.value['lastAni']
+      const newNotifications = (lastNotified > 0) && notifications ? notifications.filter(({createdAt}) => createdAt > lastNotified) : []
       debug(`Found ${newNotifications?.length} new notifications`)
-      for (const {media, episode, type} of newNotifications) {
-        if ((!settings.value.aniNotifyLimited || type !== 'AIRING') && media.type === 'ANIME' && media.format !== 'MUSIC') {
-          const options = {
+      for (const {media, episode, type, createdAt} of newNotifications) {
+        if ((settings.value.aniNotify !== 'limited' || type !== 'AIRING') && media.type === 'ANIME' && media.format !== 'MUSIC' && (!settings.value.rssNotifyDubs || !malDubs.isDubMedia(media))) {
+          const details = {
             title: media.title.userPreferred,
-            message: type === 'AIRING' ? `Episode ${episode} is out in Japan, it should be available soon.` : 'Was recently announced!',
+            message: type === 'AIRING' ? `Episode ${episode} (Sub) is out in Japan, it should be available soon.` : 'Was recently announced!',
             icon: media.coverImage.medium,
-            heroImg: media?.bannerImage,
-            button: [
-              { text: 'View Anime', activation: `shiru://anime/${media?.id}` },
-            ],
-            activation: {
-              type: 'protocol',
-              launch: `shiru://anime/${media?.id}`
-            }
+            heroImg: media?.bannerImage
           }
-          IPC.emit('notification', options)
+          if (settings.value.systemNotify) {
+            IPC.emit('notification', {
+              ...details,
+              button: [
+                {text: 'View Anime', activation: `shiru://anime/${media?.id}`},
+              ],
+              activation: {
+                type: 'protocol',
+                launch: `shiru://anime/${media?.id}`
+              }
+            })
+          }
+          window.dispatchEvent(new CustomEvent('notification-app', {
+            detail: {
+              ...details,
+              id: media?.id,
+              ...(type === 'AIRING' ? { episode: episode } : {}),
+              timestamp: createdAt,
+              click_action: (type === 'AIRING' ? 'PLAY' : 'VIEW')
+            }
+          }))
         }
       }
     }
+    updateNotify('lastAni', Date.now() / 1000)
   }
 
   /**

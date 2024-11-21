@@ -1,5 +1,5 @@
 import { DOMPARSER } from '@/modules/util.js'
-import { settings, profiles, alToken, malToken } from '@/modules/settings.js'
+import { settings, notify, updateNotify } from '@/modules/settings.js'
 import { toast } from 'svelte-sonner'
 import { add } from '@/modules/torrent.js'
 import { getEpisodeMetadataForMedia } from '@/modules/anime.js'
@@ -7,17 +7,10 @@ import AnimeResolver from '@/modules/animeresolver.js'
 import { anilistClient } from '@/modules/anilist.js'
 import { hasNextPage } from '@/modules/sections.js'
 import { malDubs } from '@/modules/animedubs.js'
-import { writable, get } from "svelte/store"
 import IPC from '@/modules/ipc.js'
 import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:rss')
-
-let fallbackNotify = JSON.parse(localStorage.getItem('rssNotify'))
-const currentProfile = writable(alToken || malToken)
-profiles.subscribe(() => {
-  currentProfile.set(alToken || malToken)
-})
 
 export function parseRSSNodes (nodes) {
   return nodes.map(item => {
@@ -65,9 +58,11 @@ class RSSMediaManager {
     const res = this._getMediaForRSS(page, perPage, url)
     if (!ignoreErrors) {
       res.catch(e => {
-        toast.error('Search Failed', {
-          description: 'Failed to load media for home feed!\n' + e.message
-        })
+        if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+          toast.error('Search Failed', {
+            description: 'Failed to load media for home feed!\n' + e.message
+          })
+        }
         debug('Failed to load media for home feed', e.stack)
       })
     }
@@ -81,7 +76,6 @@ class RSSMediaManager {
 
   async getContentChanged (page, perPage, url) {
     const content = await getRSSContent(getReleasesRSSurl(url))
-
     if (!content) return false
 
     const pubDate = +(new Date(content.querySelector('pubDate').textContent)) * page * perPage
@@ -96,16 +90,15 @@ class RSSMediaManager {
     if (!changed) return this.resultMap[url].result
     debug(`Feed ${url} has changed, updating`)
 
-    const mainProfile = get(currentProfile)
     const index = (page - 1) * perPage
     const targetPage = [...changed.content.querySelectorAll('item')].slice(index, index + perPage)
     const items = parseRSSNodes(targetPage)
     hasNextPage.value = items.length === perPage
     const result = this.structureResolveResults(items)
 
-    await this.findNewReleasesAndNotify(result,  mainProfile?.viewer?.data?.Viewer?.rssNotify?.[url]?.date || fallbackNotify?.[url]?.date);
-    (mainProfile?.viewer?.data?.Viewer?.rssNotify ?? (fallbackNotify ??= {}))[url] = { date: changed.pullDate }
-    localStorage.setItem(mainProfile ? (alToken ? 'ALviewer' : 'MALviewer') : 'rssNotify', JSON.stringify(mainProfile || fallbackNotify))
+    const encodedUrl = btoa(url)
+    await this.findNewReleasesAndNotify(result, notify.value['lastRSS']?.[encodedUrl]?.date)
+    updateNotify('lastRSS', (current) => ({...current, [encodedUrl]: { date: changed.pullDate }}))
 
     this.resultMap[url] = {
       date: changed.pubDate,
@@ -121,27 +114,45 @@ class RSSMediaManager {
     const newReleases = res.filter(({ date }) => date?.getTime() > oldDate)
     debug(`Found ${newReleases?.length} new releases, notifying...`)
 
-    for (const { media, parseObject, episode, link } of newReleases) {
+    for (const { media, parseObject, episode, link, date } of newReleases) {
       const notify = (!media?.mediaListEntry && settings.value.rssNotify?.includes('NOTONLIST')) || (media?.mediaListEntry && settings.value.rssNotify?.includes(media?.mediaListEntry?.status))
       const dubbed = malDubs.isDubMedia(parseObject)
       if (notify && (!settings.value.rssNotifyDubs || dubbed || !malDubs.isDubMedia(media))) {
         const progress = media?.mediaListEntry?.progress
         const behind = progress < (episode - 1)
-        const options = {
+        const details = {
           title: anilistClient.title(media) || parseObject.anime_title,
           message: `${episode ? `Episode ${episode}` : media?.format === 'MOVIE' ? `The Movie` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${episode || media?.format === 'MOVIE' ? `is out!` : `is now ready to binge!`}`,
           icon: media?.coverImage.medium,
-          heroImg: media?.bannerImage,
-          button: [
-            { text: `${!progress || progress === 0 ? 'Start Watching' : behind ? 'Continue Watching' : 'Watch Now'}`, activation: `${!progress || progress === 0 || behind ? 'shiru://search/' + media?.id : 'shiru://torrent/' + link}` },
-            { text: 'View Anime', activation: `shiru://anime/${media?.id}` }
-          ],
-          activation: {
-            type: 'protocol',
-            launch: `shiru://anime/${media?.id}`
-          }
+          heroImg: media?.bannerImage
         }
-        IPC.emit('notification', options)
+        if (settings.value.systemNotify) {
+          IPC.emit('notification', {
+            ...details,
+            button: [
+              {
+                text: `${!progress || progress === 0 ? 'Start Watching' : behind ? 'Continue Watching' : 'Watch Now'}`,
+                activation: `${!progress || progress === 0 || behind ? 'shiru://search/' + media?.id : 'shiru://torrent/' + link}`
+              },
+              {text: 'View Anime', activation: `shiru://anime/${media?.id}`}
+            ],
+            activation: {
+              type: 'protocol',
+              launch: `shiru://anime/${media?.id}`
+            }
+          })
+        }
+        window.dispatchEvent(new CustomEvent('notification-app', {
+          detail: {
+            ...details,
+            id: media?.id,
+            episode: episode,
+            timestamp: Math.floor(new Date(date).getTime() / 1000),
+            dub: dubbed,
+            click_action: 'TORRENT',
+            magnet: link
+          }
+        }))
       }
     }
   }

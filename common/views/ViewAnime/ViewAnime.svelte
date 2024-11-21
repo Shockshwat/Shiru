@@ -93,8 +93,8 @@
     IPC.emit('open', url)
   }
   let episodeOrder = true
-  window.addEventListener('overlay-check', () => {
-    if (media) {
+  window.addEventListener('overlay-check', (event) => {
+    if (!event?.detail?.nowPlaying && media) {
       close()
     }
   })

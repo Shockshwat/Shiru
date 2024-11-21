@@ -13,8 +13,7 @@
   export let overlay = ''
 </script>
 
-<div class='sidebar-link sidebar-link-with-icon pointer overflow-hidden {css}'
-  use:click={() => { if (!icon.includes("login") && !icon.includes("favorite")) { window.dispatchEvent(new Event('overlay-check')) } _click() } }>
+<div class='sidebar-link sidebar-link-with-icon pointer overflow-hidden {css}' use:click={() => { if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) } _click() } }>
   <span class='text-nowrap d-flex align-items-center w-full h-full'>
     {#if image}
       <span class='rounded d-flex'>
@@ -22,7 +21,7 @@
       </span>
       <span class='text ml-20 {overlay === "profile" ? "font-weight-bolder font-size-18" : ""}'>{text}</span>
     {:else}
-      {@const active = (page === _page && overlay !== 'active') || (overlay === 'active' && nowPlaying)}
+      {@const active = (page === _page && overlay !== 'active') || overlay === 'notify' || (overlay === 'active' && nowPlaying)}
       <span class='rounded d-flex'>
         <slot active={active}>{icon}</slot>
       </span>

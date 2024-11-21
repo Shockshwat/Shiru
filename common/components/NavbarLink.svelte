@@ -11,17 +11,13 @@
   export let overlay = ''
 </script>
 
-<div
-  class='navbar-link navbar-link-with-icon pointer overflow-hidden {css}'
-  use:click={() => { if (!icon.includes("favorite")) { window.dispatchEvent(new Event('overlay-check')) }  _click() } }>
-
+<div class='navbar-link navbar-link-with-icon pointer overflow-hidden {css}' use:click={() => { if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) }  _click() } }>
   <span class='rounded d-flex'>
     <slot active={(page === _page && overlay !== 'active') || (overlay === 'active' && nowPlaying)}>{icon}</slot>
   </span>
 </div>
 
 <style>
-
   .navbar-link > span {
     color: #fff;
     border-radius: 0.3rem;

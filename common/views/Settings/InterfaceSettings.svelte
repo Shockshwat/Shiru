@@ -62,7 +62,7 @@
     <option value='full'>Full</option>
   </select>
 </SettingCard>
-<SettingCard title='Card Audio' description={'If the dub or sub icon should be shown on the cards in the menu.\nThis will show one of three simple icons which are previewed as follows:'}>
+<SettingCard title='Card Audio' description={'If the dub or sub icon should be shown on the cards in the menu, will be hidden on the schedule page.\nThis will show one of three simple icons which are previewed as follows:'}>
   <AudioLabel example={true}/>
   <div class='custom-switch'>
     <input type='checkbox' id='card-audio' bind:checked={settings.cardAudio} />
@@ -86,7 +86,46 @@
   </SettingCard>
 {/if}
 <h4 class='mb-10 font-weight-bold'>Notification Settings</h4>
-<SettingCard title='RSS Feed' description={'When your RSS feed updates with new entries a notification will be sent out depending on your list status.'}>
+<SettingCard title='System Notifications' description='Allows custom system notifications to be sent, with this disabled you will still get in-app notifications.'>
+  <div class='custom-switch'>
+    <input type='checkbox' id='system-notify' bind:checked={settings.systemNotify} />
+    <label for='system-notify'>{settings.systemNotify ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
+{#if Helper.isAniAuth()}
+  <SettingCard title='AniList Notifications' description='Get notifications from your AniList account, showing when episodes have aired and any new anime titles you are following have been added to the database. Limited will only get important notifications like when a new season is announced, consider using the Limited setting when using RSS Feed notifications.'>
+    <select class='form-control bg-dark w-300 mw-full' bind:value={settings.aniNotify}>
+      <option value='all' selected>All</option>
+      <option value='limited'>Limited</option>
+      <option value='none'>None</option>
+    </select>
+  </SettingCard>
+{/if}
+<SettingCard title='Dubs Notifications' description={'When the dub schedule airs a new episode or any new anime titles you are following have been added to the database, a notification will be sent depending on your list status.\n\nLimited will only get important notifications like when a dub for a new season is announced, consider using the Limited setting when using RSS Feed notifications.'}>
+  <div>
+    {#each settings.dubNotify as status, i}
+      <div class='input-group mb-10 w-500 mw-full'>
+        <select id='dubs-notify-{i}' class='w-400 form-control mw-full bg-dark' bind:value={settings.dubNotify[i]} >
+          <option disabled value=''>Select a status</option>
+          {#each [['Watching', 'CURRENT'], ['Planning', 'PLANNING'], ['Paused', 'PAUSED'], ['Completed', 'COMPLETED'], ['Dropped', 'DROPPED'], ['Rewatching', 'REPEATING'], ['Not on List', 'NOTONLIST']].filter(option => !settings.dubNotify.includes(option)) as option}
+            <option value='{option[1]}'>{option[0]}</option>
+          {/each}
+        </select>
+        <div class='input-group-append'>
+          <button type='button' use:click={() => { settings.dubNotify.splice(i, 1); settings.dubNotify = settings.dubNotify }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>
+        </div>
+      </div>
+    {/each}
+    <div class='d-flex'>
+      <button type='button' use:click={() => { settings.dubNotify = [...settings.dubNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
+      <div class='custom-switch ml-auto mt-7'>
+        <input type='checkbox' id='dubs-limited' bind:checked={settings.dubNotifyLimited} />
+        <label for='dubs-limited'>Limited</label>
+      </div>
+    </div>
+  </div>
+</SettingCard>
+<SettingCard title='RSS Feed' description={'When each RSS feed updates with new entries, notifications will be sent depending on your list status.\n\nDub Preferred will send notifications for an anime only if a dubbed episode is available or if the series is sub-only (no dub exists). This is ideal for viewers who prioritize watching dubbed content whenever possible.'}>
   <div>
     {#each settings.rssNotify as status, i}
       <div class='input-group mb-10 w-500 mw-full'>
@@ -101,31 +140,15 @@
         </div>
       </div>
     {/each}
-    <button type='button' use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
-  </div>
-</SettingCard>
-<SettingCard title='RSS Dubs' description={'Enabling this means you will only receive notifications for an anime title if it is either a dubbed episode or no dub exists for the series.\nWhen this is disabled it will result in both dubbed and subbed episode notifications for the same anime title.'}>
-  <div class='custom-switch'>
-    <input type='checkbox' id='rss-feed-dubs' bind:checked={settings.rssNotifyDubs} />
-    <label for='rss-feed-dubs'>{settings.rssNotifyDubs ? 'On' : 'Off'}</label>
-  </div>
-</SettingCard>
-{#if Helper.isAniAuth()}
-  <SettingCard title='AniList Notifications' description={'Enables the checking of notifications on your Anilist account. This will show when episodes have aired and any new anime titles you are following have been added to the database. This can cause notifications to be cluttered if you rely on RSS Feed notifications, consider narrowing the scope if this is enabled.'}>
-    <div class='custom-switch'>
-      <input type='checkbox' id='ani-notify' bind:checked={settings.aniNotify} />
-      <label for='ani-notify'>{settings.aniNotify ? 'On' : 'Off'}</label>
-    </div>
-  </SettingCard>
-  {#if settings.aniNotify}
-    <SettingCard title='AniList Limited' description={'Reduces the amount of notifications retrieved, with this enabled you will only get important notifications like when a new season is announced. Note, you will not get notifications about currently airing episodes.'}>
-      <div class='custom-switch'>
-        <input type='checkbox' id='ani-limited' bind:checked={settings.aniNotifyLimited} />
-        <label for='ani-limited'>{settings.aniNotifyLimited ? 'On' : 'Off'}</label>
+    <div class='d-flex'>
+      <button type='button' use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
+      <div class='custom-switch  ml-auto mt-7'>
+        <input type='checkbox' id='rss-feed-dubs' bind:checked={settings.rssNotifyDubs} />
+        <label for='rss-feed-dubs'>Dub Preferred</label>
       </div>
-    </SettingCard>
-  {/if}
-{/if}
+    </div>
+  </div>
+</SettingCard>
 
 <h4 class='mb-10 font-weight-bold'>Home Screen Settings</h4>
 {#if Helper.isAuthorized()}
@@ -163,6 +186,9 @@
 </SettingCard>
 
 <style>
+  .mt-7 {
+    margin-top: .7rem;
+  }
   textarea {
     min-height: 6.6rem;
   }
