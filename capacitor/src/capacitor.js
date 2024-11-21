@@ -87,6 +87,8 @@ const protocolMap = {
   alauth: token => sendToken(token),
   malauth: token => sendMalToken(token),
   anime: id => IPC.emit('open-anime', id),
+  torrent: magnet => add(magnet),
+  search: id => play(id),
   w2g: link => IPC.emit('w2glink', link),
   schedule: () => IPC.emit('schedule'),
   donate: () => Browser.open({ url: 'https://github.com/sponsors/RockinChaos/' })
@@ -116,6 +118,22 @@ function sendMalToken (line) {
     if (state.includes('%')) state = decodeURIComponent(state)
     IPC.emit('maltoken', code, state)
   } 
+}
+
+/**
+ * @param {string} id - The media id.
+ */
+function play(id) {
+  IPC.emit.send('play-anime', id)
+  IPC.emit.send('window-show')
+}
+
+/**
+ * @param {string} magnet - The magnet link.
+ */
+function add(magnet) {
+  IPC.emit.send('play-torrent', magnet)
+  IPC.emit.send('window-show')
 }
 
 App.getLaunchUrl().then(res => {
