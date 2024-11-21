@@ -37,7 +37,7 @@ class MALDubs {
         debug('Getting MyAnimeList Dubs IDs')
         let res = {}
         try {
-            res = await fetch('https://raw.githubusercontent.com/MAL-Dubs/MAL-Dubs/main/data/dubInfo.json')
+            res = await fetch(`https://raw.githubusercontent.com/MAL-Dubs/MAL-Dubs/main/data/dubInfo.json?timestamp=${new Date().getTime()}`)
         } catch (e) {
             if (!res || res.status !== 404) throw e
         }
