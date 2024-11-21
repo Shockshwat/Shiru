@@ -33,6 +33,12 @@
 {/if}
 
 <h4 class='mb-10 font-weight-bold'>Interface Settings</h4>
+<SettingCard title='Hide Donate Button' description='Hides the "Support This App" button from the menu bar.'>
+  <div class='custom-switch'>
+    <input type='checkbox' id='donate' bind:checked={settings.donate} />
+    <label for='donate'>{settings.donate ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 <SettingCard title='Enable Smooth Scrolling' description='Enables smooth scrolling for vertical containers. Turning this off might remove jitter when scrolling on devices without a GPU.'>
   <div class='custom-switch'>
     <input type='checkbox' id='smooth-scroll' bind:checked={settings.smoothScroll} />
