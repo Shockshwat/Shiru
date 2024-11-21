@@ -95,9 +95,9 @@ export default new class AnimeResolver {
         }
         if (obj.release_information?.length > 0) {
           if (obj.anime_year) {
-            titleVariants.unshift({...titleObject, title: title + " " + obj.release_information, year: obj.anime_year})
+            titleVariants.unshift({...titleObject, title: title + ' ' + obj.release_information, year: obj.anime_year})
           }
-          titleVariants.unshift({...titleObject, title: title + " " + obj.release_information})
+          titleVariants.unshift({...titleObject, title: title + ' ' + obj.release_information})
         }
         return titleVariants
       })
@@ -109,8 +109,7 @@ export default new class AnimeResolver {
     for (const chunk of chunks(titleObjects, 60)) {
       // single title has a complexity of 8.1, al limits complexity to 500, so this can be at most 62, undercut it to 60, al pagination is 50, but at most we'll do 30 titles since isAdult duplicates each title
       const search = await anilistClient.alSearchCompound(chunk)
-      if (search?.errors) throw search.errors[0]
-      if (!search) throw {error: {message:'Failed to perform compound search as it returned undefined!'}}
+      if (!search || search?.errors) return
       for (const [key, media] of search) {
         if (!this.animeNameCache[key]) {
           debug(`Found ${key} as ${media?.id}: ${media?.title?.userPreferred}`)
@@ -169,7 +168,7 @@ export default new class AnimeResolver {
       name = name.replace(/\.(mkv|mp4|avi|mov|wmv|flv|webm|m4v|mpeg|mpg|3gp|ogg|ogv)$/i, '').replace(/\./g, ' ')
 
       name = name
-          .replace("1-2", "1/2").replace("1_2", "1/2") // Ranma 1/2 fix.
+          .replace('1-2', '1/2').replace('1_2', '1/2') // Ranma 1/2 fix.
 
       // Restore preserved patterns by converting markers back
       name = name
@@ -191,10 +190,8 @@ export default new class AnimeResolver {
   async resolveFileAnime (fileName) {
     if (!fileName) return [{}]
     const parseObjs = await this.findAndCacheTitle(this.cleanFileName(fileName))
-
     const fileAnimes = []
     for (const parseObj of parseObjs) {
-
       let failed = false
       let episode
       let media = this.animeNameCache[this.getCacheKeyForTitle(parseObj)]

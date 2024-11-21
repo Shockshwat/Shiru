@@ -9,7 +9,8 @@ import clipboard from './clipboard.js'
 import { search, key } from '@/views/Search.svelte'
 
 import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
-import Helper from "@/modules/helper.js"
+import { animeSchedule } from '@/modules/animeschedule.js'
+import Helper from '@/modules/helper.js'
 
 const imageRx = /\.(jpeg|jpg|gif|png|webp)/i
 
@@ -244,9 +245,18 @@ export function setStatus (status, other = {}, media) {
 const episodeMetadataMap = {}
 
 export async function getEpisodeMetadataForMedia (media) {
-  if (episodeMetadataMap[media.id]) return episodeMetadataMap[media.id]
-  const res = await fetch('https://api.ani.zip/mappings?anilist_id=' + media.id)
+  if (episodeMetadataMap[media?.id]) return episodeMetadataMap[media?.id]
+  const res = await fetch('https://api.ani.zip/mappings?anilist_id=' + media?.id)
   const { episodes } = await res.json()
-  episodeMetadataMap[media.id] = episodes
+  episodeMetadataMap[media?.id] = episodes
   return episodes
+}
+
+export function episode(media, variables) {
+  return variables?.hideSubs ? animeSchedule.airing.value.find(cached => cached.media.id === media.id)?.media?.airingSchedule?.nodes?.[0].episode : media.airingSchedule?.nodes?.[0]?.episode
+}
+
+export function airingAt(media, variables) {
+  const airingAt = variables?.hideSubs ? animeSchedule.airing.value.find(cached => cached.media.id === media.id)?.media?.airingSchedule?.nodes?.[0].airingAt : media.airingSchedule?.nodes?.[0]?.airingAt
+  return airingAt && (variables?.hideSubs ? new Date(airingAt).getTime() / 1000 : airingAt)
 }
