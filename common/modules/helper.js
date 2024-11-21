@@ -1,11 +1,11 @@
-import { alToken, malToken, isAuthorized } from '@/modules/settings.js'
+import {alToken, malToken, isAuthorized, settings} from '@/modules/settings.js'
 import { anilistClient, codes } from '@/modules/anilist.js'
 import { malClient } from '@/modules/myanimelist.js'
 import { malDubs } from "@/modules/animedubs.js"
 import { profiles } from '@/modules/settings.js'
+import { matchKeys } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
 import { get } from 'svelte/store'
-import Fuse from 'fuse.js'
 import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:helper')
@@ -163,18 +163,6 @@ export default class Helper {
     }
   }
 
-  static matchTitle(media, phrase, keys) {
-    if (!phrase) {
-      return true
-    }
-    const options = {
-      includeScore: true,
-      threshold: 0.4,
-      keys: keys
-    }
-    return new Fuse([media], options).search(phrase).length > 0
-  }
-
   /*
    * This exists to fill in any queried AniList media with the user list media data from alternate authorizations.
    */
@@ -294,11 +282,11 @@ export default class Helper {
     }
   }
 
-  static listToast(res, description, profile){
+  static listToast(res, description, profile)  {
     const who = (profile ? ' for ' + profile.viewer.data.Viewer.name + (profile.viewer?.data?.Viewer?.avatar ? ' (AniList)' : ' (MyAnimeList)')  : '')
     if (res?.data?.mediaListEntry || res?.data?.SaveMediaListEntry) {
       debug(`List Updated ${who}: ${description.replace(/\n/g, ', ')}`)
-      if (!profile) {
+      if (!profile && (settings.value.toasts.includes('All') || settings.value.toasts.includes('Successes'))) {
         toast.success('List Updated', {
           description,
           duration: 6000
@@ -320,7 +308,7 @@ export default class Helper {
     debug('Getting custom paged media list')
     const ids = this.isAniAuth() ? mediaList.filter(({ media }) => {
         if ((!variables.hideSubs || malDubs.dubLists.value.dubbed.includes(media.idMal)) &&
-          this.matchTitle(media, variables.search, ['title.userPreferred', 'title.english', 'title.romaji', 'title.native']) &&
+          matchKeys(media, variables.search, ['title.userPreferred', 'title.english', 'title.romaji', 'title.native']) &&
           (!variables.genre || variables.genre.map(genre => genre.trim().toLowerCase()).every(genre => media.genres.map(genre => genre.trim().toLowerCase()).includes(genre))) &&
           (!variables.tag || variables.tag.map(tag => tag.trim().toLowerCase()).every(tag => media.tags.map(tag => tag.name.trim().toLowerCase()).includes(tag))) &&
           (!variables.season || variables.season === media.season) &&
@@ -332,7 +320,7 @@ export default class Helper {
         }
       }).map(({ media }) => (this.isUserSort(variables) ? media : media.id)) : mediaList.filter(({ node }) => {
         if ((!variables.hideSubs || malDubs.dubLists.value.dubbed.includes(node.id)) &&
-          this.matchTitle(node, variables.search, ['title', 'alternative_titles.en', 'alternative_titles.ja']) &&
+          matchKeys(node, variables.search, ['title', 'alternative_titles.en', 'alternative_titles.ja']) &&
           (!variables.season || variables.season.toLowerCase() === node.start_season?.season.toLowerCase()) &&
           (!variables.year || variables.year === node.start_season?.year) &&
           (!variables.format || (variables.format !== 'TV_SHORT' && variables.format === node.media_type.toUpperCase()) || (variables.format === 'TV_SHORT' && node.average_episode_duration < 1200)) &&
