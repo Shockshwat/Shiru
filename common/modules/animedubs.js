@@ -3,6 +3,7 @@ import { matchPhrase } from "@/modules/util.js"
 import { writable } from 'simple-store-svelte'
 import { codes } from '@/modules/anilist.js'
 import Debug from '@/modules/debug.js'
+import { settings } from '@/modules/settings.js'
 
 const debug = Debug('ui:animedubs')
 
@@ -64,10 +65,12 @@ class MALDubs {
 
     printError(error) {
         debug(`Error: ${error.status || 429} - ${error.message || codes[error.status || 429]}`)
-        toast.error('Dub Caching Failed', {
-            description: `Failed to load dub information!\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
-            duration: 3000
-        })
+        if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+            toast.error('Dub Caching Failed', {
+                description: `Failed to load dub information!\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
+                duration: 3000
+            })
+        }
     }
 }
 

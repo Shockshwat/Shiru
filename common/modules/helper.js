@@ -307,10 +307,12 @@ export default class Helper {
     } else {
       const error = `\n${429} - ${codes[429]}`
       debug(`Error: Failed to update user list${who} with: ${description.replace(/\n/g, ', ')} ${error}`)
-      toast.error('Failed to Update List' + who, {
-        description: description + error,
-        duration: 9000
-      })
+      if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+        toast.error('Failed to Update List' + who, {
+          description: description + error,
+          duration: 9000
+        })
+      }
     }
   }
 

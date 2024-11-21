@@ -5,6 +5,7 @@ import clipboard from './clipboard.js'
 import IPC from '@/modules/ipc.js'
 import 'browser-event-target-emitter'
 import Debug from '@/modules/debug.js'
+import { settings } from '@/modules/settings.js'
 
 const debug = Debug('ui:torrent')
 
@@ -61,12 +62,16 @@ client.on('files', ({ detail }) => {
 
 client.on('error', ({ detail }) => {
   debug(`Error: ${detail.message || detail}`)
-  toast.error('Torrent Error', { description: '' + (detail.message || detail) })
+  if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+    toast.error('Torrent Error', {description: '' + (detail.message || detail)})
+  }
 })
 
 client.on('warn', ({ detail }) => {
   debug(`Warn: ${detail.message || detail}`)
-  toast.warning('Torrent Warning', { description: '' + (detail.message || detail) })
+  if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Warnings')) {
+    toast.warning('Torrent Warning', {description: '' + (detail.message || detail)})
+  }
 })
 
 client.on('info', ({ detail }) => {

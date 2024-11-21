@@ -1,7 +1,7 @@
 import { writable } from 'simple-store-svelte'
 import Bottleneck from 'bottleneck'
 
-import { malToken, refreshMalToken } from '@/modules/settings.js'
+import { malToken, refreshMalToken, settings } from '@/modules/settings.js'
 import { codes } from "@/modules/anilist.js"
 import { toast } from 'svelte-sonner'
 import { sleep } from "@/modules/util.js";
@@ -14,10 +14,12 @@ export const clientID = 'bb7dce3881d803e656c45aa39bda9ccc' // app type MUST be s
 
 function printError (error) {
   debug(`Error: ${error.status || error || 429} - ${error.message || codes[error.status || error || 429]}`)
-  toast.error('Search Failed', {
-    description: `Failed making request to MyAnimeList!\nTry again in a minute.\n${error.status || error || 429} - ${error.message || codes[error.status || error || 429]}`,
-    duration: 3000
-  })
+  if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+    toast.error('Search Failed', {
+      description: `Failed making request to MyAnimeList!\nTry again in a minute.\n${error.status || error || 429} - ${error.message || codes[error.status || error || 429]}`,
+      duration: 3000
+    })
+  }
 }
 
 const queryFields =  [

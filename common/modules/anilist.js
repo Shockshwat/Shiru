@@ -41,10 +41,12 @@ export const codes = {
 
 function printError (error) {
   debug(`Error: ${error.status || 429} - ${error.message || codes[error.status || 429]}`)
-  toast.error('Search Failed', {
-    description: `Failed making request to anilist!\nTry again in a minute.\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
-    duration: 3000
-  })
+  if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+    toast.error('Search Failed', {
+      description: `Failed making request to anilist!\nTry again in a minute.\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
+      duration: 3000
+    })
+  }
 }
 
 const date = new Date()

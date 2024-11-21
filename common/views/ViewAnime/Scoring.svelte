@@ -1,6 +1,6 @@
 <script>
   import { anilistClient, codes } from '@/modules/anilist.js'
-  import { profiles } from '@/modules/settings.js'
+  import { profiles, settings } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
   import { get, writable } from 'svelte/store'
   import { toast } from 'svelte-sonner'
@@ -122,7 +122,7 @@
             }
           }
         }
-      } else {
+      } else if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Warnings')) {
         toast.warning('No Changes to List', {
           description: `Title: ${anilistClient.title(media)}\nStatus: ${Helper.statusName[status]}\nEpisode: ${episode} / ${totalEpisodes}${score !== 0 ? `\nYour Score: ${score}` : ''}`,
           duration: 6000
@@ -138,12 +138,12 @@
     if ((save && res?.data?.SaveMediaListEntry) || (!save && res)) {
       debug(`List Updated${who}: ${description.replace(/\n/g, ', ')}`)
       if (!profile) {
-        if (save) {
+        if (save && (settings.value.toasts.includes('All') || settings.value.toasts.includes('Successes'))) {
           toast.success('List Updated', {
             description,
             duration: 6000
           })
-        } else {
+        } else if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Warnings')) {
           toast.warning('List Updated', {
             description,
             duration: 9000
@@ -153,10 +153,12 @@
     } else {
       const error = `\n${429} - ${codes[429]}`
       debug(`Error: Failed to ${(save ? 'update' : 'delete title from')} user list${who} with: ${description.replace(/\n/g, ', ')} ${error}`)
-      toast.error('Failed to ' + (save ? 'Update' : 'Delete') + ' List' + who, {
-        description: description + error,
-        duration: 9000
-      })
+      if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+        toast.error('Failed to ' + (save ? 'Update' : 'Delete') + ' List' + who, {
+          description: description + error,
+          duration: 9000
+        })
+      }
     }
   }
 

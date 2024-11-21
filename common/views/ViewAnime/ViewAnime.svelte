@@ -125,6 +125,11 @@
     handlePlay(id, episode, torrentOnly)
   })
 
+  window.addEventListener('play-torrent', (event) => {
+    add(event.detail.magnet)
+    IPC.emit('overlay-check')
+  })
+
   IPC.on('play-torrent', magnet => {
     add(magnet)
     IPC.emit('overlay-check')

@@ -100,6 +100,15 @@
   </select>
 </SettingCard>
 
+<SettingCard title='Toast Levels' description='Changes what toasts are shown in the app, limiting what toasts are shown could be useful if an api is down to prevent spam.'>
+  <select class='form-control bg-dark w-300 mw-full' bind:value={settings.toasts}>
+    <option value='All' selected>All</option>
+    <option value='Warnings / Successes'>Warnings / Successes</option>
+    <option value='Errors'>Errors</option>
+    <option value='None'>None</option>
+  </select>
+</SettingCard>
+
 <SettingCard title='App and Device Info' description='Copy app and device debug info and capabilities, such as GPU information, GPU capabilities, version information and settings to clipboard.'>
   <button type='button' use:click={() => IPC.emit('get-device-info')} class='btn btn-primary'>Copy To Clipboard</button>
 </SettingCard>
