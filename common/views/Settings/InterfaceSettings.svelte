@@ -33,7 +33,7 @@
 {/if}
 
 <h4 class='mb-10 font-weight-bold'>Interface Settings</h4>
-<SettingCard title='Hide Donate Button' description='Hides the "Support This App" button from the menu bar.'>
+<SettingCard title='Enable Donate Button' description='Enables the "Support This App" button on the menu bar.'>
   <div class='custom-switch'>
     <input type='checkbox' id='donate' bind:checked={settings.donate} />
     <label for='donate'>{settings.donate ? 'On' : 'Off'}</label>
