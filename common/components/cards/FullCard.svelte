@@ -1,15 +1,16 @@
 <script>
   import { getContext } from 'svelte'
-  import { formatMap, statusColorMap } from '@/modules/anime.js'
+  import { airingAt, episode, formatMap, statusColorMap } from '@/modules/anime.js'
   import { click } from '@/modules/click.js'
   import { countdown } from '@/modules/util.js'
   import { page } from '@/App.svelte'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
-  import { anilistClient } from "@/modules/anilist"
-  import Helper from "@/modules/helper.js"
+  import { anilistClient } from '@/modules/anilist.js'
+  import Helper from '@/modules/helper.js'
   /** @type {import('@/modules/al.d.ts').Media} */
   export let media
   export let variables = null
+  let _variables = variables
 
   const view = getContext('view')
   function viewMedia () {
@@ -23,7 +24,9 @@
     <div class='row h-full'>
       <div class='col-4 img-col d-inline-block position-relative'>
         <img loading='lazy' src={media.coverImage.extraLarge || ''} alt='cover' class='cover-img w-full h-full' />
-        <AudioLabel {media} />
+        {#if !_variables?.scheduleList}
+          <AudioLabel {media} />
+        {/if}
       </div>
       <div class='col h-full card-grid'>
         <div class='px-15 py-10 bg-very-dark'>
@@ -34,11 +37,11 @@
             {anilistClient.title(media)}
           </h5>
           {#if $page === 'schedule'}
-            <div class='py-5'>
-              {#if media.airingSchedule?.nodes?.[0]?.airingAt}
-                Episode {media.airingSchedule.nodes[0].episode } in
-                <span class='font-weight-bold text-light'>
-                  {countdown(media.airingSchedule.nodes[0].airingAt - Date.now() / 1000)}
+            <div class='d-flex align-items-center py-5'>
+              {#if airingAt(media, _variables)}
+                Episode { episode(media, _variables) } in&nbsp;
+                <span class='font-weight-bold text-light d-inline'>
+                  { countdown(airingAt(media, _variables) - Date.now() / 1000) }
                 </span>
               {:else}
                 &nbsp;
@@ -64,9 +67,11 @@
             {:else if media.duration}
               <span class='text-nowrap d-flex align-items-center'>{media.duration + ' Minutes'}</span>
             {/if}
-            <span class='text-nowrap d-flex align-items-center'>
-              <AudioLabel {media} banner={true}/>
-            </span>
+            {#if !_variables?.scheduleList}
+              <span class='text-nowrap d-flex align-items-center'>
+                <AudioLabel {media} banner={true}/>
+              </span>
+            {/if}
             {#if media.isAdult}
               <span class='text-nowrap d-flex align-items-center'>
                 Rated 18+

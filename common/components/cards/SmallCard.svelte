@@ -1,27 +1,29 @@
 <script>
   import { getContext } from 'svelte'
   import PreviewCard from './PreviewCard.svelte'
-  import { formatMap, statusColorMap } from '@/modules/anime.js'
+  import { episode, airingAt, formatMap, statusColorMap } from '@/modules/anime.js'
   import { createListener } from '@/modules/util.js'
   import { hoverClick } from '@/modules/click.js'
   import { countdown } from '@/modules/util.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
 
   import { page } from '@/App.svelte'
-  import { anilistClient } from "@/modules/anilist"
-  import Helper from "@/modules/helper.js"
+  import { anilistClient } from '@/modules/anilist.js'
+  import Helper from '@/modules/helper.js'
   import { CalendarDays, Tv, ThumbsUp, ThumbsDown } from 'lucide-svelte'
 
   /** @type {import('@/modules/al.d.ts').Media} */
   export let media
   export let type = null
   export let variables = null
-  let preview = false
+  let _variables = variables
 
   const view = getContext('view')
   function viewMedia () {
     $view = media
   }
+
+  let preview = false
   function setHoverState (state) {
     preview = state
   }
@@ -32,24 +34,26 @@
 
 <div class='d-flex p-md-20 p-15 position-relative first-check {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState]}>
   {#if preview}
-    <PreviewCard {media} {type} />
+    <PreviewCard {media} {type} variables={_variables} />
   {/if}
   <div class='item small-card d-flex flex-column h-full pointer content-visibility-auto' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}>
     {#if $page === 'schedule'}
       <div class='w-full text-center pb-10'>
-        {#if media.airingSchedule?.nodes?.[0]?.airingAt}
-          Episode {media.airingSchedule.nodes[0].episode } in
+        {#if airingAt(media, _variables)}
+          Episode { episode(media, _variables) } in
           <span class='font-weight-bold text-light'>
-            {countdown(media.airingSchedule.nodes[0].airingAt - Date.now() / 1000)}
+            {countdown(airingAt(media, _variables) - Date.now() / 1000)}
           </span>
         {:else}
           &nbsp;
         {/if}
       </div>
     {/if}
-    <div class="d-inline-block position-relative">
+    <div class='d-inline-block position-relative'>
       <img loading='lazy' src={media.coverImage.extraLarge || ''} alt='cover' class='cover-img w-full rounded' style:--color={media.coverImage.color || '#1890ff'} />
-      <AudioLabel {media} />
+      {#if !_variables?.scheduleList}
+        <AudioLabel {media} />
+      {/if}
     </div>
     {#if type || type === 0}
       <div class='context-type d-flex align-items-center'>

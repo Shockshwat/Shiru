@@ -10,6 +10,7 @@
   /** @type {import('@/modules/al.d.ts').Media} */
   export let media
   export let type = null
+  export let variables
 
   let hide = true
 
@@ -127,9 +128,11 @@
           {media.duration + ' Minutes'}
         </span>
       {/if}
-      <span class='text-nowrap d-flex align-items-center'>
-        <AudioLabel {media} banner={true}/>
-      </span>
+      {#if !variables?.scheduleList}
+        <span class='text-nowrap d-flex align-items-center'>
+          <AudioLabel {media} banner={true}/>
+        </span>
+      {/if}
       {#if media.isAdult}
       <span class='text-nowrap d-flex align-items-center'>
           Rated 18+
