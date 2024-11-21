@@ -3,8 +3,20 @@
   import { settings } from '@/modules/settings.js'
   import { anilistClient, currentSeason, currentYear } from '@/modules/anilist.js'
   import Helper from '@/modules/helper.js'
+  import { writable } from 'svelte/store'
 
-  const bannerData = anilistClient.search({ method: 'Search', sort: 'POPULARITY_DESC', perPage: 15, onList: false, season: currentSeason, year: currentYear, status_not: 'NOT_YET_RELEASED' })
+  const bannerData = writable(getTitles())
+  // Refresh banner every 15 minutes
+  setInterval(() => getTitles(true), 5 * 60 * 1000)
+
+  async function getTitles(refresh) {
+    const res = anilistClient.search({ method: 'Search', sort: 'POPULARITY_DESC', perPage: 15, onList: false, season: currentSeason, year: currentYear, status_not: 'NOT_YET_RELEASED' })
+    if (refresh) {
+      const renderData = await res
+      bannerData.set(Promise.resolve(renderData))
+    }
+    else return res
+  }
 
   const manager = new SectionsManager()
 
@@ -22,7 +34,7 @@
       if (!value) return
       for (const section of manager.sections) {
         // remove preview value, to force UI to re-request data, which updates it once in viewport
-        if (userSections.includes(section.title)) section.preview.value = section.load(1, 50, section.variables)
+        if (userSections.includes(section.title) && !section.hide) section.preview.value = section.load(1, 50, section.variables)
       }
     })
   }
@@ -34,8 +46,8 @@
   import smoothScroll from '@/modules/scroll.js'
 </script>
 
-<div class='h-full w-full overflow-y-scroll root overflow-x-hidden' use:smoothScroll>
-  <Banner data={bannerData} />
+<div class='h-full w-full overflow-y-scroll root overflow-x-hidden' use:smoothScroll>\
+  <Banner data={$bannerData} />
   <div class='d-flex flex-column h-full w-full mt-15'>
     {#each manager.sections as section, i (i)}
       {#if !section.hide}
