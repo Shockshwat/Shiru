@@ -129,7 +129,7 @@
               {@const delayed = dubAiring.episodeDate && new Date(dubAiring.delayedUntil) >= new Date(dubAiring.episodeDate)}
               <div class='position-absolute bottom-0 left-0 {delayed ? `bg-danger` : `bg-secondary`} py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
                 {#if dubAiring.episodeDate}
-                  Dub: {since(past(new Date(dubAiring.episodeDate), (dubAiring.episodeNumber >= episode ? 0 : (episode - dubAiring.episodeNumber)), true))} {delayed ? ' (delayed)' : ''}
+                  Dub: {since(past(new Date(delayed ? dubAiring.delayedUntil : dubAiring.episodeDate), (dubAiring.episodeNumber >= episode ? 0 : (episode - dubAiring.episodeNumber)), true))} {delayed ? ' (delayed)' : ''}
                 {:else}
                   {dubAiring}
                 {/if}
