@@ -842,6 +842,13 @@
   // remaps chapters to what perfect-seekbar uses and adds potentially missing chapters
   function sanitiseChapters (chapters, safeduration) {
     if (!chapters?.length) return []
+    chapters = chapters.map((chapter, index, arr) => {
+      if (chapter.start === chapter.end) { // Fix chapters with incorrect start/end times which causes an invisible seekbar, this happens when the start and end time are identical
+        const nextChapter = arr[index + 1] // We now assume each chapter is a bookmark and use the next chapters start time and the current chapters end time.
+        return { ...chapter, end: nextChapter ? nextChapter.start : safeduration * 1000 } // Use next chapter's start or ensure the entire safe duration of seekbar is visible.
+      }
+      return chapter
+    })
     const sanitised = []
     const first = chapters[0]
     if (first.start !== 0) {
