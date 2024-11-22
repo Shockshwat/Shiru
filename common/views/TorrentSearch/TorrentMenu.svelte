@@ -25,9 +25,10 @@
    */
   function getRequestedAudio(result, audioLang) {
     const terms = sanitiseTerms(result)
+    const checkTerm = (term, keyword) => (Array.isArray(term.text) ? term.text : [term.text]).some(text => text.toLowerCase().includes(keyword.toLowerCase()))
 
-    const exactMatch = terms.some(term => term.text.toLowerCase().includes(audioLang))
-    const dualAudio = terms.some(term => term.text.toLowerCase().includes('dual'))
+    const exactMatch = terms.some(term => checkTerm(term, audioLang))
+    const dualAudio = terms.some(term => checkTerm(term, 'dual'))
 
     return exactMatch || dualAudio
   }
