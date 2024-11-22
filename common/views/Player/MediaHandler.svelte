@@ -58,12 +58,16 @@
       const needsValidation = !(!specialCount || (media?.episodes === episodeCount && episodes && episodes[Number(episode)]))
       const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
       const streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en)) ? { title: (`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en) } : (needsValidation && media?.status === 'FINISHED') ? { title: (`Episode ${episode} - ` + (episodes[Number(episode)]?.title?.en || episodes[1])) } : streamingTitle
+      if (streamingEpisode?.title) {
+        const titleParts = streamingEpisode.title.split(" - ")
+        streamingEpisode.title = (titleParts?.[0]?.trim() === titleParts?.[1]?.trim()) ? titleParts?.[0]?.trim() : streamingEpisode.title
+      }
 
       const details = {
-          title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
-          episode: ep,
-          episodeTitle: streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title)),
-          thumbnail: media?.coverImage.extraLarge || streamingEpisode?.thumbnail
+        title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
+        episode: ep,
+        episodeTitle: streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title)),
+        thumbnail: media?.coverImage.extraLarge || streamingEpisode?.thumbnail
       }
       const np = {
         media,
@@ -121,19 +125,32 @@
     if (!files?.length) return processed.set(files)
     let videoFiles = []
     const otherFiles = []
+    const torrentNames = []
     for (const file of files) {
       if (videoRx.test(file.name)) {
         videoFiles.push(file)
       } else {
         otherFiles.push(file)
       }
+      if (file.torrent_name) torrentNames.push(file.torrent_name)
     }
     let newPlaying = nowPlaying.value
     const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => file.name))
-    videoFiles.map(file => {
-      file.media = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(file.name).includes(parseObject.file_name))
-      return file
-    })
+    if (resolved[0].failed) {
+      debug('Media has failed to resolve using the file name, trying again using the torrent name ...')
+      const torrentName = [...new Set(torrentNames)][0] // temporary, may need to handle multiple torrents in the future.
+      const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => `${torrentName} ${file.name}`))
+      videoFiles.map(file => {
+          file.media = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(`${torrentName} ${file.name}`).includes(parseObject.file_name))
+          return file
+      })
+    } else {
+      videoFiles.map(file => {
+          file.media = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(file.name).includes(parseObject.file_name))
+          return file
+      })
+    }
+
     videoFiles = videoFiles.filter(file => !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type?.toUpperCase()))
     if (newPlaying?.verified && videoFiles.length === 1) {
       debug('Media was verified, skipping verification')

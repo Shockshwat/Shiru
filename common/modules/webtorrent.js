@@ -146,6 +146,7 @@ export default class TorrentClient extends WebTorrent {
     const files = torrent.files.map(file => {
       return {
         infoHash: torrent.infoHash,
+        torrent_name: torrent?.name,
         name: file.name,
         type: file.type,
         size: file.size,

@@ -11,6 +11,9 @@ import { search, key } from '@/views/Search.svelte'
 import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
 import { animeSchedule } from '@/modules/animeschedule.js'
 import Helper from '@/modules/helper.js'
+import Debug from '@/modules/debug.js'
+
+const debug = Debug('ui:anime')
 
 const imageRx = /\.(jpeg|jpg|gif|png|webp)/i
 
@@ -187,7 +190,7 @@ export async function anitomyscript (...args) {
     }
     if (Number(obj.anime_season) > 1) obj.anime_title += ' S' + obj.anime_season
   }
-
+  debug(`AnitoMyScript found titles: ${JSON.stringify(parseObjs)}`)
   return parseObjs
 }
 
