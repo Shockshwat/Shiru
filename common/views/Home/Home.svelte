@@ -26,7 +26,7 @@
     mappedSections[section.title] = section
   }
 
-  for (const sectionTitle of settings.value.homeSections) manager.add(mappedSections[sectionTitle])
+  for (const sectionTitle of settings.value.homeSections) manager.add(mappedSections[sectionTitle[0]])
 
   if (Helper.getUser()) {
     const userSections = ['Continue Watching', 'Sequels You Missed', 'Stories You Missed', 'Planning List', 'Completed List', 'Paused List', 'Dropped List', 'Watching List']
@@ -46,7 +46,7 @@
   import smoothScroll from '@/modules/scroll.js'
 </script>
 
-<div class='h-full w-full overflow-y-scroll root overflow-x-hidden' use:smoothScroll>\
+<div class='h-full w-full overflow-y-scroll root overflow-x-hidden' use:smoothScroll>
   <Banner data={$bannerData} />
   <div class='d-flex flex-column h-full w-full mt-15'>
     {#each manager.sections as section, i (i)}
