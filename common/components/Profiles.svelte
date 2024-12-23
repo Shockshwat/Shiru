@@ -1,7 +1,7 @@
 <script context='module'>
   import { generateRandomString } from "@/modules/util.js"
-  import { get, writable } from 'simple-store-svelte'
-  import { swapProfiles, alToken, malToken, profiles } from '@/modules/settings.js'
+  import { writable } from 'simple-store-svelte'
+  import { swapProfiles, alToken, malToken, profiles, sync } from '@/modules/settings.js'
   import { platformMap } from '@/views/Settings/Settings.svelte'
   import { clientID } from "@/modules/myanimelist.js"
   import { click } from '@/modules/click.js'
@@ -23,7 +23,6 @@
 
   function currentLogout () {
     swapProfiles(null)
-    location.reload()
   }
 
   function dropProfile (profile) {
@@ -34,19 +33,12 @@
 
   function switchProfile (profile) {
     swapProfiles(profile)
-    location.reload()
   }
 
   function toggleSync(profile) {
-    const mainProfile = get(currentProfile)
-    let syncList = Array.isArray(mainProfile.viewer.data.Viewer.sync) ? mainProfile.viewer.data.Viewer.sync : []
-
     const profileID = profile.viewer.data.Viewer.id
-    if (syncList.includes(profileID)) syncList = syncList.filter(id => id !== profileID)
-    else syncList.push(profileID)
-
-    mainProfile.viewer.data.Viewer.sync = syncList
-    localStorage.setItem(isAniProfile(mainProfile) ? 'ALviewer' : 'MALviewer', JSON.stringify(mainProfile))
+    if (sync.value.includes(profileID)) sync.value = sync.value.filter(id => id !== profileID)
+    else sync.value = sync.value.concat(profileID)
   }
 
   function confirmAnilist () {
@@ -118,9 +110,8 @@
               </div>
               <div class='controls d-flex align-items-center flex-wrap ml-10'>
                 {#if !profile.reauth}
-                  {@const isSync = Array.isArray($currentProfile?.viewer?.data?.Viewer?.sync) && $currentProfile.viewer.data.Viewer.sync.includes(profile?.viewer?.data?.Viewer?.id)}
                   <button type='button' class='custom-switch bg-transparent border-0' title='Sync List Entries' on:click|stopPropagation>
-                    <input type='checkbox' id='sync-{profile.viewer.data.Viewer.id}' checked={isSync} on:click={() => toggleSync(profile)} />
+                    <input type='checkbox' id='sync-{profile.viewer.data.Viewer.id}' checked={$sync.includes(profile.viewer.data.Viewer.id)} on:click={() => toggleSync(profile)} />
                     <label for='sync-{profile.viewer.data.Viewer.id}'><br/></label>
                   </button>
                 {:else}
@@ -128,7 +119,7 @@
                     <ClockAlert size='2.2rem' />
                   </button>
                 {/if}
-                <button type='button' class='button {profile.reauth ? `pa-button` : `p-button`} pt-5 pb-5 pl-5 pr-5 bg-transparent border-0 d-flex align-items-center justify-content-center' title='Logout' on:click|stopPropagation={() => dropProfile(profile)}>
+                <button type='button' class='button {profile.reauth ? `pa-button` : `p-button`} pt-5 pb-5 pl-5 pr-5 bg-transparent border-0 rounded d-flex align-items-center justify-content-center' title='Logout' on:click|stopPropagation={() => dropProfile(profile)}>
                   <LogOut size='2.2rem' />
                 </button>
               </div>
