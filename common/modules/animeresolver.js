@@ -68,6 +68,12 @@ export default new class AnimeResolver {
       titles.add(modified)
     }
 
+    // Remove Episode Titles identified by -
+    const splitMatch = title.match(/\s+-\s+/)
+    if (splitMatch) {
+      titles.add(title.split(/\s+-\s+/)[0].trim())
+    }
+
     // Detect and add alternate title within parentheses
     const multiTitleMatch = modified.match(/^(.+?)\s*\((.+?)\)$/)
     if (multiTitleMatch) {
@@ -84,7 +90,7 @@ export default new class AnimeResolver {
    */
   async findAnimesByTitle (parseObjects) {
     if (!parseObjects.length) return
-    const titleObjects = parseObjects.map(obj => {
+    const titleObjects = parseObjects.flatMap(obj => {
       const key = this.getCacheKeyForTitle(obj)
       const titles = this.alternativeTitles(obj.anime_title)
       const titleObjects = titles.flatMap(title => {
@@ -103,7 +109,7 @@ export default new class AnimeResolver {
       })
       titleObjects.push({ ...titleObjects.at(-1), isAdult: true })
       return titleObjects
-    }).flat()
+    })
 
     debug(`Finding ${titleObjects?.length} titles: ${titleObjects?.map(obj => obj.title).join(', ')}`)
     for (const chunk of chunks(titleObjects, 60)) {
@@ -331,7 +337,7 @@ export default new class AnimeResolver {
 
     if (!edge) {
       const obj = { media, episode: episode - offset, offset, increment, rootMedia, failed: true }
-      if (!force) debug(`Failed to resolve ${media.id}:${media.title.userPreferred} ${episode} ${increment} ${offset} ${rootMedia.id}:${rootMedia.title.userPreferred}`)
+      if (!force) debug(`Failed to resolve season ${media.id}:${media.title.userPreferred} ${episode} ${increment} ${offset} ${rootMedia.id}:${rootMedia.title.userPreferred}`)
       return obj
     }
     media = await this.getAnimeById(edge.id)
