@@ -30,7 +30,7 @@
 <div class='sidebar z-30 d-md-block' class:animated={$settings.expandingSidebar}>
   <div class='sidebar-overlay pointer-events-none h-full position-absolute' />
   <div class='sidebar-menu h-full d-flex flex-column justify-content-center align-items-center m-0 pb-5 animate'>
-    <SidebarLink click={() => { $profileView = !$profileView }} icon='login' text={Helper.getUser() ? 'Profiles' : 'Login'} css='mt-auto' {page} overlay={!$notifyView && !$actionPrompt && $profileView && 'profile'} nowPlaying={$view === $media.media} image={Helper.getUserAvatar()}>
+    <SidebarLink click={() => { $profileView = !$profileView }} icon='login' text={Helper.getUser() ? 'Profiles' : 'Login'} css='mt-auto' {page} overlay={!$notifyView && !$actionPrompt && $profileView && 'profile'} nowPlaying={$view} image={Helper.getUserAvatar()}>
       <LogIn size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' />
     </SidebarLink>
     <SidebarLink click={() => { page = 'home'; if ($view) $view = null }} _page='home' text='Home' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
@@ -45,7 +45,7 @@
     {#if $media?.media}
       {@const currentMedia = $view}
       {@const active = $view && !$notifyView && !$profileView && !$actionPrompt && 'active'}
-      <SidebarLink click={() => { $view = (currentMedia?.id === $media.media.id && active ? null : $media.media) }} icon='queue_music' text='Now Playing' {page} overlay={active} nowPlaying={$view === $media.media} let:active>
+      <SidebarLink click={() => { $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media) }} icon='queue_music' text='Now Playing' {page} overlay={active} nowPlaying={$view === $media?.media} let:active>
         <ListVideo size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
       </SidebarLink>
     {/if}
@@ -66,7 +66,7 @@
         <Download size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded update' strokeWidth={active ? '3' : '2'} />
       </SidebarLink>
     {/if}
-    <SidebarLink click={() => { $notifyView = !$notifyView }} icon='bell' text='Notifications' css='{!$settings.donate && updateState !== `downloading` && updateState !== `ready` ? `mt-auto` : ``}' {page} overlay={!$actionPrompt && $notifyView && 'notify'} nowPlaying={$view === $media.media} let:active>
+    <SidebarLink click={() => { $notifyView = !$notifyView }} icon='bell' text='Notifications' css='{!$settings.donate && updateState !== `downloading` && updateState !== `ready` ? `mt-auto` : ``}' {page} overlay={!$actionPrompt && $notifyView && 'notify'} nowPlaying={$view} let:active>
       {#if $hasUnreadNotifications}
         <BellDot size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded notify' strokeWidth={active ? '3' : '2'} />
       {:else}

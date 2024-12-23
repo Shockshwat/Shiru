@@ -85,52 +85,63 @@
   </SettingCard>
 {/if}
 <h4 class='mb-10 font-weight-bold'>Notification Settings</h4>
-<SettingCard title='System Notifications' description='Allows custom system notifications to be sent, with this disabled you will still get in-app notifications.'>
+<SettingCard title='System Notifications' description={'Allows custom system notifications to be sent, with this disabled you will still get in-app notifications.\n\nNote: If you enable system notifications and have MULTIPLE Notification Feeds specified, such as RSS, Releases, and Anilist you WILL be spammed with multiple notifications. Consider choosing a single feed based on your needs.'}>
   <div class='custom-switch'>
     <input type='checkbox' id='system-notify' bind:checked={settings.systemNotify} />
     <label for='system-notify'>{settings.systemNotify ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+<SettingCard title='Prefer Dubs' description='This will send notifications for an anime only if a dubbed episode is available or if the series is sub-only (no dub exists). This is ideal for viewers who prioritize watching dubbed content whenever possible.'>
+  <div class='custom-switch'>
+    <input type='checkbox' id='rss-notify-dubs' bind:checked={settings.rssNotifyDubs} />
+    <label for='rss-notify-dubs'>{settings.rssNotifyDubs ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 {#if Helper.isAniAuth()}
-  <SettingCard title='AniList Notifications' description='Get notifications from your AniList account, showing when episodes have aired and any new anime titles you are following have been added to the database. Limited will only get important notifications like when a new season is announced, consider using the Limited setting when using RSS Feed notifications.'>
-    <select class='form-control bg-dark w-300 mw-full' bind:value={settings.aniNotify}>
+  <SettingCard title='AniList Notifications' description='Get notifications from your AniList account, showing when episodes have aired and any new anime titles you are following have been added to the database. Limited will only get important notifications like when a new season is announced.'>
+    <select class='form-control bg-dark w-150 mw-full' bind:value={settings.aniNotify}>
       <option value='all' selected>All</option>
       <option value='limited'>Limited</option>
       <option value='none'>None</option>
     </select>
   </SettingCard>
 {/if}
-<SettingCard title='Dubs Notifications' description={'When the dub schedule airs a new episode or any new anime titles you are following have been added to the database, a notification will be sent depending on your list status.\n\nLimited will only get important notifications like when a dub for a new season is announced, consider using the Limited setting when using RSS Feed notifications.'}>
+{#each ['Sub', 'Dub', 'Hentai'] as type}
+  {#if type !== 'Hentai' || settings.adult === 'hentai'}
+    <SettingCard title='{type} Announcements' description={`Get ${type} announcement notifications when an airing date is confirmed.\nChoose to get all announcements, updates on sequels for related anime you're following, or turn off notifications entirely.`}>
+      <select class='form-control bg-dark w-150 mw-full' bind:value={settings[`${type.toLowerCase()}Announce`]}>
+        <option value='all' selected>All</option>
+        <option value='following' selected>Following</option>
+        <option value='none'>None</option>
+      </select>
+    </SettingCard>
+  {/if}
+{/each}
+<SettingCard title='Releases Notifications' description={`When a new episode is added to any of the Releases feeds, a notification will be sent depending on your list status.`}>
   <div>
-    {#each settings.dubNotify as status, i}
-      <div class='input-group mb-10 w-500 mw-full'>
-        <select id='dubs-notify-{i}' class='w-400 form-control mw-full bg-dark' bind:value={settings.dubNotify[i]} >
+    {#each settings.releasesNotify as status, i}
+      <div class='input-group mb-10 w-210 mw-full'>
+        <select id='dubs-notify-{i}' class='w-100 form-control mw-full bg-dark' bind:value={settings.releasesNotify[i]} >
           <option disabled value=''>Select a status</option>
-          {#each [['Watching', 'CURRENT'], ['Planning', 'PLANNING'], ['Paused', 'PAUSED'], ['Completed', 'COMPLETED'], ['Dropped', 'DROPPED'], ['Rewatching', 'REPEATING'], ['Not on List', 'NOTONLIST']].filter(option => !settings.dubNotify.includes(option)) as option}
+          {#each listStatus.filter(option => !settings.releasesNotify.includes(option[1]) || status === option[1]) as option}
             <option value='{option[1]}'>{option[0]}</option>
           {/each}
         </select>
         <div class='input-group-append'>
-          <button type='button' use:click={() => { settings.dubNotify.splice(i, 1); settings.dubNotify = settings.dubNotify }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>
+          <button type='button' use:click={() => { settings.releasesNotify.splice(i, 1); settings.releasesNotify = settings.releasesNotify }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>
         </div>
       </div>
     {/each}
-    <div class='d-flex'>
-      <button type='button' use:click={() => { settings.dubNotify = [...settings.dubNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
-      <div class='custom-switch ml-auto mt-7'>
-        <input type='checkbox' id='dubs-limited' bind:checked={settings.dubNotifyLimited} />
-        <label for='dubs-limited'>Limited</label>
-      </div>
-    </div>
+    <button type='button' disabled={listStatus.every(option => settings.releasesNotify.includes(option[1]))}} use:click={() => { settings.releasesNotify = [...settings.releasesNotify, ''] }} class='btn btn-primary mb-10 mr-10'>Add Status</button>
   </div>
 </SettingCard>
-<SettingCard title='RSS Feed' description={'When each RSS feed updates with new entries, notifications will be sent depending on your list status.\n\nDub Preferred will send notifications for an anime only if a dubbed episode is available or if the series is sub-only (no dub exists). This is ideal for viewers who prioritize watching dubbed content whenever possible.'}>
+<SettingCard title='RSS Feed' description={'When each RSS feed updates with new entries, notifications will be sent depending on your list status.\n\nThese notifications will combine with Anilist and Releases notifications for the in-app notification tray.'}>
   <div>
     {#each settings.rssNotify as status, i}
-      <div class='input-group mb-10 w-500 mw-full'>
-        <select id='rss-feed-{i}' class='w-400 form-control mw-full bg-dark' bind:value={settings.rssNotify[i]} >
+      <div class='input-group mb-10 w-150 mw-full'>
+        <select id='rss-notify-{i}' class='w-100 form-control mw-full bg-dark' bind:value={settings.rssNotify[i]} >
           <option disabled value=''>Select a status</option>
-          {#each [['Watching', 'CURRENT'], ['Planning', 'PLANNING'], ['Paused', 'PAUSED'], ['Completed', 'COMPLETED'], ['Dropped', 'DROPPED'], ['Rewatching', 'REPEATING'], ['Not on List', 'NOTONLIST']].filter(option => !settings.rssNotify.includes(option)) as option}
+          {#each listStatus.filter(option => !settings.rssNotify.includes(option[1]) || status === option[1]) as option}
             <option value='{option[1]}'>{option[0]}</option>
           {/each}
         </select>
@@ -139,13 +150,7 @@
         </div>
       </div>
     {/each}
-    <div class='d-flex'>
-      <button type='button' use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
-      <div class='custom-switch  ml-auto mt-7'>
-        <input type='checkbox' id='rss-feed-dubs' bind:checked={settings.rssNotifyDubs} />
-        <label for='rss-feed-dubs'>Dub Preferred</label>
-      </div>
-    </div>
+    <button type='button' disabled={listStatus.every(option => settings.rssNotify.includes(option[1]))}} use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
   </div>
 </SettingCard>
 
@@ -158,7 +163,7 @@
     </div>
   </SettingCard>
 {/if}
-<SettingCard title='RSS Feeds' description={'RSS feeds to display on the home screen. This needs to be a CORS enabled URL to a Nyaa or Tosho like RSS feed which cotains either an "infoHash" or "enclosure" tag.\nThis only shows the releases on the home screen, it doesn\'t automatically download the content.\nSince the feeds only provide the name of the file, Shiru might not always detect the anime correctly!\nSome presets for popular groups are already provided as an example, custom feeds require the FULL URL.'}>
+<SettingCard title='RSS Feeds' description={'RSS feeds to display on the home screen. This needs to be a CORS enabled URL to a Nyaa or Tosho like RSS feed which cotains either an "infoHash" or "enclosure" tag.\nThis only shows the releases on the home screen, it doesn\'t automatically download the content.\nSince the feeds only provide the name of the file, Shiru might not always detect the anime correctly!\nSome presets for popular groups are already provided as an example, custom feeds require the FULL URL.\n\nNote that adding more than 5 RSS URLs could result in getting rate limited. These will always be resolved and handle notifications so not adding them as a home sections makes no difference.'}>
   <div>
     {#each settings.rssFeedsNew as _, i}
       <div class='input-group mb-10 w-500 mw-full'>

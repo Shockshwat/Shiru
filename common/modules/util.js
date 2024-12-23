@@ -140,7 +140,15 @@ export function matchKeys(nest, phrase, keys, threshold = 0.4) {
     threshold,
     keys: keys
   }
-  return new Fuse([nest], options).search(phrase).length > 0
+  if (new Fuse([nest], options).search(phrase).length > 0) return true
+  const fuse = new Fuse([phrase], options)
+  return keys.some(key => {
+    const valueToMatch = nest[key]
+    if (valueToMatch) {
+      return fuse.search(valueToMatch).length > 0
+    }
+    return false
+  })
 }
 
 export function matchPhrase(search, phrase, threshold) {
@@ -192,14 +200,16 @@ export function debounce (fn, time) {
  * Importing this and adding {$reactive ? `` : `not-reactive`} will disable reactivity for the added element when a trigger class is clicked.
  *
  * @param {[string]} triggerClasses The classes which need to be clicked to prevent reactivity.
- * @returns { { reactive: Writable<boolean>, init: (create: boolean) => void } } The initializer and reactive listener.
+ * @returns { { reactive: Writable<boolean>, init: (create: boolean, boundary?: boolean) => void } } The initializer and reactive listener.
  */
 export function createListener(triggerClasses = []) {
   const reactive = writable(true)
   let handling = false
+  let bounds = false
 
   function handleDown({ target }) {
-    if (triggerClasses.some(className => target.closest(`.${className}`))) reactive.set(false)
+    if (triggerClasses.some(className => target.closest(`.${className}`))) reactive.set(bounds)
+    else if (bounds) reactive.set(false)
   }
 
   function handleUp() {
@@ -209,20 +219,25 @@ export function createListener(triggerClasses = []) {
   function addListeners() {
     document.addEventListener('mousedown', handleDown, true)
     document.addEventListener('touchstart', handleDown, true)
-    document.addEventListener('mouseup', handleUp, true)
-    document.addEventListener('touchend', handleUp, true)
+    if (!bounds) {
+      document.addEventListener('mouseup', handleUp, true)
+      document.addEventListener('touchend', handleUp, true)
+    }
     handling = true
   }
 
   function removeListeners() {
     document.removeEventListener('mousedown', handleDown, true)
     document.removeEventListener('touchstart', handleDown, true)
-    document.removeEventListener('mouseup', handleUp, true)
-    document.removeEventListener('touchend', handleUp, true)
+    if (!bounds) {
+      document.removeEventListener('mouseup', handleUp, true)
+      document.removeEventListener('touchend', handleUp, true)
+    }
     handling = false
   }
 
-  function init(create) {
+  function init(create, boundary = false) {
+    bounds = boundary
     if (create && !handling) addListeners()
     else if (handling) removeListeners()
   }
@@ -236,15 +251,19 @@ export const defaults = {
   playerPause: true,
   playerAutocomplete: true,
   playerDeband: false,
+  adult: 'none',
+  rssAutoplay: true,
   rssQuality: '1080',
   rssFeedsNew: SUPPORTS.extensions ? [['New Releases', 'SubsPlease']] : [],
   rssNotify: ['CURRENT', 'PLANNING'],
   rssNotifyDubs: false,
   systemNotify: true,
-  aniNotify: 'full',
-  dubNotify: [],
-  dubNotifyLimited: false,
-  rssAutoplay: true,
+  aniNotify: 'all',
+  releasesNotify: [],
+  subAnnounce: 'none',
+  dubAnnounce: 'none',
+  hentaiAnnounce: 'none',
+  customSections: [['Romance', ['Romance'], [], [], []], ['Isekai Comedy', ['Comedy'], ['Isekai'], [], []]],
   torrentSpeed: 5,
   torrentPersist: false,
   torrentDHT: false,
@@ -260,17 +279,18 @@ export const defaults = {
   enableDoH: false,
   doHURL: 'https://cloudflare-dns.com/dns-query',
   disableSubtitleBlur: SUPPORTS.isAndroid,
-  enableRPC: true,
-  showDetailsInRPC: true,
+  enableRPC: 'full',
   smoothScroll: !SUPPORTS.isAndroid,
   cards: 'small',
   cardAudio: false,
   titleLang: 'romaji',
   hideMyAnime: false,
+  toasts: 'All',
   closeAction: 'Prompt',
   queryComplexity: 'Complex',
   expandingSidebar: !SUPPORTS.isAndroid,
   torrentPathNew: undefined,
+  donate: true,
   font: undefined,
   angle: 'default',
   toshoURL: SUPPORTS.extensions ? decodeURIComponent(atob('aHR0cHM6Ly9mZWVkLmFuaW1ldG9zaG8ub3JnLw==')) : '',

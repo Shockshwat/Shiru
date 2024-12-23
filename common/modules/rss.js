@@ -122,7 +122,7 @@ class RSSMediaManager {
         const behind = progress < (episode - 1)
         const details = {
           title: anilistClient.title(media) || parseObject.anime_title,
-          message: `${episode ? `Episode ${episode}` : media?.format === 'MOVIE' ? `The Movie` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${episode || media?.format === 'MOVIE' ? `is out!` : `is now ready to binge!`}`,
+          message: `${media?.format === 'MOVIE' ? `The Movie` : episode ? `${media?.episodes === episode ? `The wait is over! ` : ``}Episode ${episode}` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${episode || media?.format === 'MOVIE' ? `is out${media?.format !== 'MOVIE' && media?.episodes === episode ? `, this season is now ready to binge` : ``}!` : `is now ready to binge!`}`,
           icon: media?.coverImage.medium,
           heroImg: media?.bannerImage
         }
@@ -146,8 +146,10 @@ class RSSMediaManager {
           detail: {
             ...details,
             id: media?.id,
-            episode: episode,
+            episode: episode || (parseObject?.anime_title?.match(/S(\d{2})/) ? parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10) : episode),
             timestamp: Math.floor(new Date(date).getTime() / 1000),
+            format: media?.format,
+            season: !episode && parseObject.anime_title.match(/S(\d{2})/),
             dub: dubbed,
             click_action: 'TORRENT',
             magnet: link

@@ -91,6 +91,32 @@ function createSections () {
 
       return section
     }),
+    // official episode releases section
+      ...['Dubbed Releases', 'Subbed Releases', ...(settings.value.adult === 'hentai' ? ['Hentai Releases'] : [])].map((title) => {
+      const type = title.includes('Subbed') ? 'Sub' : title.includes('Dubbed') ? 'Dub' : 'Hentai'
+      const section = {
+        title,
+        sort: 'N/A',
+        format: !title.includes('Hentai') ? ['TV', 'MOVIE', 'OVA', 'ONA'] : ['OVA'],
+        variables: { disableSearch: true },
+        isRSS: true,
+        load: (page = 1, perPage = 50) => animeSchedule.getMediaForRSS(page, perPage, type),
+        preview: writable(animeSchedule.getMediaForRSS(1, 50, type)),
+      }
+
+      // update every 30 seconds
+      section.interval = setInterval(async () => {
+        try {
+          if (await animeSchedule.feedChanged(type)) {
+            section.preview.set(animeSchedule.getMediaForRSS(1, 50, type))
+          }
+        } catch (error) {
+          debug(`Failed to update ${title} feed at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`)
+        }
+      }, 30000)
+
+      return section
+    }),
     // user specific sections
     {
       title: 'Sequels You Missed', variables : { sort: 'POPULARITY_DESC', userList: true, missedList: true, disableHide: true },

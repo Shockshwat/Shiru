@@ -11,8 +11,8 @@
     const { season, year, status, ...variables } = _variables
     const results = { data: { Page: { media: [], pageInfo: { hasNextPage: false } } } }
     const opts = { ...vars, ...SectionsManager.sanitiseObject(variables) }
-    const airingLists = await animeSchedule.airingLists.value
-    const hideSubs = variables.hideSubs ? { idMal: airingLists.map(result => result.media?.idMal).filter(idMal => idMal !== undefined) } : {}
+    const airingLists = await animeSchedule.dubAiringLists.value
+    const hideSubs = variables.hideSubs ? { idMal: airingLists.map(entry => entry.media?.media?.idMal).filter(idMal => idMal !== undefined) } : {}
     const hideMyAnime = (variables.hideMyAnime && Helper.isAuthorized()) ? {[Helper.isAniAuth() ? 'id_not' : 'idMal_not']:
             await Helper.userLists(variables).then(res => {
                 if (!res?.data && res?.errors) throw res.errors[0]
@@ -38,9 +38,26 @@
     if (variables.hideSubs) {
       // filter out entries without airing schedule, duplicates [only allow first occurrence], and completed dubs, then sort entries from first airing to last airing.
       results.data.Page.media = results.data.Page.media.filter((media, index, self) => {
-        const cachedItem = airingLists.find(cached => cached.media.id === media.id)
-        return (!(cachedItem?.media?.airingSchedule?.nodes[0]?.episode > media.episodes) || !media.episodes) && cachedItem?.media?.airingSchedule?.nodes[0]?.airingAt && self.findIndex(m => m.id === media.id) === index
-      }).sort((a, b) => (new Date(airingLists.find(cached => cached.media.id === a.id)?.media.airingSchedule?.nodes[0]?.airingAt).getTime() / 1000) - (new Date(airingLists.find(cached => cached.media.id === b.id)?.media.airingSchedule?.nodes[0]?.airingAt).getTime() / 1000))
+        const cachedItem = airingLists.find(entry => entry.media?.media?.id === media.id)
+        if (cachedItem?.delayedIndefinitely && cachedItem?.status?.toUpperCase()?.includes('FINISHED')) { // skip these as they are VERY likely partial dubs so production isn't necessarily in a suspended state.
+          return false
+        }
+        if (cachedItem?.media?.media?.airingSchedule?.nodes[0]?.airingAt) {
+          const airingAt = new Date(cachedItem.media.media.airingSchedule.nodes[0].airingAt)
+          if (airingAt < new Date()) {
+            cachedItem.media.media.airingSchedule.nodes[0].episode = cachedItem.media.media.airingSchedule.nodes[0].episode + 1
+            cachedItem.media.media.airingSchedule.nodes[0].airingAt = (new Date(airingAt.getTime() + (cachedItem.delayedIndefinitely ? 6 * 365 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000))).toISOString().slice(0, -5) + 'Z'
+          }
+        }
+        return (!(cachedItem?.media?.media?.airingSchedule?.nodes[0]?.episode > media.episodes) || !media.episodes) && cachedItem?.media?.media?.airingSchedule?.nodes[0]?.airingAt && self.findIndex(m => m.id === media.id) === index
+      }).sort((a, b) => {
+          const aEntry = airingLists.find(entry => entry.media?.media?.id === a.id)
+          const bEntry = airingLists.find(entry => entry.media?.media?.id === b.id)
+          const aDelayed = aEntry?.delayedIndefinitely ? 1 : 0
+          const bDelayed = bEntry?.delayedIndefinitely ? 1 : 0
+          if (aDelayed !== bDelayed) return aDelayed - bDelayed
+          return new Date(aEntry?.media?.media?.airingSchedule?.nodes[0]?.airingAt).getTime() - new Date(bEntry?.media?.media?.airingSchedule?.nodes[0]?.airingAt).getTime()
+      })
     } else {
       // filter out entries without airing schedule and duplicates [only allow first occurrence], then sort entries from first airing to last airing.
       results.data.Page.media = results.data.Page.media.filter((media, index, self) => media.airingSchedule?.nodes?.[0]?.airingAt && self.findIndex(m => m.id === media.id) === index).sort((a, b) => a.airingSchedule?.nodes?.[0]?.airingAt - b.airingSchedule?.nodes?.[0]?.airingAt)
