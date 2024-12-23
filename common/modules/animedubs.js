@@ -1,5 +1,5 @@
 import { toast } from 'svelte-sonner'
-import { matchPhrase } from "@/modules/util.js"
+import { matchPhrase } from '@/modules/util.js'
 import { writable } from 'simple-store-svelte'
 import { codes } from '@/modules/anilist.js'
 import Debug from '@/modules/debug.js'
@@ -17,10 +17,14 @@ class MALDubs {
 
     constructor() {
         this.getMALDubs()
-        //  update dubLists every 60 mins
-        setInterval(() => {
-            this.getMALDubs()
-        }, 1000 * 60 * 60)
+        //  update dubLists every 6 hours
+        setInterval(async () => {
+            try {
+                await this.getMALDubs()
+            } catch (error) {
+                debug(`Failed to update dubbed anime list at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`)
+            }
+        }, 1000 * 60 * 60* 6)
     }
 
     isDubMedia(media) {
