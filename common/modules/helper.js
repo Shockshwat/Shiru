@@ -1,11 +1,10 @@
-import {alToken, malToken, isAuthorized, settings} from '@/modules/settings.js'
+import { alToken, malToken, settings, sync, isAuthorized } from '@/modules/settings.js'
 import { anilistClient, codes } from '@/modules/anilist.js'
 import { malClient } from '@/modules/myanimelist.js'
 import { malDubs } from "@/modules/animedubs.js"
 import { profiles } from '@/modules/settings.js'
 import { matchKeys } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
-import { get } from 'svelte/store'
 import Debug from '@/modules/debug.js'
 
 const debug = Debug('ui:helper')
@@ -170,7 +169,7 @@ export default class Helper {
     if (this.isMalAuth() && !malToken.reauth) {
       debug(`Filling MyAnimeList entry data for ${media?.id} (AniList)`)
       const userLists = await malClient.userLists.value
-      const malEntry = userLists.data.MediaList.find(({ node }) => node.id === media.idMal)
+      const malEntry = userLists.data?.MediaList?.find(({ node }) => node.id === media.idMal)
       if (malEntry) {
         const start_date = malEntry.node.my_list_status.start_date ? new Date(malEntry.node.my_list_status.start_date) : undefined
         const finish_date = malEntry.node.my_list_status.finish_date ? new Date(malEntry.node.my_list_status.finish_date) : undefined
@@ -255,11 +254,10 @@ export default class Helper {
         }
         this.listToast(res, description, false)
 
-        const mainSync = this.getUser().sync
-        if (Array.isArray(mainSync) && mainSync.length > 0) { // handle profile entry syncing
+        if (sync.value.length > 0) { // handle profile entry syncing
           const mediaId = cachedMedia.id
-          for (const profile of get(profiles)) {
-            if (mainSync.includes(profile?.viewer?.data?.Viewer?.id)) {
+          for (const profile of profiles.value) {
+            if (sync.value.includes(profile?.viewer?.data?.Viewer?.id)) {
               let res
               if (profile.viewer?.data?.Viewer?.avatar) {
                 variables.score = (cachedMedia.mediaListEntry?.score ? (cachedMedia.mediaListEntry?.score * 10) : 0)
@@ -313,7 +311,7 @@ export default class Helper {
           (!variables.tag || variables.tag.map(tag => tag.trim().toLowerCase()).every(tag => media.tags.map(tag => tag.name.trim().toLowerCase()).includes(tag))) &&
           (!variables.season || variables.season === media.season) &&
           (!variables.year || variables.year === media.seasonYear) &&
-          (!variables.format || variables.format === media.format) &&
+          (!variables.format || (Array.isArray(variables.format) && variables.format.includes(media.format)) || variables.format === media.format) &&
           (!variables.status || variables.status === media.status) &&
           (!variables.continueWatching || (media.status === 'FINISHED' || media.mediaListEntry?.progress < media.nextAiringEpisode?.episode - 1))) {
           return true
@@ -323,7 +321,7 @@ export default class Helper {
           matchKeys(node, variables.search, ['title', 'alternative_titles.en', 'alternative_titles.ja']) &&
           (!variables.season || variables.season.toLowerCase() === node.start_season?.season.toLowerCase()) &&
           (!variables.year || variables.year === node.start_season?.year) &&
-          (!variables.format || (variables.format !== 'TV_SHORT' && variables.format === node.media_type.toUpperCase()) || (variables.format === 'TV_SHORT' && node.average_episode_duration < 1200)) &&
+          (!variables.format || ((Array.isArray(variables.format) ? !variables.format.includes(node.media_type.toUpperCase()) && node.media_type.toUpperCase() !== 'TV_SHORT' : variables.format !== 'TV_SHORT' && variables.format === node.media_type.toUpperCase()) || ((Array.isArray(variables.format) ? variables.format.includes('TV_SHORT') : variables.format === 'TV_SHORT') && node.average_episode_duration < 1200))) &&
           (!variables.status || variables.status === 'CANCELLED' || variables.status === this.airingMap(node.status))) {
           // api does not provide airing episode or tags, additionally genres are inaccurate and tags do not exist.
           return true

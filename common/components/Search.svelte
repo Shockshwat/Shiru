@@ -1,6 +1,6 @@
 <script context='module'>
-  const badgeKeys = ['title', 'search', 'genre', 'tag', 'season', 'year', 'format', 'status', 'sort', 'hideSubs', 'hideMyAnime', 'hideStatus']
-  const badgeDisplayNames = { title: BookUser, search: Type, genre: Drama, tag: Hash, season: CalendarRange, year: Leaf, format: Tv, status: MonitorPlay, sort: ArrowDownWideNarrow, hideMyAnime: SlidersHorizontal, hideSubs: Mic }
+  const badgeKeys = ['title', 'search', 'genre', 'tag', 'season', 'year', 'format', 'status', 'status_not', 'sort', 'hideSubs', 'hideMyAnime', 'hideStatus']
+  const badgeDisplayNames = { title: BookUser, search: Type, genre: Drama, tag: Hash, season: CalendarRange, year: Leaf, format: Tv, status: MonitorPlay, status_not: MonitorX, sort: ArrowDownWideNarrow, hideMyAnime: SlidersHorizontal, hideSubs: Mic }
   const sortOptions = { TITLE_ROMAJI: 'Title', START_DATE_DESC: 'Release Date', SCORE_DESC: 'Score', POPULARITY_DESC: 'Popularity', UPDATED_AT_DESC: 'Date Updated', UPDATED_TIME_DESC: 'Last Updated', STARTED_ON_DESC: 'Start Date', FINISHED_ON_DESC: 'Completed Date', PROGRESS_DESC: 'Your Progress', USER_SCORE_DESC: 'Your Score' }
 
   export function searchCleanup (search, badge) {
@@ -11,15 +11,15 @@
 </script>
 
 <script>
-  import { createListener } from "@/modules/util.js"
-  import { traceAnime } from '@/modules/anime.js'
+  import { createListener } from '@/modules/util.js'
+  import { traceAnime, genreList, tagList } from '@/modules/anime.js'
   import { settings } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
   import { page } from '@/App.svelte'
   import { toast } from 'svelte-sonner'
   import Helper from '@/modules/helper.js'
   import { MagnifyingGlass, Image } from 'svelte-radix'
-  import { BookUser, Type, Drama, Leaf, CalendarRange, MonitorPlay, Tv, ArrowDownWideNarrow, Filter, FilterX, Tags, Hash, SlidersHorizontal, Mic, Grid3X3, Grid2X2 } from 'lucide-svelte'
+  import { BookUser, Type, Drama, Leaf, CalendarRange, MonitorPlay, MonitorX, Tv, ArrowDownWideNarrow, Filter, FilterX, Tags, Hash, SlidersHorizontal, Mic, Grid3X3, Grid2X2 } from 'lucide-svelte'
 
   const { reactive, init } = createListener(['x-filter'])
   $: init($page === 'search' || $page === 'schedule')
@@ -32,192 +32,6 @@
   }
   let form
 
-  const genreList = [
-    'Action',
-    'Adventure',
-    'Comedy',
-    'Drama',
-    'Ecchi',
-    'Fantasy',
-    'Horror',
-    'Mahou Shoujo',
-    'Mecha',
-    'Music',
-    'Mystery',
-    'Psychological',
-    'Romance',
-    'Sci-Fi',
-    'Slice of Life',
-    'Sports',
-    'Supernatural',
-    'Thriller'
-  ]
-
-  const tagList = [
-    'Chuunibyou',
-    'Demons',
-    'Food',
-    'Heterosexual',
-    'Isekai',
-    'Iyashikei',
-    'Josei',
-    'Magic',
-    'Yuri',
-    'Love Triangle',
-    'Female Harem',
-    'Male Harem',
-    'Mixed Gender Harem',
-    'Arranged Marriage',
-    'Marriage',
-    'Martial Arts',
-    'Military',
-    'Nudity',
-    'Parody',
-    'Reincarnation',
-    'Satire',
-    'School',
-    'Seinen',
-    'Shoujo',
-    'Shounen',
-    'Slavery',
-    'Space',
-    'Super Power',
-    'Superhero',
-    'Teens\' Love',
-    'Unrequited Love',
-    'Vampire',
-    'Kids',
-    'Gender Bending',
-    'Body Swapping',
-    'Boys\' Love',
-    'Cute Boys Doing Cute Things',
-    'Cute Girls Doing Cute Things',
-    'Acting',
-    'Afterlife',
-    'Age Gap',
-    'Age Regression',
-    'Aliens',
-    'Alternate Universe',
-    'Amnesia',
-    'Angels',
-    'Anti-Hero',
-    'Archery',
-    'Artificial Intelligence',
-    'Assassins',
-    'Asexual',
-    'Augmented Reality',
-    'Band',
-    'Bar',
-    'Battle Royale',
-    'Board Game',
-    'Boarding School',
-    'Bullying',
-    'Calligraphy',
-    'CGI',
-    'Classic Literature',
-    'College',
-    'Cosplay',
-    'Crime',
-    'Crossdressing',
-    'Cult',
-    'Dancing',
-    'Death Game',
-    'Desert',
-    'Disability',
-    'Drawing',
-    'Dragons',
-    'Dungeon',
-    'Elf',
-    'Espionage',
-    'Fairy',
-    'Femboy',
-    'Female Protagonist',
-    'Fashion',
-    'Foreign',
-    'Full CGI',
-    'Fugitive',
-    'Gambling',
-    'Ghost',
-    'Gods',
-    'Goblin',
-    'Guns',
-    'Gyaru',
-    'Hikikomori',
-    'Historical',
-    'Homeless',
-    'Idol',
-    'Inn',
-    'Kaiju',
-    'Konbini',
-    'Kuudere',
-    'Language Barrier',
-    'Makeup',
-    'Maids',
-    'Male Protagonist',
-    'Matriarchy',
-    'Matchmaking',
-    'Mermaid',
-    'Monster Boy',
-    'Monster Girl',
-    'Natural Disaster',
-    'Necromancy',
-    'Ninja',
-    'Nun',
-    'Office',
-    'Office Lady',
-    'Omegaverse',
-    'Orphan',
-    'Outdoor',
-    'Photography',
-    'Pirates',
-    'Polyamorous',
-    'Post-Apocalyptic',
-    'Primarily Adult Cast',
-    'Primarily Female Cast',
-    'Primarily Male Cast',
-    'Primarily Teen Cast',
-    'Prison',
-    'Rakugo',
-    'Restaurant',
-    'Robots',
-    'Rural',
-    'Samurai',
-    'School Club',
-    'Shapeshifting',
-    'Shrine Maiden',
-    'Skeleton',
-    'Slapstick',
-    'Snowscape',
-    'Space',
-    'Spearplay',
-    'Succubus',
-    'Surreal Comedy',
-    'Survival',
-    'Swordplay',
-    'Teacher',
-    'Time Loop',
-    'Time Manipulation',
-    'Time Skip',
-    'Transgender',
-    'Tsundere',
-    'Twins',
-    'Urban',
-    'Urban Fantasy',
-    'Video Games',
-    'Villainess',
-    'Virtual World',
-    'VTuber',
-    'War',
-    'Werewolf',
-    'Witch',
-    'Work',
-    'Writing',
-    'Wuxia',
-    'Yakuza',
-    'Yandere',
-    'Youkai',
-    'Zombie'
-  ]
   let filteredTags = []
 
   $: {
@@ -502,7 +316,6 @@
             <option value='TITLE_ROMAJI'>Title</option>
             <option value='SCORE_DESC'>Score</option>
             <option value='START_DATE_DESC'>Release Date</option>
-            <option value='UPDATED_AT_DESC'>Updated Date</option>
             {#if search.userList && search.title && !search.missedList}
               {#if search.completedList}
                 <option value='FINISHED_ON_DESC'>Completed Date</option>
@@ -578,7 +391,7 @@
   </div>
   <div class='w-full px-10 pt-10 h-50 d-flex flex-colum align-items-center'>
     <form>
-      <div class='{$reactive ? `` : `not-reactive`}' role="button" tabindex="0">
+      <div class:not-reactive={!$reactive} role='button' tabindex='0'>
         {#if sanitisedSearch?.length}
           {@const filteredBadges = sanitisedSearch.filter(badge => badge.key !== 'hideStatus' && (search.userList || badge.key !== 'title'))}
           <div class='d-flex flex-row align-items-center'>
@@ -589,7 +402,7 @@
             {@const matchingBadges = filteredBadges.filter(badge => badge.key === key)}
             {#each matchingBadges as badge}
               {#if badge.key === key && (badge.key !== 'hideStatus' && (search.userList || badge.key !== 'title')) }
-                <div class='badge bg-light border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center'>
+                <div class='badge border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center' class:bg-light={!badge.key.includes('_not')} class:bg-danger-dark={badge.key.includes('_not')}>
                   <svelte:component this={badgeDisplayNames[badge.key]} class='mr-5' size='1.8rem' />
                   <div class='font-size-12 mr-5'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</div>
                   {#if !search.scheduleList || (badge.key !== 'season' && badge.key !== 'year')}
@@ -609,6 +422,10 @@
 </form>
 
 <style>
+  .bg-danger-dark {
+    background-color: #631420;
+  }
+
   .input-group,
   .container-fluid button, .pointer {
     transition: scale 0.2s ease;

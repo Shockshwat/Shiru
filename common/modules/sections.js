@@ -1,6 +1,6 @@
 import { anilistClient, currentSeason, currentYear } from '@/modules/anilist.js'
 import { animeSchedule } from '@/modules/animeschedule.js'
-import { malDubs } from "@/modules/animedubs.js"
+import { malDubs } from '@/modules/animedubs.js'
 import { writable } from 'simple-store-svelte'
 import { settings } from '@/modules/settings.js'
 import { RSSManager } from '@/modules/rss.js'
@@ -10,6 +10,11 @@ import Debug from '@/modules/debug.js'
 const debug = Debug('ui:sections')
 
 export const hasNextPage = writable(true)
+
+const hideStatus = ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED']
+const hideMyAnime = settings.value.hideMyAnime
+const format = ['TV', 'MOVIE']
+const status_not = ['NOT_YET_RELEASED', 'CANCELLED']
 
 export default class SectionsManager {
   constructor (data = []) {
@@ -67,11 +72,16 @@ export let sections = []
 //})
 
 function createSections () {
+  const sectionFormat = (title) => (settings.value.homeSections.find(([t]) => t === title)?.[2] || [])
+  const createSection = (section, variables = {}, staticSort) => ({ ...section, ...(section.sort && staticSort ? { sort: "N/A" } : {}), variables: { ...variables, sort: settings.value.homeSections.find(([t]) => !staticSort && t === section.title)?.[1] ?? section.sort, ...(Array.isArray(sectionFormat(section.title)) && sectionFormat(section.title).length > 0 ? { format : sectionFormat(section.title) } : {}) } })
+
   return [
   // RSS feeds
     ...settings.value.rssFeedsNew.map(([title, url]) => {
       const section = {
         title,
+        sort: 'N/A',
+        format: ['N/A'],
         load: (page = 1, perPage = 12) => RSSManager.getMediaForRSS(page, perPage, url),
         preview: writable(RSSManager.getMediaForRSS(1, 12, url)),
         variables: { disableSearch: true },
@@ -118,8 +128,7 @@ function createSections () {
       return section
     }),
     // user specific sections
-    {
-      title: 'Sequels You Missed', variables : { sort: 'POPULARITY_DESC', userList: true, missedList: true, disableHide: true },
+    createSection({ title: 'Sequels You Missed', sort: 'POPULARITY_DESC', format: [], hide: !Helper.isAuthorized() || Helper.isMalAuth(),
       load: (page = 1, perPage = 50, variables = {}) => {
         if (Helper.isMalAuth()) return {} // not going to bother handling this, see below.
         const res = Helper.userLists(variables).then(res => {
@@ -134,11 +143,9 @@ function createSections () {
           return anilistClient.searchIDS({ page, perPage, id: ids, id_not: excludeIds, ...SectionsManager.sanitiseObject(variables), status: ['FINISHED', 'RELEASING'] })
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized() || Helper.isMalAuth() // disable this section when authenticated with MyAnimeList. API for userLists fail to return relations and likely will never be fixed on their end.
-    },
-    {
-      title: 'Stories You Missed', variables : { sort: 'POPULARITY_DESC', userList: true, missedList: true, disableHide: true },
+      } // disable this section when authenticated with MyAnimeList. API for userLists fail to return relations and likely will never be fixed on their end.
+    }, { userList: true, missedList: true, disableHide: true }),
+    createSection({ title: 'Stories You Missed', sort: 'POPULARITY_DESC', format: [], hide: !Helper.isAuthorized() || Helper.isMalAuth(),
       load: (page = 1, perPage = 50, variables = {}) => {
         if (Helper.isMalAuth()) return {} // same as Sequels You Missed
         const res = Helper.userLists(variables).then(res => {
@@ -153,11 +160,9 @@ function createSections () {
           return anilistClient.searchIDS({ page, perPage, id: ids, id_not: excludeIds, ...SectionsManager.sanitiseObject(variables), status: ['FINISHED', 'RELEASING'] })
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized() || Helper.isMalAuth()
-    },
-    {
-      title: 'Continue Watching', variables: { sort: 'UPDATED_TIME_DESC', userList: true, continueWatching: true, disableHide: true },
+      } // disable this section when authenticated with MyAnimeList. API for userLists fail to return relations and likely will never be fixed on their end.
+    }, { userList: true, missedList: true, disableHide: true }),
+    createSection({ title: 'Continue Watching', sort: 'UPDATED_TIME_DESC', format: [], hide: !Helper.isAuthorized(),
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
           if (!res?.data && res?.errors) throw res.errors[0]
@@ -168,11 +173,9 @@ function createSections () {
           return Helper.getPaginatedMediaList(page, perPage, variables, mediaList)
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized()
-    },
-    {
-      title: 'Watching List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, disableHide: true },
+      }
+    }, { userList: true, continueWatching: true, disableHide: true, status_not }),
+    createSection({ title: 'Watching List', sort: 'UPDATED_TIME_DESC', format: [], hide: !Helper.isAuthorized(),
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
           if (!res?.data && res?.errors) throw res.errors[0]
@@ -183,11 +186,9 @@ function createSections () {
           return Helper.getPaginatedMediaList(page, perPage, variables, mediaList)
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized()
-    },
-    {
-      title: 'Completed List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, completedList: true, disableHide: true },
+      }
+    }, { userList: true, disableHide: true, status_not }),
+    createSection({ title: 'Completed List', sort: 'UPDATED_TIME_DESC', format: [], hide: !Helper.isAuthorized(),
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
           if (!res?.data && res?.errors) throw res.errors[0]
@@ -198,11 +199,9 @@ function createSections () {
           return Helper.getPaginatedMediaList(page, perPage, variables, mediaList)
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized()
-    },
-    {
-      title: 'Planning List', variables : { sort: 'POPULARITY_DESC', userList: true, planningList: true, disableHide: true },
+      }
+    }, { userList: true, completedList: true, disableHide: true, status_not }),
+    createSection({ title: 'Planning List', sort: 'POPULARITY_DESC', format: [], hide: !Helper.isAuthorized(),
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
           if (!res?.data && res?.errors) throw res.errors[0]
@@ -213,11 +212,9 @@ function createSections () {
           return Helper.getPaginatedMediaList(page, perPage, variables, mediaList)
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized()
-    },
-    {
-      title: 'Paused List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, disableHide: true },
+      }
+    }, { userList: true, planningList: true, disableHide: true, status_not }),
+    createSection({ title: 'Paused List', sort: 'UPDATED_TIME_DESC', format: [], hide: !Helper.isAuthorized(),
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
           if (!res?.data && res?.errors) throw res.errors[0]
@@ -228,11 +225,9 @@ function createSections () {
           return Helper.getPaginatedMediaList(page, perPage, variables, mediaList)
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized()
-    },
-    {
-      title: 'Dropped List', variables : { sort: 'UPDATED_TIME_DESC', userList: true, droppedList: true, disableHide: true },
+      }
+    }, { userList: true, disableHide: true, status_not }),
+    createSection({ title: 'Dropped List', sort: 'UPDATED_TIME_DESC', format: [], hide: !Helper.isAuthorized(),
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = Helper.userLists(variables).then(res => {
           if (!res?.data && res?.errors) throw res.errors[0]
@@ -243,17 +238,12 @@ function createSections () {
           return Helper.getPaginatedMediaList(page, perPage, variables, mediaList)
         })
         return SectionsManager.wrapResponse(res, perPage)
-      },
-      hide: !Helper.isAuthorized()
-    },
+      }
+    }, { userList: true, droppedList: true, disableHide: true, status_not }),
     // common, non-user specific sections
-    { title: 'Popular This Season', variables: { sort: 'POPULARITY_DESC', season: currentSeason, year: currentYear, hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } },
-    { title: 'Trending Now', variables: { sort: 'TRENDING_DESC', hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } },
-    { title: 'All Time Popular', variables: { sort: 'POPULARITY_DESC', hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } },
-    { title: 'Romance', variables: { sort: 'TRENDING_DESC', genre: ['Romance'], hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } },
-    { title: 'Action', variables: { sort: 'TRENDING_DESC', genre: ['Action'], hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } },
-    { title: 'Adventure', variables: { sort: 'TRENDING_DESC', genre: ['Adventure'], hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } },
-    { title: 'Fantasy', variables: { sort: 'TRENDING_DESC', genre: ['Fantasy'], hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } },
-    { title: 'Comedy', variables: { sort: 'TRENDING_DESC', genre: ['Comedy'], hideMyAnime: settings.value.hideMyAnime, hideStatus: ['CURRENT', 'REPEATING', 'COMPLETED', 'DROPPED'] } }
+    createSection({ title: 'Popular This Season', sort: 'POPULARITY_DESC', format }, { season: currentSeason, year: currentYear, hideMyAnime, hideStatus, status_not }, true),
+    createSection({ title: 'Trending Now', sort: 'TRENDING_DESC', format }, { hideMyAnime, hideStatus, status_not }, true),
+    createSection({ title: 'All Time Popular', sort: 'POPULARITY_DESC', format }, { hideMyAnime, hideStatus, status_not }, true),
+    ...settings.value.customSections.map(([title, genres, tags, genre_not, tags_not]) => createSection({ title, sort: 'TRENDING_DESC', format }, { ...(genres?.length > 0 ? { genre: genres } : {}), ...(tags?.length > 0 ? { tag: tags } : {}), hideMyAnime, hideStatus, status_not }))
   ]
 }

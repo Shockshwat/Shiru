@@ -6,12 +6,16 @@
   import SettingCard from './SettingCard.svelte'
   import { SUPPORTS } from '@/modules/support.js'
   import { Trash2 } from 'lucide-svelte'
+  import { genreList, tagList } from '@/modules/anime.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
-  import Helper from "@/modules/helper.js"
+  import CustomDropdown from '@/components/CustomDropdown.svelte'
+  import Helper from '@/modules/helper.js'
   function updateAngle () {
     IPC.emit('angle', settings.value.angle)
   }
   export let settings
+
+  const listStatus = [['Watching', 'CURRENT'], ['Planning', 'PLANNING'], ['Paused', 'PAUSED'], ['Completed', 'COMPLETED'], ['Dropped', 'DROPPED'], ['Rewatching', 'REPEATING'], ['Not on List', 'NOTONLIST']]
 </script>
 
 {#if SUPPORTS.discord}
@@ -56,7 +60,7 @@
   </SettingCard>
 {/if}
 <SettingCard title='Card Type' description='What type of cards to display in menus.'>
-  <select class='form-control bg-dark w-300 mw-full' bind:value={settings.cards}>
+  <select class='form-control bg-dark w-100 mw-full' bind:value={settings.cards}>
     <option value='small' selected>Small</option>
     <option value='full'>Full</option>
   </select>
@@ -183,6 +187,41 @@
     <button type='button' use:click={() => { settings.rssFeedsNew[settings.rssFeedsNew.length] = ['New Releases', null] }} class='btn btn-primary mb-10'>Add Feed</button>
   </div>
 </SettingCard>
+<SettingCard title='Custom Sections' description={'Create custom sections that can be added to the home screen.\n\nNewly created custom sections will not appear in "Sections And Order" until you restart the app.'}>
+  <div>
+    {#each settings.customSections as _, i}
+      {#if i === 0}
+        <div class='d-flex mb-5 w-480 mw-full'>
+          <div class='flex-shrink-1 w-150 font-size-16 text-center font-weight-bold'>Name</div>
+          <div class='flex-shrink-1 w-150 font-size-16 text-center font-weight-bold'>Genres</div>
+          <div class='flex-shrink-1 w-150 mr-5 font-size-16 text-center font-weight-bold'>Tags</div>
+          <div class='flex-shrink-1 font-size-16 text-center font-weight-bold hidden' style='width: 3rem'>&nbsp;</div>
+        </div>
+      {/if}
+      <div class='d-flex mb-10 w-480 mw-full'>
+        <div class='position-relative flex-shrink-1 w-150'>
+          <input
+            type='text'
+            class='form-control bg-dark fix-border-right text-capitalize'
+            placeholder='Name'
+            autocomplete='off'
+            bind:value={settings.customSections[i][0]}
+          />
+        </div>
+        <div class='position-relative flex-shrink-1 w-150'>
+          <CustomDropdown id={`genre-is-${i}`} options={genreList} bind:value={settings.customSections[i][1]}/>
+        </div>
+        <div class='position-relative flex-shrink-1 w-150'>
+          <CustomDropdown id={`tag-is-${i}`} options={tagList} bind:value={settings.customSections[i][2]}/>
+        </div>
+        <div class='input-group-append'>
+          <button type='button' use:click={() => { settings.customSections.splice(i, 1); settings.customSections = settings.customSections }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>
+        </div>
+      </div>
+    {/each}
+    <button type='button' use:click={() => { settings.customSections[settings.customSections.length] = ['New Section', [], [], [], []] }} class='btn btn-primary mb-10'>Add Section</button>
+  </div>
+</SettingCard>
 <SettingCard title='Sections And Order' description="Sections and their order on the home screen, if you want more RSS feeds to show up here, create them first in the RSS feed list. Adding many multiple normal lists doesn't impact performance, but adding a lot of RSS feeds will impact app startup times. Drag/drop these sections to re-order them.">
   <div class='position-relative'>
     <HomeSections bind:homeSections={settings.homeSections} />
@@ -190,10 +229,20 @@
 </SettingCard>
 
 <style>
+  .w-210 {
+    width: 21rem;
+  }
+  .w-480 {
+    width: 48rem;
+  }
   .mt-7 {
     margin-top: .7rem;
   }
   textarea {
     min-height: 6.6rem;
+  }
+  .fix-border-right {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
   }
 </style>

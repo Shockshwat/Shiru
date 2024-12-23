@@ -1,5 +1,5 @@
-import { DOMPARSER } from './util.js'
-import { anilistClient } from './anilist.js'
+import { DOMPARSER, getRandomInt, countdown } from './util.js'
+import { codes, anilistClient } from './anilist.js'
 import _anitomyscript from 'anitomyscript'
 import { toast } from 'svelte-sonner'
 import SectionsManager from './sections.js'
@@ -10,6 +10,7 @@ import { search, key } from '@/views/Search.svelte'
 
 import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
 import { animeSchedule } from '@/modules/animeschedule.js'
+import {caches, settings, updateCache} from '@/modules/settings.js'
 import Helper from '@/modules/helper.js'
 import Debug from '@/modules/debug.js'
 
@@ -215,6 +216,261 @@ export const statusColorMap = {
   DROPPED: 'rgb(232,93,117)'
 }
 
+export const genreList = [
+  'Action',
+  'Adventure',
+  'Comedy',
+  'Drama',
+  'Ecchi',
+  'Fantasy',
+  ...(settings.value.adult === 'hentai' ? ['Hentai'] : []),
+  'Horror',
+  'Mahou Shoujo',
+  'Mecha',
+  'Music',
+  'Mystery',
+  'Psychological',
+  'Romance',
+  'Sci-Fi',
+  'Slice of Life',
+  'Sports',
+  'Supernatural',
+  'Thriller'
+]
+
+export const tagList = [
+  'Chuunibyou',
+  'Demons',
+  'Food',
+  'Heterosexual',
+  'Isekai',
+  'Iyashikei',
+  'Josei',
+  'Magic',
+  'Yuri',
+  'Love Triangle',
+  'Female Harem',
+  'Male Harem',
+  'Mixed Gender Harem',
+  'Arranged Marriage',
+  'Marriage',
+  'Martial Arts',
+  'Military',
+  'Nudity',
+  'Parody',
+  'Reincarnation',
+  'Satire',
+  'School',
+  'Seinen',
+  'Shoujo',
+  'Shounen',
+  'Slavery',
+  'Space',
+  'Super Power',
+  'Superhero',
+  'Teens\' Love',
+  'Unrequited Love',
+  'Vampire',
+  'Kids',
+  'Gender Bending',
+  'Body Swapping',
+  'Boys\' Love',
+  'Cute Boys Doing Cute Things',
+  'Cute Girls Doing Cute Things',
+  'Acting',
+  'Afterlife',
+  'Age Gap',
+  'Age Regression',
+  'Aliens',
+  'Alternate Universe',
+  'Amnesia',
+  'Angels',
+  'Anti-Hero',
+  'Archery',
+  'Artificial Intelligence',
+  'Assassins',
+  'Asexual',
+  'Augmented Reality',
+  'Band',
+  'Bar',
+  'Battle Royale',
+  'Board Game',
+  'Boarding School',
+  'Bullying',
+  'Calligraphy',
+  'CGI',
+  'Classic Literature',
+  'College',
+  'Cosplay',
+  'Crime',
+  'Crossdressing',
+  'Cult',
+  'Dancing',
+  'Death Game',
+  'Desert',
+  'Disability',
+  'Drawing',
+  'Dragons',
+  'Dungeon',
+  'Elf',
+  'Espionage',
+  'Fairy',
+  'Femboy',
+  'Female Protagonist',
+  'Fashion',
+  'Foreign',
+  'Full CGI',
+  'Fugitive',
+  'Gambling',
+  'Ghost',
+  'Gods',
+  'Goblin',
+  'Guns',
+  'Gyaru',
+  'Hikikomori',
+  'Historical',
+  'Homeless',
+  'Idol',
+  'Inn',
+  'Kaiju',
+  'Konbini',
+  'Kuudere',
+  'Language Barrier',
+  'Makeup',
+  'Maids',
+  'Male Protagonist',
+  'Matriarchy',
+  'Matchmaking',
+  'Mermaid',
+  'Monster Boy',
+  'Monster Girl',
+  'Natural Disaster',
+  'Necromancy',
+  'Ninja',
+  'Nun',
+  'Office',
+  'Office Lady',
+  'Omegaverse',
+  'Orphan',
+  'Outdoor',
+  'Photography',
+  'Pirates',
+  'Polyamorous',
+  'Post-Apocalyptic',
+  'Primarily Adult Cast',
+  'Primarily Female Cast',
+  'Primarily Male Cast',
+  'Primarily Teen Cast',
+  'Prison',
+  'Rakugo',
+  'Restaurant',
+  'Robots',
+  'Rural',
+  'Samurai',
+  'School Club',
+  'Shapeshifting',
+  'Shrine Maiden',
+  'Skeleton',
+  'Slapstick',
+  'Snowscape',
+  'Space',
+  'Spearplay',
+  'Succubus',
+  'Surreal Comedy',
+  'Survival',
+  'Swordplay',
+  'Teacher',
+  'Time Loop',
+  'Time Manipulation',
+  'Time Skip',
+  'Transgender',
+  'Tsundere',
+  'Twins',
+  'Urban',
+  'Urban Fantasy',
+  'Video Games',
+  'Villainess',
+  'Virtual World',
+  'VTuber',
+  'War',
+  'Werewolf',
+  'Witch',
+  'Work',
+  'Writing',
+  'Wuxia',
+  'Yakuza',
+  'Yandere',
+  'Youkai',
+  'Zombie',
+  ...(settings.value.adult === 'hentai' ? [
+  'Ahegao',
+  'Amputation',
+  'Anal Sex',
+  'Armpits',
+  'Ashikoki',
+  'Asphyxiation',
+  'Blackmail',
+  'Bondage',
+  'Boobjob',
+  'Cervix Penetration',
+  'Cheating',
+  'Cumflation',
+  'Cunnilingus',
+  'Deepthroat',
+  'Defloration',
+  'DILF',
+  'Double Penetration',
+  'Erotic Piercings',
+  'Exhibitionism',
+  'Facial',
+  'Feet',
+  'Fellatio',
+  'Femdom',
+  'Fisting',
+  'Flat Chest',
+  'Futanari',
+  'Group Sex',
+  'Hair Pulling',
+  'Handjob',
+  'Human Pet',
+  'Hypersexuality',
+  'Incest',
+  'Inseki',
+  'Irrumatio',
+  'Lactation',
+  'Large Breasts',
+  'Male Pregnancy',
+  'Masochism',
+  'Masturbation',
+  'Mating Press',
+  'MILF',
+  'Nakadashi',
+  'Netorare',
+  'Netorase',
+  'Netori',
+  'Pet Play',
+  'Pregnant',
+  'Prostitution',
+  'Public Sex',
+  'Rape',
+  'Rimjob',
+  'Sadism',
+  'Scat',
+  'Scissoring',
+  'Sex Toys',
+  'Squirting',
+  'Sumata',
+  'Sweat',
+  'Tentacles',
+  'Threesome',
+  'Virginity',
+  'Vore',
+  'Voyeur',
+  'Watersports',
+  'Zoophilia'
+  ] : [])
+]
+
 export async function playMedia (media) {
   let ep = 1
   if (media.mediaListEntry) {
@@ -223,7 +479,7 @@ export async function playMedia (media) {
       if (status === 'COMPLETED') {
         await setStatus('REPEATING', { episode: 0 }, media)
       } else {
-        ep = Math.min(getMediaMaxEp(media, true), progress + 1)
+        ep = Math.min(getMediaMaxEp(media, true) || (progress + 1), progress + 1)
       }
     }
   }
@@ -249,17 +505,92 @@ const episodeMetadataMap = {}
 
 export async function getEpisodeMetadataForMedia (media) {
   if (episodeMetadataMap[media?.id]) return episodeMetadataMap[media?.id]
-  const res = await fetch('https://api.ani.zip/mappings?anilist_id=' + media?.id)
-  const { episodes } = await res.json()
+  const { episodes } = await getAniMappings(media?.id)
   episodeMetadataMap[media?.id] = episodes
   return episodes
 }
 
 export function episode(media, variables) {
-  return variables?.hideSubs ? animeSchedule.airing.value.find(cached => cached.media.id === media.id)?.media?.airingSchedule?.nodes?.[0].episode : media.airingSchedule?.nodes?.[0]?.episode
+  if (variables?.hideSubs) {
+    const entry = animeSchedule.dubAiring.value.find(entry => entry.media?.media?.id === media.id)
+    const nodes = entry?.media?.media?.airingSchedule?.nodes
+
+    if (!nodes || nodes.length === 0) return `Episode 1 in`
+    if (entry?.delayedIndefinitely && nodes[0]) return `Episode ${nodes[0].episode} is`
+    if (nodes.length === 1) return `Episode ${nodes[0].episode} in`
+
+    let lastEpisode = nodes[0].episode
+    for (let i = 1; i < nodes.length; i++) {
+      if (new Date(nodes[i].airingAt).getTime() !== new Date(nodes[i - 1].airingAt).getTime()) {
+        lastEpisode = nodes[i - 1].episode
+        break
+      }
+      if (i === nodes.length - 1) lastEpisode = nodes[i].episode
+    }
+
+    return `Episode ${nodes[0].episode === lastEpisode ? `${nodes[0].episode}` : `${nodes[0].episode} ~ ${lastEpisode}`} in`
+  }
+  return `Episode ${media.airingSchedule?.nodes?.[0]?.episode} in`
 }
 
 export function airingAt(media, variables) {
-  const airingAt = variables?.hideSubs ? animeSchedule.airing.value.find(cached => cached.media.id === media.id)?.media?.airingSchedule?.nodes?.[0].airingAt : media.airingSchedule?.nodes?.[0]?.airingAt
-  return airingAt && (variables?.hideSubs ? new Date(airingAt).getTime() / 1000 : airingAt)
+  if (variables?.hideSubs) {
+    const entry = animeSchedule.dubAiring.value.find((entry) => entry.media?.media?.id === media.id)
+    if (entry?.delayedIndefinitely) return "Suspended"
+    const airingAt = entry?.media?.media?.airingSchedule?.nodes?.[0]?.airingAt
+    return airingAt ? countdown((new Date(airingAt).getTime() / 1000) - Date.now() / 1000) : null
+  }
+  const airingAt = media.airingSchedule?.nodes?.[0]?.airingAt
+  return airingAt ? countdown( (new Date(airingAt).getTime()) - Date.now() / 1000) : null
+}
+
+export async function getAniMappings(anilistID) {
+  if (!anilistID) return
+  debug(`Searching for ani mappings for anilist media: ${anilistID}`)
+  const cachedEntry = caches.value['mappings'][anilistID]
+  if (cachedEntry && Date.now() < cachedEntry.expiry) {
+    debug(`Found cached ani mappings for anilist media: ${anilistID}`)
+    return cachedEntry.data
+  }
+
+  let res = {}
+  try {
+    res = await fetch(`https://api.ani.zip/mappings?anilist_id=${anilistID}`)
+  } catch (e) {
+    if (!res || res.status !== 404) throw e
+  }
+  if (!res.ok && (res.status === 429 || res.status === 500)) {
+    throw res
+  }
+  let json = null
+  try {
+    json = await res.json()
+  } catch (error) {
+    if (res.ok) printError(error)
+  }
+  if (!res.ok) {
+    if (json) {
+      for (const error of json?.errors || []) {
+        printError(error)
+      }
+    } else {
+      printError(res)
+    }
+  }
+  // prevent updating the cache if the request fails (usually only occurs when the api is down).
+  if (json && !json?.errors?.length > 0) {
+    updateCache('mappings', anilistID, { data: json, expiry: Date.now() + getRandomInt(1440, 2160) * 60 * 1000 })
+  }
+  const data = caches.value['mappings'][anilistID]?.data
+  return data && Object.keys(await data).length > 0 ? data : json
+}
+
+function printError(error) {
+  debug(`Error: ${error.status || 429} - ${error.message || codes[error.status || 429]}`)
+  if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+    toast.error('AniSearch Failed', {
+      description: `Failed to fetch the ani mappings!\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
+      duration: 3000
+    })
+  }
 }
