@@ -16,20 +16,13 @@
 
 {#if SUPPORTS.discord}
   <h4 class='mb-10 font-weight-bold'>Rich Presence Settings</h4>
-  <SettingCard title='Discord Rich Presence' description='Enables the use of Discord rich presence to display app activity.'>
-    <div class='custom-switch'>
-      <input type='checkbox' id='rpc-enabled' bind:checked={settings.enableRPC} />
-      <label for='rpc-enabled'>{settings.enableRPC ? 'On' : 'Off'}</label>
-    </div>
+  <SettingCard title='Discord Rich Presence' description={'Enables the use of Discord rich presence to display app activity.\nFull enables complete rich presence support showing anime details, limited reduces what is seen not showing the currently played anime and episode, disabled completely disables rich presence.'}>
+    <select class='form-control bg-dark w-100 mw-full' bind:value={settings.enableRPC}>
+      <option value='full' selected>Full</option>
+      <option value='limited'>Limited</option>
+      <option value='disabled'>Disabled</option>
+    </select>
   </SettingCard>
-  {#if settings.enableRPC}
-    <SettingCard title='Show Details in Discord Rich Presence' description='Shows currently played anime and episode in Discord rich presence.'>
-      <div class='custom-switch'>
-        <input type='checkbox' id='rpc-details' bind:checked={settings.showDetailsInRPC} />
-        <label for='rpc-details'>{settings.showDetailsInRPC ? 'On' : 'Off'}</label>
-      </div>
-    </SettingCard>
-  {/if}
 {/if}
 
 <h4 class='mb-10 font-weight-bold'>Interface Settings</h4>

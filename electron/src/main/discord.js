@@ -25,29 +25,22 @@ export default class Discord {
 
   discord = new Client({ transport: 'ipc' })
 
-  /** @type {Discord['defaultStatus'] | undefined} */
-  enableRPC
-  /** @type {Discord['defaultStatus'] | undefined} */
-  allowDiscordDetails
+  /** @type {string} */
+  enableRPC = 'disabled'
   /** @type {Discord['defaultStatus'] | undefined} */
   cachedPresence
 
   /** @param {import('electron').BrowserWindow} window */
   constructor (window) {
-    ipcMain.on('show-discord-status', (event, data) => {
-      this.allowDiscordDetails = data
-      this.debouncedDiscordRPC(this.allowDiscordDetails ? this.cachedPresence : undefined)
-    })
-
     ipcMain.on('discord', (event, data) => {
       this.cachedPresence = data
-      this.debouncedDiscordRPC(this.allowDiscordDetails ? this.cachedPresence : undefined)
+      this.debouncedDiscordRPC(this.enableRPC === 'full' ? this.cachedPresence : undefined)
     })
 
     ipcMain.on('discord-rpc', (event, data) => {
       if (this.enableRPC !== data) {
         this.enableRPC = data
-        if (data && !this.discord?.user) {
+        if (data !== 'disabled' && !this.discord?.user) {
           this.loginRPC()
         } else {
           this.logoutRPC()
@@ -81,12 +74,12 @@ export default class Discord {
 
   logoutRPC () {
     if (this.discord?.user) {
-      this.discord.clearActivity(process.pid)
+      setTimeout(() => this.discord.clearActivity(process.pid), 500).unref()
     }
   }
 
   setDiscordRPC (data = this.defaultStatus) {
-    if (this.discord.user && data && this.enableRPC) {
+    if (this.discord.user && data && this.enableRPC !== 'disabled') {
       data.pid = process.pid
       this.discord.request('SET_ACTIVITY', data)
     }
