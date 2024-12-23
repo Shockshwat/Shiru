@@ -4,6 +4,7 @@
 *.map
 .sourcemaps
 dist/
+*.gradle
 
 *.jks
 *.pepk
