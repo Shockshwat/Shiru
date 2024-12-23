@@ -8,7 +8,7 @@ import { anilistClient } from '@/modules/anilist.js'
 import { hasNextPage } from '@/modules/sections.js'
 import { malDubs } from '@/modules/animedubs.js'
 import IPC from '@/modules/ipc.js'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:rss')
 

@@ -5,7 +5,7 @@ import { writable } from 'simple-store-svelte'
 import { settings } from '@/modules/settings.js'
 import { RSSManager } from '@/modules/rss.js'
 import Helper from '@/modules/helper.js'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:sections')
 

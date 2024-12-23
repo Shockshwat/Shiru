@@ -6,7 +6,7 @@ import { codes } from "@/modules/anilist.js"
 import { toast } from 'svelte-sonner'
 import { sleep } from "@/modules/util.js";
 import Helper from '@/modules/helper.js'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:myanimelist')
 

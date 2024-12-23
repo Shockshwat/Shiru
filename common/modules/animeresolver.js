@@ -1,7 +1,7 @@
 import { anilistClient } from './anilist.js'
 import { anitomyscript } from './anime.js'
 import { chunks, matchKeys } from './util.js'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:animeresolver')
 

@@ -12,7 +12,7 @@ import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
 import { animeSchedule } from '@/modules/animeschedule.js'
 import {caches, settings, updateCache} from '@/modules/settings.js'
 import Helper from '@/modules/helper.js'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:anime')
 

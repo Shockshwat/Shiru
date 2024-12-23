@@ -6,7 +6,7 @@
   import { anilistClient } from '@/modules/anilist.js'
   import { episodesList } from '@/modules/episodes.js'
   import { getAniMappings } from '@/modules/anime.js'
-  import Debug from '@/modules/debug.js'
+  import Debug from 'debug'
 
   const debug = Debug('ui:mediahandler')
 

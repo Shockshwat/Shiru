@@ -3,7 +3,7 @@ import { codes } from '@/modules/anilist.js'
 import { caches, settings, updateCache } from '@/modules/settings.js'
 import { getRandomInt, sleep } from '@/modules/util.js'
 import Bottleneck from 'bottleneck'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:episodes')
 

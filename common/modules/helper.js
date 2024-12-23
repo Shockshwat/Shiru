@@ -5,7 +5,7 @@ import { malDubs } from "@/modules/animedubs.js"
 import { profiles } from '@/modules/settings.js'
 import { matchKeys } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:helper')
 

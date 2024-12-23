@@ -2,7 +2,7 @@ import { writable } from 'simple-store-svelte'
 import { debounce, defaults, cacheDefaults, notifyDefaults } from '@/modules/util.js'
 import IPC from '@/modules/ipc.js'
 import { toast } from 'svelte-sonner'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:settings')
 
