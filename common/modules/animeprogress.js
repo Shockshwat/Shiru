@@ -1,4 +1,5 @@
 import { writable, derived } from 'simple-store-svelte'
+import { cacheID } from '@/modules/settings.js';
 
 // Maximum number of entries to keep in LocalStorage
 const maxEntries = 1000
@@ -6,12 +7,12 @@ const maxEntries = 1000
 // LocalStorage is structured as an array of objects with the following properties:
 // mediaId, episode, currentTime, safeduration, createdAt, updatedAt
 function loadFromLocalStorage () {
-  const data = localStorage.getItem('animeEpisodeProgress')
+  const data = localStorage.getItem(`animeEpisodeProgress_${cacheID}`)
   return data ? JSON.parse(data) : []
 }
 
 function saveToLocalStorage (data) {
-  localStorage.setItem('animeEpisodeProgress', JSON.stringify(data))
+  localStorage.setItem(`animeEpisodeProgress_${cacheID}`, JSON.stringify(data))
   animeProgressStore.set(data)
 }
 

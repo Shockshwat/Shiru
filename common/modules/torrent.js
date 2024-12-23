@@ -5,7 +5,7 @@ import clipboard from './clipboard.js'
 import IPC from '@/modules/ipc.js'
 import 'browser-event-target-emitter'
 import Debug from '@/modules/debug.js'
-import { settings } from '@/modules/settings.js'
+import { cacheID, settings } from '@/modules/settings.js'
 
 const debug = Debug('ui:torrent')
 
@@ -54,7 +54,7 @@ class TorrentWorker extends EventTarget {
 
 export const client = new TorrentWorker()
 
-client.send('load', localStorage.getItem('torrent'))
+client.send('load', localStorage.getItem(`torrent_${cacheID}`))
 
 client.on('files', ({ detail }) => {
   files.set(detail)
@@ -83,13 +83,16 @@ export async function add (torrentID, hide) {
   if (torrentID) {
     debug('Adding torrent', { torrentID })
     if (torrentID.startsWith?.('magnet:')) {
-      localStorage.setItem('torrent', JSON.stringify(torrentID))
+      localStorage.setItem(`torrent_${cacheID}`, JSON.stringify(torrentID))
     } else {
-      localStorage.setItem('torrent', torrentID)
+      localStorage.setItem(`torrent_${cacheID}`, torrentID)
     }
     files.set([])
-    if (!hide) page.set('player')
-    client.send('torrent', torrentID)
+    if (!hide) {
+      page.set('player')
+      window.dispatchEvent(new Event('overlay-check'))
+    }
+    client.send(`torrent`, torrentID)
   }
 }
 // external player for android

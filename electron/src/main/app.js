@@ -81,6 +81,7 @@ export default class App {
     this.mainWindow.on('close', (event) => {
       if (!this.close) {
         event.preventDefault()
+        this.showAndFocus()
         this.mainWindow.webContents.send('window-close')
       }
     })
@@ -157,6 +158,8 @@ export default class App {
       this.webtorrentWindow.webContents.postMessage('port', null, [port1])
       sender.postMessage('port', null, [port2])
     })
+
+    ipcMain.on('webtorrent-reload', () => { if (!this.mainWindow?.isDestroyed() && !this.webtorrentWindow?.isDestroyed()) this.webtorrentWindow.webContents.postMessage('webtorrent-reload', null) })
 
     ipcMain.on('quit-and-install', () => {
       if (this.updater.hasUpdate) {

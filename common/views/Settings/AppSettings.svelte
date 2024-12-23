@@ -49,14 +49,14 @@
 <script context='module'>
   import { click } from '@/modules/click.js'
   import { toast } from 'svelte-sonner'
-  import { resetSettings } from '@/modules/settings.js'
+  import { cacheID, resetSettings, resetCaches, resetNotifications } from '@/modules/settings.js'
   import IPC from '@/modules/ipc.js'
   import { SUPPORTS } from '@/modules/support.js'
 
   async function importSettings () {
     try {
       const settings = JSON.parse(await navigator.clipboard.readText())
-      localStorage.setItem('settings', JSON.stringify(settings))
+      localStorage.setItem(`settings_${cacheID}`, JSON.stringify(settings))
       location.reload()
     } catch (error) {
       toast.error('Failed to import settings', {
@@ -66,7 +66,7 @@
     }
   }
   function exportSettings () {
-    navigator.clipboard.writeText(localStorage.getItem('settings'))
+    navigator.clipboard.writeText(localStorage.getItem(`settings_${cacheID}`))
     toast('Copied to clipboard', {
       description: 'Copied settings to clipboard',
       duration: 5000
@@ -126,6 +126,12 @@
     <button type='button' use:click={() => IPC.emit('ui-devtools')} class='btn btn-primary'>Open Devtools</button>
   </SettingCard>
 {/if}
+<SettingCard title='Reset Notifications' description="Resets all notifications that have been cached, this is not recommended unless you are experiencing issues. This will also reset the last time you have been notified, so expect previous notifications to appear again.">
+  <button type='button' use:click={() => resetNotifications()} class='btn btn-primary'>Reset Notifications</button>
+</SettingCard>
+<SettingCard title='Reset Caches' description="Resets everything the app has cached, this is not recommended unless you are experiencing issues. Caching increases load times and decreases down time. This does not reset the notifications cache.">
+  <button type='button' use:click={() => resetCaches()} class='btn btn-primary'>Reset Caches</button>
+</SettingCard>
 
 <h4 class='mb-10 font-weight-bold'>App Settings</h4>
 <SettingCard title='Close Action' description='Choose the functionality of the close button for the app. You can choose to receive a Prompt to Minimize or Close, default to Minimize, or default to Closing the app.'>

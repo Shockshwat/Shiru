@@ -1,8 +1,8 @@
 <script>
   import { anilistClient, codes } from '@/modules/anilist.js'
-  import { profiles, settings } from '@/modules/settings.js'
+  import { profiles, settings, sync } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
-  import { get, writable } from 'svelte/store'
+  import { writable } from 'svelte/store'
   import { toast } from 'svelte-sonner'
   import { Bookmark, PencilLine } from 'lucide-svelte'
   import Helper from '@/modules/helper.js'
@@ -66,11 +66,10 @@
 
       if (res) media.mediaListEntry = undefined
 
-      const mainSync = Helper.getUser().sync
-      if (Array.isArray(mainSync) && mainSync.length > 0) { // handle profile syncing
+      if (sync.value.length > 0) { // handle profile syncing
         const mediaId = media.id
-        for (const profile of get(profiles)) {
-          if (mainSync.includes(profile?.viewer?.data?.Viewer?.id)) {
+        for (const profile of profiles.value) {
+          if (sync.value.includes(profile?.viewer?.data?.Viewer?.id)) {
             const anilist = profile.viewer?.data?.Viewer?.avatar
             const listId = (anilist ? {id: (await anilistClient.getUserLists({userID: profile.viewer.data.Viewer.id, token: profile.token}))?.data?.MediaListCollection?.lists?.flatMap(list => list.entries).find(({ media }) => media.id === mediaId)?.media?.mediaListEntry?.id} : {idMal: media.idMal})
             if (listId?.id || listId?.idMal) {
@@ -105,10 +104,9 @@
 
         const description = `Title: ${anilistClient.title(media)}\nStatus: ${Helper.statusName[status]}\nEpisode: ${episode} / ${totalEpisodes}${score !== 0 ? `\nYour Score: ${score}` : ''}`
         printToast(res, description, true, false)
-        const mainSync = Helper.getUser().sync
-        if (Array.isArray(mainSync) && mainSync.length > 0) { // handle profile syncing
-          for (const profile of get(profiles)) {
-            if (mainSync.includes(profile?.viewer?.data?.Viewer?.id)) {
+        if (sync.value.length > 0) { // handle profile syncing
+          for (const profile of profiles.value) {
+            if (sync.value.includes(profile?.viewer?.data?.Viewer?.id)) {
               const anilist = profile.viewer?.data?.Viewer?.avatar
               const res = await Helper.entry(media, {
                 ...variables,

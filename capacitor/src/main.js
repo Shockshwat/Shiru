@@ -19,7 +19,7 @@ if (typeof localStorage === 'undefined') {
 let client
 
 channel.on('port-init', data => {
-  localStorage.setItem('settings', data)
+  localStorage.setItem(`settings_${TorrentClient.cacheID}`, data)
   const port = {
     onmessage: _ => {},
     postMessage: data => {
@@ -29,7 +29,7 @@ channel.on('port-init', data => {
   let storedSettings = {}
 
   try {
-    storedSettings = JSON.parse(localStorage.getItem('settings')) || {}
+    storedSettings = JSON.parse(localStorage.getItem(`settings_${TorrentClient.cacheID}`)) || {}
   } catch (error) {}
 
   channel.on('ipc', a => port.onmessage(a))
@@ -40,4 +40,11 @@ channel.on('port-init', data => {
       ports: [port]
     })
   }
+  channel.on('webtorrent-reload', () => {
+    if (client) {
+      client.destroy()
+      storedSettings = JSON.parse(localStorage.getItem(`settings_${TorrentClient.cacheID}`)) || {}
+      client = new TorrentClient(channel, storageQuota, 'node', storedSettings.torrentPathNew || env.TMPDIR)
+    }
+  })
 })

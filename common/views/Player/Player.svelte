@@ -70,9 +70,9 @@
   const canCast = false
   let isFullscreen = false
   let ended = false
-  let volume = Number(localStorage.getItem('volume')) || 1
+  let volume = Number(localStorage.getItem(`volume_${cacheID}`)) || 1
   let playbackRate = 1
-  $: localStorage.setItem('volume', (volume || 0).toString())
+  $: localStorage.setItem(`volume_${cacheID}`, (volume || 0).toString())
   $: safeduration = (isFinite(duration) ? duration : currentTime) || 0
   $: {
     if (hidden) {

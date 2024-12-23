@@ -1,5 +1,5 @@
-import { get, writable } from 'simple-store-svelte'
-import { defaults } from './util.js'
+import { writable } from 'simple-store-svelte'
+import { debounce, defaults, cacheDefaults, notifyDefaults } from '@/modules/util.js'
 import IPC from '@/modules/ipc.js'
 import { toast } from 'svelte-sonner'
 import Debug from '@/modules/debug.js'
@@ -11,38 +11,102 @@ export let alToken = JSON.parse(localStorage.getItem('ALviewer')) || null
 /** @type {{viewer: import('./mal').Query<{Viewer: import('./mal').Viewer}>, token: string, refresh: string, refresh_in: number, reauth: boolean} | null} */
 export let malToken = JSON.parse(localStorage.getItem('MALviewer')) || null
 
+export let cacheID = alToken ? alToken.viewer.data.Viewer.id : malToken ? malToken.viewer.data.Viewer.id : 'default'
+
 let storedSettings = { ...defaults }
 
 let scopedDefaults
 
 try {
-  storedSettings = JSON.parse(localStorage.getItem('settings')) || { ...defaults }
+  storedSettings = JSON.parse(localStorage.getItem(`settings_${cacheID}`)) || { ...defaults }
 } catch (e) {}
 try {
   scopedDefaults = {
-    homeSections: [...(storedSettings.rssFeedsNew || defaults.rssFeedsNew).map(([title]) => title), 'Continue Watching', 'Sequels You Missed', 'Planning List', 'Popular This Season', 'Trending Now', 'All Time Popular', 'Romance', 'Action', 'Adventure', 'Fantasy', 'Comedy']
+    homeSections: [...(storedSettings.rssFeedsNew || defaults.rssFeedsNew).map(([title]) => [title, ['N/A'], ['N/A']]), ...(storedSettings.customSections || defaults.customSections).map(([title]) => [title, 'TRENDING_DESC', ['TV', 'MOVIE']]), ['Subbed Releases', 'N/A', ['TV', 'MOVIE', 'OVA', 'ONA']], ['Dubbed Releases', 'N/A', ['TV', 'MOVIE', 'OVA', 'ONA']], ['Continue Watching', 'UPDATED_TIME_DESC',  []], ['Sequels You Missed', 'POPULARITY_DESC',  []], ['Planning List', 'POPULARITY_DESC',  []], ['Popular This Season', 'N/A', ['TV', 'MOVIE']], ['Trending Now', 'N/A', ['TV', 'MOVIE']], ['All Time Popular', 'N/A', ['TV', 'MOVIE']]]
   }
 } catch (e) {
   resetSettings()
   location.reload()
 }
 
-/**
- * @type {import('simple-store-svelte').Writable<typeof defaults>}
- */
+/** @type {import('simple-store-svelte').Writable<number[]>} */
+export const sync = writable(JSON.parse(localStorage.getItem(`sync_${cacheID}`)) || [])
+
+sync.subscribe(value => {
+  localStorage.setItem(`sync_${cacheID}`, JSON.stringify(value))
+})
+
+/** @type {import('simple-store-svelte').Writable<typeof defaults>} */
 export const settings = writable({ ...defaults, ...scopedDefaults, ...storedSettings })
 
 settings.subscribe(value => {
-  localStorage.setItem('settings', JSON.stringify(value))
-})
-
-profiles.subscribe(value => {
-  localStorage.setItem('profiles', JSON.stringify(value))
+  localStorage.setItem(`settings_${cacheID}`, JSON.stringify(value))
 })
 
 export function resetSettings () {
   settings.value = { ...defaults, ...scopedDefaults }
 }
+
+/** @type {import('svelte/store').Writable<{ lastRSS: any, lastAni: number, lastDub: number, announcedDubs: any, notifications: any }>} */
+export const notify = writable({ ...notifyDefaults, ...(JSON.parse(localStorage.getItem(`notify_${cacheID}`)) || {}) })
+const debounceNotify = debounce(value => localStorage.setItem(`notify_${cacheID}`, JSON.stringify(value)), 4500)
+notify.subscribe(value => {
+  debounceNotify(value)
+})
+
+export function resetNotifications() {
+  notify.value = { ...notifyDefaults }
+  window.dispatchEvent(new Event('notification-reset'))
+  localStorage.setItem(`notify_${cacheID}`, JSON.stringify(notify.value))
+}
+
+/**
+ * Updates the notifications for a specific route.
+ * @param {string} route The route or category to update (e.g., 'recommendations').
+ * @param {Object} cacheData The cache object to store.
+ */
+export function updateNotify(route, cacheData) {
+  notify.update((cache) => {
+    const current = cache[route]
+    cache[route] = typeof cacheData === 'function' ? cacheData(current) : cacheData
+    return cache
+  })
+}
+
+/** @type {import('svelte/store').Writable<{ recommendations: Record<string, any>, following: Record<string, any>, episodes: Record<string, any>, search: Record<string, any>, compound: Record<string, any>, searchIDS: Record<string, any>, notifications: Record<string, any>, medias: Record<number, import('./al.d.ts').Media>, }>} */
+export const caches = writable({ ...cacheDefaults, ...(JSON.parse(localStorage.getItem(`caches_${cacheID}`)) || {}) })
+const swappingProfile = writable(false)
+window.onbeforeunload = function () {
+  IPC.emit('webtorrent-reload')
+  if (!swappingProfile.value) localStorage.setItem(`caches_${cacheID}`, JSON.stringify(caches.value))
+}
+
+export function resetCaches () {
+  caches.value = { ...cacheDefaults }
+  localStorage.setItem(`caches_${cacheID}`, JSON.stringify(caches.value))
+}
+
+/**
+ * Updates the cache for a specific route.
+ * @param {string} route The route or category to update (e.g., 'recommendations').
+ * @param {number|string} key The key for the specific cache entry (e.g., media ID).
+ * @param {Object} cacheData The cache object to store.
+ */
+export function updateCache(route, key, cacheData) {
+  caches.update((cache) => {
+    if (!cache[route]) cache[route] = {}
+    const current = cache[route][key]
+    cache[route][key] = typeof cacheData === 'function' ? cacheData(current) : cacheData
+    return cache
+  })
+}
+
+/** @type {import('simple-store-svelte').Writable<typeof defaults>} */
+export const profiles = writable(JSON.parse(localStorage.getItem('profiles')) || [])
+
+profiles.subscribe(value => {
+  localStorage.setItem('profiles', JSON.stringify(value))
+})
 
 export function isAuthorized() {
   return alToken || malToken
@@ -52,13 +116,13 @@ window.addEventListener('paste', ({ clipboardData }) => {
   if (clipboardData.items?.[0]) {
     if (clipboardData.items[0].type === 'text/plain' && clipboardData.items[0].kind === 'string') {
       clipboardData.items[0].getAsString(text => {
-        if (text.includes("access_token=")) { // is an AniList token
+        if (text.includes('access_token=')) { // is an AniList token
           let token = text.split('access_token=')?.[1]?.split('&token_type')?.[0]
           if (token) {
             if (token.endsWith('/')) token = token.slice(0, -1)
             handleToken(token)
           }
-        } else if (text.includes("code=") && text.includes("&state")) { // is a MyAnimeList authorization
+        } else if (text.includes('code=') && text.includes('&state')) { // is a MyAnimeList authorization
           let code = text.split('code=')[1].split('&state')[0]
           let state = text.split('&state=')[1]
           if (code && state) {
@@ -85,7 +149,6 @@ async function handleToken (token) {
     return
   }
   swapProfiles({token, viewer}, true)
-  location.reload()
 }
 
 IPC.on('maltoken', handleMalToken)
@@ -128,7 +191,7 @@ async function handleMalToken (code, state) {
 export async function refreshMalToken (token) {
   const { clientID } = await import('./myanimelist.js')
   const currentProfile = malToken?.token === token
-  const refresh = currentProfile ? malToken.refresh : get(profiles).find(profile => profile.token === token)?.refresh
+  const refresh = currentProfile ? malToken.refresh : profiles.value.find(profile => profile.token === token)?.refresh
   debug(`Attempting to refresh authorization token ${token} with the refresh token ${refresh}`)
   let response
   if (refresh && refresh.length > 0) {
@@ -162,14 +225,13 @@ export async function refreshMalToken (token) {
   const viewer = await malClient.viewer(oauth.access_token)
   const refresh_in = Math.floor((Date.now() + 14 * 24 * 60 * 60 * 1000) / 1000)
   if (malToken?.token === token) {
-    const profile = copyConstants({ viewer: viewer }, malToken)
-    malToken = { viewer: profile.viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }
-    localStorage.setItem('MALviewer', JSON.stringify({ viewer: profile.viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }))
+    malToken = { viewer: viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }
+    localStorage.setItem('MALviewer', JSON.stringify(malToken))
   } else {
     profiles.update(profiles =>
         profiles.map(profile => {
           if (profile.token === token) {
-            return { viewer: copyConstants({ viewer: viewer }, profile).viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }
+            return { viewer: viewer, token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: refresh_in, reauth: false }
           }
           return profile
         })
@@ -181,18 +243,29 @@ export async function refreshMalToken (token) {
 
 export function swapProfiles(profile, newProfile) {
   const currentProfile = isAuthorized()
-  const swapProfile = profile !== null && !get(profiles).some(p => (p.viewer?.data?.Viewer?.id === currentProfile?.viewer?.data?.Viewer?.id))
-  if (currentProfile && swapProfile && !newProfile) {
-    const torrent = localStorage.getItem('torrent')
-    const lastFinished = localStorage.getItem('lastFinished')
-    const settings = localStorage.getItem('settings')
-    if (torrent) currentProfile.viewer.data.Viewer.torrent = torrent
-    if (lastFinished) currentProfile.viewer.data.Viewer.lastFinished = lastFinished
-    if (settings) currentProfile.viewer.data.Viewer.settings = settings
-    profiles.update(currentProfiles => [currentProfile, ...currentProfiles])
+  const keys = [
+    'torrent',
+    'lastFinished',
+    'lastMagnet',
+    'settings',
+    'notify',
+    'caches',
+    'animeEpisodeProgress',
+    'theme',
+    'volume'
+  ]
+
+  if (!isAuthorized() && profile !== null) {
+    keys.forEach(key => {
+      const defaultKey = `${key}_default`
+      const value = localStorage.getItem(defaultKey)
+      if (value !== null) localStorage.setItem(`${key}_${profile.viewer.data.Viewer.id}`, value)
+      else localStorage.removeItem(defaultKey)
+    })
   }
 
-  if (profile === null && get(profiles).length > 0) {
+  if (profile === null && profiles.value.length > 0) {
+    swappingProfile.set(true)
     let firstProfile
     profiles.update(profiles => {
         firstProfile = profiles[0]
@@ -200,48 +273,32 @@ export function swapProfiles(profile, newProfile) {
         return profiles.slice(1)
     })
   } else if (profile !== null) {
+    swappingProfile.set(true)
     if (profile?.viewer?.data?.Viewer?.id === currentProfile?.viewer?.data?.Viewer?.id && newProfile) {
-      localStorage.setItem(alToken ? 'ALviewer' : 'MALviewer', JSON.stringify(copyConstants(profile, (alToken ? alToken : malToken))))
-      location.reload()
-    } else if (get(profiles).some(p => p.viewer?.data?.Viewer?.id === profile?.viewer?.data?.Viewer?.id && newProfile)) {
-      profiles.update(profiles => {
-        return profiles.map(p => {
-          if (p.viewer?.data?.Viewer?.id === profile?.viewer?.data?.Viewer?.id) {
-            p = copyConstants(profile, p)
-          }
-          return p
-        })
-      })
+      localStorage.setItem(alToken ? 'ALviewer' : 'MALviewer', profile)
+    } else if (profiles.value.some(p => p.viewer?.data?.Viewer?.id === profile?.viewer?.data?.Viewer?.id && newProfile)) {
+      profiles.update(profiles => profiles.map(p => p.viewer?.data?.Viewer?.id === profile?.viewer?.data?.Viewer?.id ? profile : p))
     } else {
+      if (currentProfile) profiles.update(currentProfiles => [currentProfile, ...currentProfiles])
       setViewer(profile)
-      profiles.update(profiles =>
-          profiles.filter(p => p.viewer?.data?.Viewer?.id !== profile.viewer?.data?.Viewer?.id)
-      )
+      profiles.update(profiles => profiles.filter(p => p.viewer?.data?.Viewer?.id !== profile.viewer?.data?.Viewer?.id))
     }
   } else {
+    swappingProfile.set(true)
+    keys.forEach(key => {
+      const currentKey = `${key}_${cacheID}`
+      const value = localStorage.getItem(currentKey)
+      if (value !== null) localStorage.setItem(`${key}_default`, value)
+      else localStorage.removeItem(currentKey)
+    })
     localStorage.removeItem(alToken ? 'ALviewer' : 'MALviewer')
     alToken = null
     malToken = null
   }
+  location.reload()
 }
 
 function setViewer (profile) {
-  const { torrent, lastFinished, settings } = profile?.viewer?.data?.Viewer
-  if (torrent) {
-    localStorage.setItem('torrent', torrent)
-  } else if (isAuthorized()) {
-    localStorage.removeItem('torrent')
-  }
-  if (lastFinished) {
-    localStorage.setItem('lastFinished', lastFinished)
-  } else if (isAuthorized()) {
-    localStorage.removeItem('lastFinished')
-  }
-  if (settings) {
-    localStorage.setItem('settings', settings)
-  } else if (isAuthorized()) {
-    localStorage.setItem('settings', writable({ ...defaults, ...scopedDefaults}))
-  }
   localStorage.removeItem(alToken ? 'ALviewer' : 'MALviewer')
   if (profile?.viewer?.data?.Viewer?.avatar) {
     alToken = profile
@@ -251,12 +308,4 @@ function setViewer (profile) {
     alToken = null
   }
   localStorage.setItem(profile.viewer?.data?.Viewer?.avatar ? 'ALviewer' : 'MALviewer', JSON.stringify(profile))
-}
-
-function copyConstants(newProfile, oldProfile) {
-  newProfile.viewer.data.Viewer.sync = oldProfile.viewer.data.Viewer.sync
-  newProfile.viewer.data.Viewer.settings = oldProfile.viewer.data.Viewer.settings
-  newProfile.viewer.data.Viewer.torrent = oldProfile.viewer.data.Viewer.torrent
-  newProfile.viewer.data.Viewer.lastFinished = oldProfile.viewer.data.Viewer.lastFinished
-  return newProfile
 }

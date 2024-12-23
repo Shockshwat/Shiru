@@ -150,10 +150,6 @@ export type Viewer = {
   }
   name: string
   id: number
-  sync: number[]
-  settings: string
-  torrent: string
-  lastFinished: string
   mediaListOptions?: {
     animeList?: {
       customLists?: { name: string; enabled: boolean }[]

@@ -9,3 +9,7 @@ async function storageQuota (directory) {
 }
 
 globalThis.client = new TorrentClient(ipcRenderer, storageQuota, 'node')
+ipcRenderer.on('webtorrent-reload', () => {
+  globalThis.client.destroy()
+  globalThis.client = new TorrentClient(ipcRenderer, storageQuota, 'node')
+})

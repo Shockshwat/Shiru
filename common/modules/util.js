@@ -282,6 +282,30 @@ export const defaults = {
   playerSkip: false
 }
 
+export const cacheDefaults = {
+  recommendations: {},
+  following: {},
+  episodes: {},
+  search: {},
+  compound: {},
+  searchIDS: {},
+  mappings: {},
+  medias: {}
+}
+
+export const notifyDefaults = {
+  lastRSS: {},
+  lastAni: 0,
+  lastDub: 0,
+  lastSub: 0,
+  lastHentai: 0,
+  dubsDelayed: [],
+  announcedDubs: [],
+  announcedSubs: [],
+  announcedHentais: [],
+  notifications: []
+}
+
 export const subtitleExtensions = ['srt', 'vtt', 'ass', 'ssa', 'sub', 'txt']
 export const subRx = new RegExp(`.(${subtitleExtensions.join('|')})$`, 'i')
 
