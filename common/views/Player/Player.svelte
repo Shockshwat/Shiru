@@ -1,7 +1,9 @@
 <script>
-  import { settings } from '@/modules/settings.js'
+  import { cacheID, settings } from '@/modules/settings.js'
   import { getAnimeProgress, setAnimeProgress } from '@/modules/animeprogress.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
+  import { anilistClient } from '@/modules/anilist.js'
+  import { episodesList } from '@/modules/episodes.js'
   import { client } from '@/modules/torrent.js'
   import { createEventDispatcher } from 'svelte'
   import Subtitles from '@/modules/subtitles.js'
@@ -208,7 +210,7 @@
   let hasNext = false
   let hasLast = false
   function checkAvail (media, current) {
-    if ((media?.media?.nextAiringEpisode?.episode - 1 || media?.media?.episodes) > media?.episode) hasNext = true
+    if (((media?.media?.nextAiringEpisode?.episode - 1 || media?.media?.episodes) > media?.episode) || (!media?.media?.nextAiringEpisode?.episode && !media?.media?.airingSchedule?.nodes?.[0]?.episode && !media?.media?.episodes)) hasNext = true
     else hasNext = videos.indexOf(current) !== videos.length - 1;
     if (media?.episode > 1) hasLast = true
     else hasLast = videos.indexOf(current) > 0;
@@ -263,8 +265,12 @@
     currentTime = targetTime
   }
 
-  function autoPlay () {
-    if (!miniplayer) {
+  async function autoPlay () {
+    const fillerEpisode = await episodesList.getSingleEpisode(media?.media?.idMal, media?.episode)
+    filler = fillerEpisode?.filler && 'Filler'
+    recap = fillerEpisode?.recap && 'Recap'
+    skipPrompt = filler || recap
+    if (!miniplayer && !filler && !recap) {
       video.play()
     } else {
       video.pause()
@@ -295,6 +301,7 @@
   document.addEventListener('visibilitychange', () => handleVisibility(document.visibilityState))
   IPC.on('visibilitychange', handleVisibility)
   function tryPlayNext () {
+    currentSkippable = null
     if ($settings.playerAutoplay && !state.value) playNext()
   }
   function playNext () {
@@ -752,6 +759,17 @@
     navigator.mediaSession.setActionHandler('previoustrack', playLast)
     navigator.mediaSession.setActionHandler('seekforward', forward)
     navigator.mediaSession.setActionHandler('seekbackward', rewind)
+  }
+  let filler = null
+  let recap = null
+  let skipPrompt = false
+  function skipResponse (skip) {
+    skipPrompt = false
+    if (skip) {
+      playNext()
+    } else {
+      video.play()
+    }
   }
   let stats = null
   let requestCallback = null
@@ -1224,6 +1242,21 @@
       <span class='stats'>{fastPrettyBytes(torrent.down)}/s</span>
       <span class='icon'><ArrowUp size='3rem' /></span>
       <span class='stats'>{fastPrettyBytes(torrent.up)}/s</span>
+      {#if skipPrompt}
+        <div class='position-absolute top-0 text-monospace rounded skipPrompt d-flex flex-column align-items-center text-center bg-dark-light p-20 z-50'>
+          <div class='skipFont'>
+            This episode has been marked as a <b>{filler || recap}</b>, do you want to skip?
+          </div>
+          <div class='d-flex justify-content-center mt-20'>
+            <button class='btn btn-primary mx-2 mr-20' type='button' use:click={() => skipResponse(true)}>
+              Yes
+            </button>
+            <button class='btn btn-secondary mx-2 ml-20' type='button' use:click={() => skipResponse(false)}>
+              No
+            </button>
+          </div>
+        </div>
+      {/if}
     </div>
     <div class='col-4' />
   </div>
@@ -1517,6 +1550,13 @@
     white-space: nowrap;
     font-weight: 600;
     font-family: Roboto, Arial, Helvetica, sans-serif;
+  }
+  .skipPrompt {
+    margin-top: 10rem;
+    font-family: Roboto, Arial, Helvetica, sans-serif;
+  }
+  .skipFont {
+    font-size: 1.8rem !important;
   }
   .miniplayer {
     height: auto !important;
