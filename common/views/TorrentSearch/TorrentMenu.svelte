@@ -58,6 +58,7 @@
 
 <script>
   import { nowPlaying as currentMedia } from '../Player/MediaHandler.svelte'
+  import { cacheID } from '@/modules/settings.js'
   import TorrentCard from './TorrentCard.svelte'
   import { add } from '@/modules/torrent.js'
   import TorrentSkeletonCard from './TorrentSkeletonCard.svelte'
@@ -67,7 +68,7 @@
   /** @type {{ media: Media, episode?: number }} */
   export let search
 
-  let countdown = 2
+  let countdown = 5
   let timeoutHandle
 
   /** @param {ReturnType<typeof getBest>} promise */
@@ -109,6 +110,12 @@
     toast.error(`No torrent found for ${anilistClient.title(search.media)} Episode ${search.episode}!`, { description: err.message })
   })
 
+  let lastMagnet
+  $: {
+    const lastMagnetMedia = JSON.parse(localStorage.getItem(`lastMagnet_${cacheID}`))?.[search?.media?.id]
+    lastMagnet = lastMagnetMedia?.[`${search?.episode}`] || lastMagnetMedia?.batch
+  }
+
   $: firstLoad = !firstLoad && lookup.catch(close)
 
   let searchText = ''
@@ -122,6 +129,8 @@
         description: 'This release is poorly seeded and likely will have playback issues such as buffering!'
       })
     }
+    const existingMagnets = JSON.parse(localStorage.getItem(`lastMagnet_${cacheID}`)) || {}
+    localStorage.setItem(`lastMagnet_${cacheID}`, JSON.stringify({ ...existingMagnets, [search?.media?.id]: !result.parseObject?.episode_number ? { [`batch`]: result } : { ...(existingMagnets[search?.media?.id] || {}), [`${search.episode}`]: result } }))
     add(result.link)
     close()
   }
@@ -140,7 +149,7 @@
     <button class='btn btn-square rounded-circle ml-auto pointer' type='button' use:click={close}> &times; </button>
   </div>
   <div class='d-flex align-items-center flex-wrap ml-20 mr-20'>
-    <h4 class='mb-10 text-light'>Auto-Selected Torrent</h4>
+    <h4 class='mb-10 text-light'>Auto-Selected Torrent {$settings.rssAutoplay ? `[${countdown}]` : ''}</h4>
     <div class='w-300 d-flex align-items-center ml-auto'>
       <span class='text-nowrap'>Preferred Audio Language</span>
       <select class='form-control w-full bg-dark ml-10' bind:value={$settings.audioLanguage}>
@@ -177,6 +186,19 @@
   {:catch error}
     <div class='p-15 mb-10'><div class='h-100' /></div>
   {/await}
+  {#if lastMagnet}
+    {#await lookup}
+      <h4 class='mb-10 text-light ml-20'>Last Played Torrent</h4>
+      <TorrentSkeletonCard />
+    {:then results}
+      {#each filterResults(results, searchText) as result}
+        {#if result.link === lastMagnet.link && result.seeders > 1}
+          <h4 class='mb-10 text-light ml-20'>Last Played Torrent</h4>
+          <TorrentCard result={result} {play} media={search.media} />
+        {/if}
+      {/each}
+    {/await}
+  {/if}
   <div class='input-group mt-20'>
     <div class='input-group-prepend'>
       <MagnifyingGlass size='2.75rem' class='input-group-text bg-dark pr-0' />
@@ -192,7 +214,7 @@
     <div class='col-12 col-md-6 d-flex align-items-center justify-content-around'>
       <div class='custom-switch'>
         <input type='checkbox' id='rss-autoplay' bind:checked={$settings.rssAutoplay} />
-        <label for='rss-autoplay'>Auto-Select Torrents [{countdown}]</label>
+        <label for='rss-autoplay'>Auto-Play Selected {$settings.rssAutoplay ? `[${countdown}]` : ''}</label>
       </div>
       <div class='custom-switch'>
         <input type='checkbox' id='batches' bind:checked={batch} disabled={(search.media.status !== 'FINISHED') || movie} min='1' />
@@ -211,7 +233,7 @@
           <option value='720'>720p</option>
           <option value='540'>540p</option>
           <option value='480'>480p</option>
-          <option value="">Any</option>
+          <option value=''>Any</option>
         </select>
       </div>
     </div>
