@@ -5,6 +5,7 @@
   import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
   import { anilistClient } from '@/modules/anilist.js'
+  import { episodesList } from '@/modules/episodes.js'
   import { click } from '@/modules/click.js'
   import Details from '@/views/ViewAnime/Details.svelte'
   import EpisodeList from '@/views/ViewAnime/EpisodeList.svelte'
@@ -14,19 +15,17 @@
   import Following from '@/views/ViewAnime/Following.svelte'
   import smoothScroll from '@/modules/scroll.js'
   import IPC from '@/modules/ipc.js'
-  import SmallCard from "@/components/cards/SmallCard.svelte"
-  import SkeletonCard from "@/components/cards/SkeletonCard.svelte"
-  import Helper from "@/modules/helper.js"
+  import SmallCard from '@/components/cards/SmallCard.svelte'
+  import SkeletonCard from '@/components/cards/SkeletonCard.svelte'
+  import Helper from '@/modules/helper.js'
   import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv } from 'lucide-svelte'
 
   export let overlay
   const view = getContext('view')
-  function close (play) {
+  function close () {
     $view = null
     mediaList = []
-    if (!play) {
-      overlay = 'none'
-    }
+    overlay = 'none'
   }
   function back () {
     if (mediaList.length > 1) {
@@ -59,7 +58,6 @@
     if (keyCode === 27) close()
   }
   function play (episode) {
-    close(true)
     if (episode) return playAnime(media, episode)
     if (media.status === 'NOT_YET_RELEASED') return
     playMedia(media)
@@ -134,6 +132,17 @@
     add(magnet)
     IPC.emit('overlay-check')
   })
+
+  let episodeCount = 1
+  $: {
+    if (media && (!media.episodes || media.episodes === 0)) {
+      fetchEpisodes(media.idMal)
+    } else if (media) episodeCount = media.episodes
+  }
+  async function fetchEpisodes(idMal) {
+    const episodes = await episodesList.getEpisodeData(idMal)
+    episodeCount = episodes?.length || null
+  }
 </script>
 
 <div class='modal modal-full z-50' class:show={media} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
@@ -171,11 +180,11 @@
                     </span>
                   </div>
                 {/if}
-                {#if media.episodes !== 1 && getMediaMaxEp(media)}
+                {#if media.episodes !== 1}
                   <div class='d-flex flex-row mt-10'>
                     <Clapperboard class='mx-10' size='2.2rem' />
                     <span class='mr-20'>
-                      Episodes: {getMediaMaxEp(media)}
+                      Episodes: {getMediaMaxEp(media) || media?.episodes || episodeCount || '?'}
                     </span>
                   </div>
                 {:else if media.duration}

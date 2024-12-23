@@ -2,10 +2,10 @@
   import { getContext } from 'svelte'
   import { airingAt, episode, formatMap, statusColorMap } from '@/modules/anime.js'
   import { click } from '@/modules/click.js'
-  import { countdown } from '@/modules/util.js'
   import { page } from '@/App.svelte'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import { episodesList } from '@/modules/episodes.js'
   import Helper from '@/modules/helper.js'
   /** @type {import('@/modules/al.d.ts').Media} */
   export let media
@@ -15,6 +15,19 @@
   const view = getContext('view')
   function viewMedia () {
     $view = media
+  }
+
+  let episodeCount = 1
+  $: {
+    if (media && (!media.episodes || media.episodes === 0)) {
+      fetchEpisodes(media.idMal)
+    } else if (media) episodeCount = media.episodes
+  }
+  async function fetchEpisodes(idMal) {
+    const episodes = await episodesList.getEpisodeData(idMal)
+    if (episodes && ((new Date(episodes[episodes.length]?.aired) > new Date()) || !['RELEASING', 'NOT_YET_RELEASED'].includes(media.status))) {
+      episodeCount = episodes?.length
+    } else episodeCount = null
   }
 </script>
 
@@ -39,9 +52,9 @@
           {#if $page === 'schedule'}
             <div class='d-flex align-items-center py-5'>
               {#if airingAt(media, _variables)}
-                Episode { episode(media, _variables) } in&nbsp;
+                { episode(media, _variables) }&nbsp;
                 <span class='font-weight-bold text-light d-inline'>
-                  { countdown(airingAt(media, _variables) - Date.now() / 1000) }
+                  { airingAt(media, _variables) }
                 </span>
               {:else}
                 &nbsp;
@@ -56,14 +69,16 @@
                 {formatMap[media.format]}
               {/if}
             </span>
-            {#if media.episodes && media.episodes !== 1}
-              <span class='text-nowrap d-flex align-items-center'>
-                {#if ['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress }
-                  {media.mediaListEntry.progress} / {media.episodes} Episodes
-                {:else}
-                  {media.episodes} Episodes
-                {/if}
-              </span>
+            {#if episodeCount !== 1}
+              {#if ['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress }
+                  <span class='text-nowrap d-flex align-items-center'>
+                    {media.mediaListEntry.progress} / {episodeCount || '?'} Episodes
+                  </span>
+              {:else if episodeCount}
+                  <span class='text-nowrap d-flex align-items-center'>
+                    {episodeCount} Episodes
+                  </span>
+              {/if}
             {:else if media.duration}
               <span class='text-nowrap d-flex align-items-center'>{media.duration + ' Minutes'}</span>
             {/if}

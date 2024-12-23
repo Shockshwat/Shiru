@@ -1205,11 +1205,15 @@
   <div class='top z-40 row'>
     <div class='stats col-4 pl-20'>
       <div class='font-weight-bold overflow-hidden text-truncate d-none d-md-block'>
-        {#if media?.title}{media.title}{/if}
+        {#if media?.title}
+          {media?.title}
+        {:else if media?.media?.title} <!-- useful when a torrent is EXTREMELY slow at loading... -->
+          {anilistClient.title(media?.media)}
+        {/if}
       </div>
       <div class='font-weight-normal overflow-hidden text-truncate font-size-16 text-muted d-none d-md-block'>
-        {#if media?.episode}Episode {media.episode}{/if}
-        {#if media?.episode && media?.episodeTitle}{' - '}{/if}
+        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE'}Episode {media.episode}{/if}
+        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && media?.episodeTitle}{' - '}{/if}
         {#if media?.episodeTitle}{media.episodeTitle}{/if}
       </div>
     </div>

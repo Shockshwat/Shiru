@@ -4,6 +4,8 @@
   import { videoRx } from '@/modules/util.js'
   import { tick } from 'svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import { episodesList } from '@/modules/episodes.js'
+  import { getAniMappings } from '@/modules/anime.js'
   import Debug from '@/modules/debug.js'
 
   const debug = Debug('ui:mediahandler')
@@ -21,11 +23,11 @@
   let playFile
 
   function handleCurrent ({ detail }) {
-      const nextMedia = detail?.media
-      debug(`Handling current media: ${JSON.stringify(nextMedia?.parseObject)}`)
-      if (nextMedia?.parseObject) {
-          handleMedia(nextMedia)
-      }
+    const nextMedia = detail?.media
+    debug(`Handling current media: ${JSON.stringify(nextMedia?.parseObject)}`)
+    if (nextMedia?.parseObject) {
+      handleMedia(nextMedia)
+    }
   }
 
   export function findInCurrent (obj) {
@@ -40,7 +42,7 @@
     )
     if (!targetFile) return false
     if (oldNowPlaying.media?.id !== obj.media.id) {
-      nowPlaying.set({ media: obj.media, episode: obj.episode })
+      handleMedia(obj, { media: obj.media, episode: obj.episode })
       handleFiles(fileList)
     } else {
       playFile(targetFile)
@@ -48,18 +50,24 @@
     return true
   }
 
-  async function handleMedia ({ media, episode, parseObject }) {
+  async function handleMedia ({ media, episode, parseObject }, newPlaying) {
     if (media || episode || parseObject) {
-      const ep = Number(episode || parseObject?.episode_number) || null
+      const ep = Number(episode || parseObject?.episode_number) === 0 ? 0 : (Number(episode || parseObject?.episode_number) || null)
 
-      // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
-      const res = await fetch('https://api.ani.zip/mappings?anilist_id=' + media?.id)
-      const { episodes, specialCount, episodeCount } = await res.json()
-      const needsValidation = !(!specialCount || (media?.episodes === episodeCount && episodes && episodes[Number(episode)]))
       const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
-      const streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en)) ? { title: (`Episode ${episode} - ` + episodes[Number(episode)]?.title?.en) } : (needsValidation && media?.status === 'FINISHED') ? { title: (`Episode ${episode} - ` + (episodes[Number(episode)]?.title?.en || episodes[1])) } : streamingTitle
+      let streamingEpisode = streamingTitle
+      if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {
+        // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
+        const { episodes, specialCount, episodeCount } = await getAniMappings(media?.id)
+        const needsValidation = !(!specialCount || (media?.episodes === episodeCount && episodes && episodes[Number(episode)]))
+        streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${Number(episode)} - ` + episodes[Number(episode)]?.title?.en)) ? {title: (`Episode ${Number(episode)} - ` + episodes[Number(episode)]?.title?.en)} : (needsValidation && media?.status === 'FINISHED') ? {title: (`Episode ${Number(episode)} - ` + (episodes[Number(episode)]?.title?.en || `Episode ${Number(episode)}`))} : streamingTitle
+        if (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode')) {
+          const episodeTitle = await episodesList.getSingleEpisode(media?.idMal, Number(episode)) // animappings sometimes doesn't have all the data, so we can use an alternative api to fetch episode information.,
+          if (episodeTitle && episodeTitle?.title) streamingEpisode = {title: (`Episode ${Number(episode)} - ` + episodeTitle.title)}
+        }
+      }
       if (streamingEpisode?.title) {
-        const titleParts = streamingEpisode.title.split(" - ")
+        const titleParts = streamingEpisode.title.split(' - ')
         streamingEpisode.title = (titleParts?.[0]?.trim() === titleParts?.[1]?.trim()) ? titleParts?.[0]?.trim() : streamingEpisode.title
       }
 
@@ -67,14 +75,17 @@
         title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
         episode: ep,
         episodeTitle: streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title)),
-        thumbnail: media?.coverImage.extraLarge || streamingEpisode?.thumbnail
+        thumbnail: media?.coverImage.extraLarge
       }
-      const np = {
-        media,
-        ...details
+
+      nowPlaying.set({
+          ...(newPlaying ? newPlaying : {}),
+          media,
+          ...details
+      })
+      if (!newPlaying) {
+          setMediaSession(nowPlaying.value)
       }
-      setMediaSession(np)
-      nowPlaying.set(np)
       debug(`Now playing as been set to: ${JSON.stringify(details)}`)
     }
   }
@@ -95,7 +106,7 @@
 
     let lowestPlanning
     for (const { media } of videoFiles) {
-        if (media.media?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || lowestPlanning.episode > media?.episode || lowestPlanning.season > media?.season)) lowestPlanning = { media: media.media, episode: media?.episode, season: media?.season }
+        if (media.media?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || (Number(lowestPlanning.episode) >= Number(media?.episode) && Number(lowestPlanning.season) >= Number(media?.season)))) lowestPlanning = { media: media.media, episode: media?.episode, season: media?.season }
     }
     if (lowestPlanning) return lowestPlanning
 
@@ -103,7 +114,7 @@
     for (const format of ['TV', 'MOVIE', 'ONA', 'OVA']) {
       let lowestUnwatched
       for (const { media } of videoFiles) {
-        if (media.media?.format === format && !media.media.mediaListEntry && (!lowestUnwatched || lowestUnwatched.episode > media?.episode || lowestUnwatched.season > media?.season)) lowestUnwatched = { media: media.media, episode: media?.episode, season: media?.season }
+        if (media.media?.format === format && !media.media.mediaListEntry && (!lowestUnwatched || (Number(lowestUnwatched.episode) >= Number(media?.episode) && Number(lowestUnwatched.season) >= Number(media?.season)))) lowestUnwatched = { media: media.media, episode: media?.episode, season: media?.season }
       }
       if (lowestUnwatched) return lowestUnwatched
     }
@@ -184,8 +195,7 @@
     processed.set([...result, ...otherFiles])
     await tick()
     const file = (newPlaying?.episode && (result.find(({ media }) => media.episode === newPlaying.episode) || result.find(({ media }) => media.episode === 1))) || result[0]
-    if (newPlaying) newPlaying.episode = file.media.parseObject.episode_number
-    nowPlaying.set(newPlaying)
+    handleMedia(file?.media, newPlaying)
     playFile(file || 0)
   }
 

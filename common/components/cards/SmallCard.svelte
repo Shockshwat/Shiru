@@ -4,7 +4,6 @@
   import { episode, airingAt, formatMap, statusColorMap } from '@/modules/anime.js'
   import { createListener } from '@/modules/util.js'
   import { hoverClick } from '@/modules/click.js'
-  import { countdown } from '@/modules/util.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
 
   import { page } from '@/App.svelte'
@@ -40,9 +39,9 @@
     {#if $page === 'schedule'}
       <div class='w-full text-center pb-10'>
         {#if airingAt(media, _variables)}
-          Episode { episode(media, _variables) } in
+          { episode(media, _variables) }&nbsp;
           <span class='font-weight-bold text-light'>
-            {countdown(airingAt(media, _variables) - Date.now() / 1000)}
+            {airingAt(media, _variables)}
           </span>
         {:else}
           &nbsp;
