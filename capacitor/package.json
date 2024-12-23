@@ -18,7 +18,7 @@
     "test:e2e": "cross-env NODE_ENV=production run-s build:web dev:android"
   },
   "devDependencies": {
-    "@capacitor/assets": "github:thaunknown/capacitor-assets",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.1.2",
     "cordova-res": "^0.15.4",
     "nodejs-mobile-gyp": "^0.4.0",
