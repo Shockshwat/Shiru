@@ -72,6 +72,13 @@
     <label for='card-audio'>{settings.cardAudio ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+<SettingCard title='Adult Content' description={'Adult enables searching for adult (18+) rated anime, typically series with nudity.\nHentai enables searching straight up Hentai. This includes adding the Hentai home feed, Hentai genre, and Hentai related tags for search queries.'}>
+  <select class='form-control bg-dark w-100 mw-full' bind:value={settings.adult}>
+    <option value='none' selected>None</option>
+    <option value='adult'>Adult</option>
+    <option value='hentai'>Hentai</option>
+  </select>
+</SettingCard>
 {#if SUPPORTS.angle}
   <h4 class='mb-10 font-weight-bold'>Rendering Settings</h4>
   <SettingCard title='ANGLE Backend' description="What ANGLE backend to use for rendering. DON'T CHANGE WITHOUT REASON! On some Windows machines D3D9 might help with flicker. Changing this setting to something your device doesn't support might prevent Shiru from opening which will require a full reinstall. While Vulkan is an available option it might not be fully supported on Linux.">
