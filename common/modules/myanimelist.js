@@ -252,9 +252,13 @@ class MALClient {
       path: 'users/@me',
       eToken: token
     }
+    const viewer = await this.malRequest(query)
+    if (viewer?.data?.Viewer && !viewer?.data?.Viewer?.picture) {
+      viewer.data.Viewer.picture = 'https://cdn.myanimelist.net/images/kaomoji_mal_white.png' // set default image if user doesn't have an image, viewer doesn't return the default image if none is set for whatever reason...
+    }
     return {
       data: {
-        Viewer: await this.malRequest(query)
+        Viewer: viewer
       }
     }
   }

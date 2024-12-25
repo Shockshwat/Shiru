@@ -194,8 +194,6 @@ async function handleMalToken (code, state) {
     toast.error('Failed to sign in with MyAnimeList. Please try again.', { description: JSON.stringify(viewer) })
     debug(`Failed to sign in with MyAnimeList: ${JSON.stringify(viewer)}`)
     return
-  } else if (!viewer?.data?.Viewer?.picture) {
-    viewer.data.Viewer.picture = 'https://cdn.myanimelist.net/images/kaomoji_mal_white.png' // set default image if user doesn't have an image.
   }
   swapProfiles({ token: oauth.access_token, refresh: oauth.refresh_token, refresh_in: Math.floor((Date.now() + 14 * 24 * 60 * 60 * 1000) / 1000), reauth: false, viewer }, true)
 }
