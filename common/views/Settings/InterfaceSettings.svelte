@@ -143,7 +143,7 @@
         </div>
       </div>
     {/each}
-    <button type='button' disabled={listStatus.every(option => settings.releasesNotify.includes(option[1]))}} use:click={() => { settings.releasesNotify = [...settings.releasesNotify, ''] }} class='btn btn-primary mb-10 mr-10'>Add Status</button>
+    <button type='button' disabled={listStatus.every(option => settings.releasesNotify.includes(option[1]))} use:click={() => { settings.releasesNotify = [...settings.releasesNotify, ''] }} class='btn btn-primary mb-10 mr-10'>Add Status</button>
   </div>
 </SettingCard>
 <SettingCard title='RSS Feed' description={'When each RSS feed updates with new entries, notifications will be sent depending on your list status.\n\nThese notifications will combine with Anilist and Releases notifications for the in-app notification tray.'}>
@@ -161,7 +161,7 @@
         </div>
       </div>
     {/each}
-    <button type='button' disabled={listStatus.every(option => settings.rssNotify.includes(option[1]))}} use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
+    <button type='button' disabled={listStatus.every(option => settings.rssNotify.includes(option[1]))} use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10'>Add Status</button>
   </div>
 </SettingCard>
 

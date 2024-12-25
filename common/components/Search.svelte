@@ -11,7 +11,6 @@
 </script>
 
 <script>
-  import { createListener } from '@/modules/util.js'
   import { traceAnime, genreList, tagList } from '@/modules/anime.js'
   import { settings } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
@@ -20,9 +19,6 @@
   import Helper from '@/modules/helper.js'
   import { MagnifyingGlass, Image } from 'svelte-radix'
   import { BookUser, Type, Drama, Leaf, CalendarRange, MonitorPlay, MonitorX, Tv, ArrowDownWideNarrow, Filter, FilterX, Tags, Hash, SlidersHorizontal, Mic, Grid3X3, Grid2X2 } from 'lucide-svelte'
-
-  const { reactive, init } = createListener(['x-filter'])
-  $: init($page === 'search' || $page === 'schedule')
 
   export let search
   let searchTextInput = {
@@ -390,12 +386,12 @@
       </div>
     </div>
   </div>
-  <div class='w-full px-10 pt-10 h-50 d-flex flex-colum align-items-center'>
+  <div class='w-full p-10 d-flex flex-colum align-items-center'>
     <form>
-      <div class:not-reactive={!$reactive} role='button' tabindex='0'>
+      <div class='not-reactive' role='button' tabindex='0'>
         {#if sanitisedSearch?.length}
           {@const filteredBadges = sanitisedSearch.filter(badge => badge.key !== 'hideStatus' && (search.userList || badge.key !== 'title'))}
-          <div class='d-flex flex-row align-items-center'>
+          <div class='d-flex flex-wrap flex-row align-items-center'>
             {#if filteredBadges.length > 0}
               <Tags class='text-dark-light mr-20' size='3rem' />
             {/if}
@@ -403,7 +399,7 @@
             {@const matchingBadges = filteredBadges.filter(badge => badge.key === key)}
             {#each matchingBadges as badge}
               {#if badge.key === key && (badge.key !== 'hideStatus' && (search.userList || badge.key !== 'title')) }
-                <div class='badge border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center' class:bg-light={!badge.key.includes('_not')} class:bg-danger-dark={badge.key.includes('_not')}>
+                <div class='badge border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center mb-5' class:bg-light={!badge.key.includes('_not')} class:bg-danger-dark={badge.key.includes('_not')}>
                   <svelte:component this={badgeDisplayNames[badge.key]} class='mr-5' size='1.8rem' />
                   <div class='font-size-12 mr-5'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</div>
                   {#if !search.scheduleList || (badge.key !== 'season' && badge.key !== 'year')}
