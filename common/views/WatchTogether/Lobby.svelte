@@ -61,10 +61,10 @@
         <Message time={date} {user} {messages} {type} />
       {/each}
       <div class='d-flex mt-20'>
-        <button class='btn text-danger d-flex mt-auto align-items-center justify-content-center mr-10 border-0 px-0 shadow-none' type='button' use:click={cleanup} style='height: 3.75rem !important; width: 3.75rem !important;'>
+        <button class='btn text-danger d-flex mt-auto align-items-center justify-content-center mr-10 border-0 px-0 shadow-none' title='Leave' type='button' use:click={cleanup} style='height: 3.75rem !important; width: 3.75rem !important;'>
           <DoorOpen size='1.8rem' strokeWidth={2.5} />
         </button>
-        <button class='btn text-success d-flex mt-auto align-items-center justify-content-center mr-20 border-0 px-0 shadow-none' type='button' use:click={invite} style='height: 3.75rem !important; width: 3.75rem !important;'>
+        <button class='btn text-success d-flex mt-auto align-items-center justify-content-center mr-20 border-0 px-0 shadow-none' title='Invite' type='button' use:click={invite} style='height: 3.75rem !important; width: 3.75rem !important;'>
           <UserPlus size='1.8rem' strokeWidth={2.5} />
         </button>
         <textarea
@@ -75,7 +75,7 @@
           autocomplete='off'
           maxlength='2048'
           placeholder='Message' on:keydown={checkInput} />
-        <button class='btn d-flex mt-auto align-items-center justify-content-center ml-20 border-0 px-0 shadow-none' type='button' use:click={sendMessage} style='height: 3.75rem !important; width: 3.75rem !important;'>
+        <button class='btn d-flex mt-auto align-items-center justify-content-center ml-20 border-0 px-0 shadow-none' title='Send' type='button' use:click={sendMessage} style='height: 3.75rem !important; width: 3.75rem !important;'>
           <SendHorizontal size='1.8rem' strokeWidth={2.5} />
         </button>
       </div>

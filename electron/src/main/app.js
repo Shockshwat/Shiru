@@ -141,8 +141,8 @@ export default class App {
     this.mainWindow.webContents.on('render-process-gone', async (e, { reason }) => {
       if (reason === 'crashed') {
         if (++crashcount > 10) {
-          await dialog.showMessageBox({ message: 'Crashed too many times.', title: 'Shiru', detail: 'App crashed too many times. For a fix visit https://shiru.watch/faq/', icon: '/renderer/public/logo_filled.png' })
-          shell.openExternal('https://shiru.watch/faq/')
+          await dialog.showMessageBox({ message: 'Crashed too many times.', title: 'Shiru', detail: 'App crashed too many times. For a fix visit https://github.com/RockinChaos/Shiru/wiki/faq/', icon: '/renderer/public/logo_filled.png' })
+          shell.openExternal('https://github.com/RockinChaos/Shiru/wiki/faq/')
         } else {
           app.relaunch()
         }

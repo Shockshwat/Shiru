@@ -8,7 +8,7 @@ import { toast } from 'svelte-sonner'
 import { getRandomInt, sleep } from './util.js'
 import Helper from '@/modules/helper.js'
 import IPC from '@/modules/ipc.js'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:anilist')
 

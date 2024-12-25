@@ -8,18 +8,18 @@
 <h4 align="center"><b>Stream anime torrents, real-time with no waiting for downloads</b></h4>
 
 <p align="center">
-  <a href="https://shiru.watch/#about">About</a> •
-  <a href="https://shiru.watch/features/">Features</a> •
-  <a href="https://shiru.watch/faq/">Frequently Asked Questions</a> •
+  <a href="https://github.com/RockinChaos/Shiru/wiki/about">About</a> •
+  <a href="https://github.com/RockinChaos/Shiru/wiki/features/">Features</a> •
+  <a href="https://github.com/RockinChaos/Shiru/wiki/faq/">Frequently Asked Questions</a> •
   <a href="#building-and-development">Building and Development</a> •
-  <a href="https://shiru.watch/download/">Download</a>
+  <a href="https://github.com/RockinChaos/Shiru/releases/latest/">Download</a>
 </p>
 <p align="center">
   <img src="./docs/out.gif" alt="showcase"><br>
   <a href="https://discord.gg/Z87Nh7c4Ac">
     <img src="https://img.shields.io/discord/953341991134064651?style=flat-square" alt="chat">
   </a>
-  <a href="https://shiru.watch/download/">
+  <a href="https://github.com/RockinChaos/Shiru/releases/latest/">
     <img alt="GitHub all releases" src="https://img.shields.io/github/downloads/RockinChaos/Shiru/total?style=flat-square">
   </a>
 </p>

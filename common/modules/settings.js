@@ -134,6 +134,18 @@ window.addEventListener('paste', ({ clipboardData }) => {
             state = state.replace(/(\r\n|\n|\r)/gm, '')
             handleMalToken(code, state)
           }
+        } else {
+          const anilistRegex = /(?:https?:\/\/)?anilist\.co\/anime\/(\d+)/
+          const malRegex = /(?:https?:\/\/)?myanimelist\.net\/anime\/(\d+)/
+          const anilistMatch = text.match(anilistRegex)
+          const malMatch = text.match(malRegex)
+          let protocol = text
+          if (anilistMatch) {
+            protocol = `shiru://anime/${anilistMatch[1]}`
+          } else if (malMatch) {
+            protocol = `shiru://anime/${malMatch[1]}`
+          }
+          IPC.emit('handle-protocol', protocol)
         }
       })
     }

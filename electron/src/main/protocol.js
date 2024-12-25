@@ -61,6 +61,10 @@ export default class Protocol {
         this.handleProtocol(line)
       }
     })
+
+    ipcMain.on('handle-protocol', (event, text) => {
+      this.handleProtocol(text)
+    })
   }
 
   /**
@@ -110,5 +114,6 @@ export default class Protocol {
   handleProtocol (text) {
     const match = text.match(this.protocolRx)
     if (match) this.protocolMap[match[1]]?.(match[2])
+    return match
   }
 }

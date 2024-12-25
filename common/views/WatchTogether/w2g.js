@@ -42,7 +42,7 @@ export class W2GClient extends EventEmitter {
   peers = writable({ [this.self.id]: { user: this.self } })
 
   get inviteLink () {
-    return `https://shiru.watch/w2g/${this.code}`
+    return `shiru://w2g/${this.code}`
   }
 
   /**

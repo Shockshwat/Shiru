@@ -24,7 +24,7 @@ class TorrentWorker extends EventTarget {
     })
     clipboard.on('text', ({ detail }) => {
       for (const { text } of detail) {
-        if (torrentRx.exec(text)) {
+        if (page?.value !== 'watchtogether' && torrentRx.exec(text)) {
           media.set(null)
           add(text)
           this.dispatch('info', 'A Magnet Link has been detected and is being processed. Files will be loaded shortly...')

@@ -223,10 +223,10 @@
                       <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
                     </button>
                   {/if}
-                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 {Helper.isAuthorized() ? "ml-10" : ""}' use:click={() => copyToClipboard(`https://shiru.watch/anime/${media.id}`)}>
+                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 {Helper.isAuthorized() ? "ml-10" : ""}' use:click={() => copyToClipboard(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
                     <Share2 size='1.7rem' />
                   </button>
-                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => openInBrowser(`https://anilist.co/anime/${media.id}`)}>
+                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => openInBrowser(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
                     <ExternalLink size='1.7rem' />
                   </button>
                 </div>

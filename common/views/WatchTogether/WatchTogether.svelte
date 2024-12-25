@@ -38,7 +38,7 @@
   function invite () {
     navigator.clipboard.writeText(state.value.inviteLink)
     toast.success('Copied to clipboard', {
-      description: 'Copied invite URL to clipboard',
+      description: 'Copied invite code to clipboard',
       duration: 5000
     })
   }
