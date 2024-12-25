@@ -312,7 +312,8 @@ export default class Helper {
           (!variables.season || variables.season === media.season) &&
           (!variables.year || variables.year === media.seasonYear) &&
           (!variables.format || (Array.isArray(variables.format) && variables.format.includes(media.format)) || variables.format === media.format) &&
-          (!variables.status || variables.status === media.status) &&
+          (!variables.status || (typeof variables.status === 'string' && variables.status === media.status) || (Array.isArray(variables.status) && variables.status.includes(media.status))) &&
+          (!variables.status_not || (typeof variables.status_not === 'string' && variables.status_not !== media.status) || (Array.isArray(variables.status_not) && !variables.status_not.includes(media.status))) &&
           (!variables.continueWatching || (media.status === 'FINISHED' || media.mediaListEntry?.progress < media.nextAiringEpisode?.episode - 1))) {
           return true
         }
@@ -322,7 +323,8 @@ export default class Helper {
           (!variables.season || variables.season.toLowerCase() === node.start_season?.season.toLowerCase()) &&
           (!variables.year || variables.year === node.start_season?.year) &&
           (!variables.format || ((Array.isArray(variables.format) ? !variables.format.includes(node.media_type.toUpperCase()) && node.media_type.toUpperCase() !== 'TV_SHORT' : variables.format !== 'TV_SHORT' && variables.format === node.media_type.toUpperCase()) || ((Array.isArray(variables.format) ? variables.format.includes('TV_SHORT') : variables.format === 'TV_SHORT') && node.average_episode_duration < 1200))) &&
-          (!variables.status || variables.status === 'CANCELLED' || variables.status === this.airingMap(node.status))) {
+          (!variables.status || (typeof variables.status === 'string' && variables.status === this.airingMap(node.status)) || (Array.isArray(variables.status) && variables.status.includes(this.airingMap(node.status)))) &&
+          (!variables.status_not || (typeof variables.status_not === 'string' && variables.status_not !== this.airingMap(node.status)) || (Array.isArray(variables.status_not) && !variables.status_not.includes(this.airingMap(node.status))))) {
           // api does not provide airing episode or tags, additionally genres are inaccurate and tags do not exist.
           return true
         }

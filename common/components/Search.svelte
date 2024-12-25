@@ -64,6 +64,7 @@
       year: null,
       format: '',
       status: '',
+      status_not: '',
       sort: '',
       hideSubs: false,
       hideMyAnime: false,

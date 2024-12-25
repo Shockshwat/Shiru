@@ -6,7 +6,7 @@ import { client } from '@/modules/torrent.js'
 import { extensionsWorker } from '@/views/Settings/TorrentSettings.svelte'
 import { toast } from 'svelte-sonner'
 import AnimeResolver from '@/modules/animeresolver.js'
-import Debug from '@/modules/debug.js'
+import Debug from 'debug'
 
 const debug = Debug('ui:extensions')
 
