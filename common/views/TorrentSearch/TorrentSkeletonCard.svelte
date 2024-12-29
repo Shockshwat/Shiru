@@ -4,11 +4,27 @@
       <div class='skeloader h-25 w-250 mw-full rounded bg-dark-light'><div class='skeleloader-swipe' /></div>
     </div>
     <div class='skeloader h-10 w-150 mw-full rounded bg-dark-light'><div class='skeleloader-swipe' /></div>
-    <div class='d-flex flex-row'>
-      <div class='skeloader h-10 w-300 mw-full rounded bg-dark-light'><div class='skeleloader-swipe' /></div>
-      <div class='d-flex ml-auto flex-row-reverse'>
-        <div class='skeloader h-10 w-150 mw-full rounded bg-dark-light ml-15'><div class='skeleloader-swipe' /></div>
+    <div class='metadata-container d-flex flex-row w-full'>
+      <div class='skeloader h-10 w-300 mw-full rounded bg-dark-light'>
+        <div class='skeleloader-swipe' />
       </div>
-    </div>
+      <div class='skeloader h-10 w-150 mw-full rounded bg-dark-light ml-auto secondary-metadata'>
+        <div class='skeleloader-swipe' />
+      </div>
+      </div>
   </div>
 </div>
+
+<style>
+  /* Behavior for narrow screens (mobile) */
+  @media (max-width: 35rem) {
+    .metadata-container {
+      flex-direction: column  !important;
+    }
+    .secondary-metadata {
+      margin-left: 0 !important;
+      margin-top: 1rem;
+      justify-content: flex-start !important;
+    }
+  }
+</style>

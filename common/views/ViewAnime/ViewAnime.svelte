@@ -18,7 +18,9 @@
   import SmallCard from '@/components/cards/SmallCard.svelte'
   import SkeletonCard from '@/components/cards/SkeletonCard.svelte'
   import Helper from '@/modules/helper.js'
-  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv } from 'lucide-svelte'
+  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash, Drama, BookHeart, MountainSnow, Laugh, TriangleAlert, Droplets, FlaskConical, Ghost, Skull, HeartPulse, VolleyBall, Car, Brain, FootPrints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
+  const genreIcons = { 'Action': Activity, 'Adventure': MountainSnow, 'Comedy': Laugh, 'Drama': Drama, 'Ecchi': Droplets, 'Fantasy': WandSparkles, 'Hentai': TriangleAlert, 'Horror': Skull, 'Mahou Shoujo': Drama,
+    'Mecha': Bot, 'Music': Guitar, 'Mystery': FootPrints, 'Psychological': Brain, 'Romance': BookHeart, 'Sci-Fi': FlaskConical, 'Slice of Life': Car, 'Sports': VolleyBall, 'Supernatural': Ghost, 'Thriller': HeartPulse }
 
   export let overlay
   const view = getContext('view')
@@ -143,6 +145,14 @@
     const episodes = await episodesList.getEpisodeData(idMal)
     episodeCount = episodes?.length || null
   }
+
+  let episodeList
+  let episodeLoad
+  $: if (episodeLoad) {
+      episodeLoad.then(episodes => {
+        episodeList = episodes
+      })
+    }
 </script>
 
 <div class='modal modal-full z-50' class:show={media} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
@@ -223,7 +233,7 @@
                       <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
                     </button>
                   {/if}
-                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 {Helper.isAuthorized() ? "ml-10" : ""}' use:click={() => copyToClipboard(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
+                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0' class:ml-10={Helper.isAuthorized()} use:click={() => copyToClipboard(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
                     <Share2 size='1.7rem' />
                   </button>
                   <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => openInBrowser(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
@@ -236,16 +246,14 @@
           <Details {media} alt={recommendations} />
           <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
             {#each media.tags as tag}
-              <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap'>
-                <span class='font-weight-bolder'>{tag.name}</span><span class='font-weight-light'>: {tag.rank}%</span>
+              <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'>
+                <Hash class='mr-5' size='1.8rem' /><span class='font-weight-bolder'>{tag.name}</span><span class='font-weight-light'>: {tag.rank}%</span>
               </div>
           {/each}
           </div>
-          <div class='d-flex flex-row mt-20 pt-10'>
+          <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
             {#each media.genres as genre}
-              <div class='bg-dark px-20 py-10 mr-10 rounded font-size-16'>
-                {genre}
-              </div>
+              <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'><svelte:component this={genreIcons[genre]} class='mr-5' size='1.8rem' /> {genre}</div> <!-- || Drama-->
             {/each}
           </div>
           {#if media.description}
@@ -258,6 +266,16 @@
               {media.description?.replace(/<[^>]*>/g, '') || ''}
             </div>
           {/if}
+          <Following {media} />
+          <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer' use:click={() => { episodeOrder = !episodeOrder }}>
+            <hr class='w-full' />
+            <div class='position-absolute font-size-18 font-weight-semi-bold px-20 text-white' style="left: 50%; transform: translateX(-50%);">Episodes</div>
+            <hr class='w-full' />
+            <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>Reverse</div>
+          </div>
+          <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden'>
+            <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
+          </div>
           <ToggleList list={ media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
                 const typeComparison = a.relationType.localeCompare(b.relationType)
                 if (typeComparison !== 0) return typeComparison
@@ -293,17 +311,9 @@
               </ToggleList>
             {/if}
           {/await}
-          <Following {media} />
-          <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer'>
-            <hr class='w-full' />
-            <div class='font-size-18 font-weight-semi-bold px-20 text-white'>Episodes</div>
-            <hr class='w-full' />
-
-            <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap' use:click={() => { episodeOrder = !episodeOrder }}>Reverse</div>
-          </div>
         </div>
-        <div class='col-lg-5 col-12 d-flex flex-column pl-lg-20 overflow-x-hidden'>
-          <EpisodeList {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
+        <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20 overflow-x-hidden'>
+          <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
         </div>
       </div>
     </div>

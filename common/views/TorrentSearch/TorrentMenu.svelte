@@ -148,11 +148,11 @@
     <h3 class='mb-10 font-weight-bold text-white'>Find Torrents</h3>
     <button class='btn btn-square rounded-circle ml-auto pointer' type='button' use:click={close}> &times; </button>
   </div>
-  <div class='d-flex align-items-center flex-wrap ml-20 mr-20'>
+  <div class='metadata-container d-flex flex-wrap ml-20 mr-20'>
     <h4 class='mb-10 text-light'>Auto-Selected Torrent {$settings.rssAutoplay ? `[${countdown}]` : ''}</h4>
-    <div class='w-300 d-flex align-items-center ml-auto'>
+    <div class='preferred-audio d-flex align-items-center ml-auto'>
       <span class='text-nowrap'>Preferred Audio Language</span>
-      <select class='form-control w-full bg-dark ml-10' bind:value={$settings.audioLanguage}>
+      <select class='form-control w-120 bg-dark ml-10' bind:value={$settings.audioLanguage}>
         <option value='jpn' selected>Japanese</option>
         <option value='eng'>English</option>
         <option value='chi'>Chinese</option>
@@ -252,8 +252,21 @@
 </div>
 
 <style>
+  .w-120 {
+    width: 12rem !important;
+  }
   .px-30 {
     padding-left: 3rem;
     padding-right: 3rem;
+  }
+
+  /* Behavior for narrow screens (mobile) */
+  @media (max-width: 35rem) {
+    .metadata-container {
+      flex-direction: column !important;
+    }
+    .preferred-audio {
+      margin-left: 0 !important;
+    }
   }
 </style>

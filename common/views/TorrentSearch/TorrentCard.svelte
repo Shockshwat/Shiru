@@ -1,6 +1,6 @@
 <script context='module'>
   import { click } from '@/modules/click.js'
-  import { matchPhrase } from "@/modules/util.js"
+  import { matchPhrase } from '@/modules/util.js'
   import { fastPrettyBytes, since } from '@/modules/util.js'
   import { Database, BadgeCheck } from 'lucide-svelte'
   import { toast } from 'svelte-sonner'
@@ -111,7 +111,7 @@
       <div class='position-absolute top-0 left-0 w-full h-full' style='background: var(--torrent-card-gradient)' />
     </div>
   {/if}
-  <div class='d-flex pl-10 flex-column justify-content-between w-full h-100 position-relative' style='min-width: 0;'>
+  <div class='d-flex pl-10 flex-column justify-content-between w-full h-auto position-relative' style='min-height: 10rem; min-width: 0;'>
     <div class='d-flex w-full'>
       <div class='font-size-22 font-weight-bold text-nowrap'>{result.parseObject?.release_group && result.parseObject.release_group.length < 20 ? result.parseObject.release_group : 'No Group'}</div>
       {#if result.type === 'batch'}
@@ -120,14 +120,16 @@
         <BadgeCheck size='2.8rem' class='ml-auto' style='color: #53da33' />
       {/if}
     </div>
-    <div class='font-size-14 text-muted text-truncate overflow-hidden'>{simplifyFilename(result.parseObject)}</div>
-    <div class='d-flex flex-row text-dark font-size-14' style='line-height:1'>
-      <div class='text-light d-flex align-items-center text-nowrap'>{fastPrettyBytes(result.size)}</div>
-      <div class='text-light d-flex align-items-center text-nowrap'>&nbsp;•&nbsp;</div>
-      <div class='text-light d-flex align-items-center text-nowrap'>{result.seeders} Seeders</div>
-      <div class='text-light d-flex align-items-center text-nowrap'>&nbsp;•&nbsp;</div>
-      <div class='text-light d-flex align-items-center text-nowrap'>{since(new Date(result.date))}</div>
-      <div class='d-flex ml-auto flex-row-reverse'>
+    <div class='py-5 font-size-14 text-muted text-truncate overflow-hidden'>{simplifyFilename(result.parseObject)}</div>
+    <div class='metadata-container d-flex w-full align-items-start text-dark font-size-14' style='line-height: 1;'>
+      <div class='primary-metadata py-5 d-flex flex-row'>
+        <div class='text-light d-flex align-items-center text-nowrap'>{fastPrettyBytes(result.size)}</div>
+        <div class='text-light d-flex align-items-center text-nowrap'>&nbsp;•&nbsp;</div>
+        <div class='text-light d-flex align-items-center text-nowrap'>{result.seeders} Seeders</div>
+        <div class='text-light d-flex align-items-center text-nowrap'>&nbsp;•&nbsp;</div>
+        <div class='text-light d-flex align-items-center text-nowrap'>{since(new Date(result.date))}</div>
+      </div>
+      <div class='secondary-metadata d-flex flex-wrap ml-auto justify-content-end'>
         {#if result.type === 'best'}
           <div class='rounded px-15 py-5 ml-10 border text-nowrap font-weight-bold d-flex align-items-center' style='background: #1d2d1e; border-color: #53da33 !important; color: #53da33'>
             Best Release
@@ -137,8 +139,8 @@
             Alt Release
           </div>
         {/if}
-        {#each sanitiseTerms(result.parseObject) as { text }}
-          <div class='rounded px-15 py-5 ml-10 bg-very-dark text-nowrap text-white d-flex align-items-center'>
+        {#each sanitiseTerms(result.parseObject) as { text }, index}
+          <div class='rounded px-15 py-5 bg-very-dark text-nowrap text-white d-flex align-items-center' class:ml-10={index !== 0 } style='margin-top: 0.15rem;'>
             {text}
           </div>
         {/each}
@@ -153,5 +155,16 @@
   }
   .scale:hover{
     transform: scale(1.04);
+  }
+
+  /* Behavior for narrow screens (mobile) */
+  @media (max-width: 35rem) {
+    .metadata-container {
+      flex-direction: column !important;
+    }
+    .secondary-metadata {
+      margin-left: 0 !important;
+      justify-content: flex-start !important;
+    }
   }
 </style>

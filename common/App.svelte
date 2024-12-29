@@ -69,6 +69,7 @@
 <div class='page-wrapper with-transitions bg-dark position-relative' data-sidebar-type='overlayed-all'>
   <Menubar bind:page={$page} />
   <Sidebar bind:page={$page} />
+  <Navbar bind:page={$page} />
   <div class='overflow-hidden content-wrapper h-full'>
     <Toaster visibleToasts={2} position='top-right' theme='dark' richColors duration={10000} closeButton />
     <Profiles />
@@ -78,7 +79,6 @@
     <TorrentModal bind:overlay={$overlay} />
     <Router bind:page={$page} bind:overlay={$overlay} />
   </div>
-  <Navbar bind:page={$page} />
 </div>
 
 <style>

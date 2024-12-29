@@ -43,13 +43,17 @@
 
   export let play
 
+  export let episodeLoad
+
+  export let mobileList = false
+
   $: id = media.id
   $: idMal = media.idMal
   $: duration = media.duration
 
   const episodeRx = /Episode (\d+) - (.*)/
 
-  let episodeList = []
+  export let episodeList = []
   async function load () {
     // updates episodeList when clicking through relations / recommendations
     const { episodes, specialCount, episodeCount: newEpisodeCount } = await getAniMappings(id)
@@ -103,8 +107,15 @@
 
       episodeList[episode - 1] = { episode, image, summary, rating, title, length: length || duration, airdate: +alDate || airdate, airingAt: +alDate || airdate, filler, dubAiring }
     }
+
+    return episodeList
   }
-  $: if (media) load()
+
+
+  $: if (media) {
+    episodeList = []
+    if (!mobileList) episodeLoad = load()
+  }
 
   const animeProgress = liveAnimeProgress(id)
 </script>
