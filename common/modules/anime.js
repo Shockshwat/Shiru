@@ -176,11 +176,16 @@ export async function anitomyscript (...args) {
 
   for (const obj of parseObjs) {
     obj.anime_title ??= ''
-    const seasonMatch = obj.anime_title.match(/S(\d{2})E(\d{2})/)
+    const seasonMatch = obj.anime_title.match(/S(\d{2})E(\d{2})|season-(\d+)/i)
     if (seasonMatch) {
-      obj.anime_season = seasonMatch[1]
-      obj.episode_number = seasonMatch[2]
-      obj.anime_title = obj.anime_title.replace(/S(\d{2})E(\d{2})/, '')
+      if (seasonMatch[1] && seasonMatch[2]) {
+        obj.anime_season = seasonMatch[1]
+        obj.episode_number = seasonMatch[2]
+        obj.anime_title = obj.anime_title.replace(/S(\d{2})E(\d{2})/, '')
+      } else if (seasonMatch[3]) {
+        obj.anime_season = seasonMatch[3]
+        obj.anime_title = obj.anime_title.replace(/season-\d+/i, '')
+      }
     } else if (Array.isArray(obj.anime_season)) {
       obj.anime_season = obj.anime_season[0]
     }
