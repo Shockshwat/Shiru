@@ -25,11 +25,13 @@
 <script>
   import { since } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
+  import { onDestroy } from 'svelte'
   import { episodeByAirDate } from '@/modules/extensions/index.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { liveAnimeProgress } from '@/modules/animeprogress.js'
   import { episodesList } from '@/modules/episodes.js'
   import { getAniMappings } from '@/modules/anime.js'
+  import EpisodeSkeletonCard from '@/views/ViewAnime/EpisodeListSkeleton.svelte'
 
   export let media
 
@@ -43,9 +45,13 @@
 
   export let play
 
-  export let episodeLoad
+  export let episodeLoad = null
 
   export let mobileList = false
+
+  export let episodeList = []
+
+  let mobileWaiting = null
 
   $: id = media.id
   $: idMal = media.idMal
@@ -53,7 +59,6 @@
 
   const episodeRx = /Episode (\d+) - (.*)/
 
-  export let episodeList = []
   async function load () {
     // updates episodeList when clicking through relations / recommendations
     const { episodes, specialCount, episodeCount: newEpisodeCount } = await getAniMappings(id)
@@ -108,78 +113,110 @@
       episodeList[episode - 1] = { episode, image, summary, rating, title, length: length || duration, airdate: +alDate || airdate, airingAt: +alDate || airdate, filler, dubAiring }
     }
 
-    return episodeList
+    return episodeList?.length > 0 ? episodeList : null
   }
 
 
   $: if (media) {
     episodeList = []
+    mobileWaiting = null
     if (!mobileList) episodeLoad = load()
   }
 
+  function mobileWait(condition, interval = 1000) {
+    if (mobileWaiting) return mobileList ? mobileWaiting : null
+    mobileWaiting = new Promise(resolve => setTimeout(resolve, 1000))
+    mobileWaiting = new Promise((resolve) => {
+      const check = () => {
+        if (mobileWaiting) {
+          if (condition()) resolve()
+          else setTimeout(check, interval)
+        }
+      }
+      check()
+    })
+    return mobileWaiting
+  }
+
   const animeProgress = liveAnimeProgress(id)
+
+  onDestroy(() => {
+    mobileWaiting = null
+    episodeList = []
+    episodeLoad = null
+  })
 </script>
 
-{#each episodeOrder ? episodeList : [...episodeList].reverse() as { episode, image, summary, rating, title, length, airdate, filler, dubAiring }}
-  {#await filler then res}
-    {@const fillerExists = res?.filler || res?.recap}
-    {@const completed = !watched && userProgress >= episode}
-    {@const target = userProgress + 1 === episode}
-    {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
-    <div class='w-full my-20 content-visibility-auto scale' class:opacity-half={completed} class:px-20={!target} class:h-150={image || summary}>
-      <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative' class:border={target || fillerExists} class:bg-black={completed} class:border-secondary={fillerExists} class:bg-dark={!completed} use:click={() => play(episode)}>
-        {#if image}
-          <div class='h-full'>
-            <img alt='thumbnail' src={image} class='img-cover h-full' />
-          </div>
-        {/if}
-        {#if fillerExists}
-          <div class='position-absolute bottom-0 right-0 bg-secondary py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
-            {res?.filler ? 'Filler' : 'Recap'}
-          </div>
-        {/if}
-        <div class='h-full w-full px-20 py-15 d-flex flex-column'>
-          <div class='w-full d-flex flex-row mb-15'>
-            <div class='text-white font-weight-bold font-size-16 overflow-hidden title'>
-              {episode}. {title || 'Episode ' + episode}
-            </div>
-            {#if length}
-              <div class='ml-auto pl-5'>
-                {length}m
+{#await (episodeLoad || mobileWait(() => episodeList?.length > 0 || !episodeList)?.then(() => episodeList))}
+  {#each Array(Math.max(episodeCount || 0, 1)).fill() as _}
+    <div class='w-full px-20 my-20 content-visibility-auto scale h-150'>
+      <EpisodeSkeletonCard />
+    </div>
+  {/each}
+{:then _}
+  {#if episodeList}
+    {#each episodeOrder ? episodeList : [...episodeList].reverse() as { episode, image, summary, rating, title, length, airdate, filler, dubAiring }}
+      {#await filler then res}
+        {@const fillerExists = res?.filler || res?.recap}
+        {@const completed = !watched && userProgress >= episode}
+        {@const target = userProgress + 1 === episode}
+        {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
+        <div class='w-full my-20 content-visibility-auto scale' class:opacity-half={completed} class:px-20={!target} class:h-150={image || summary}>
+          <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative' class:border={target || fillerExists} class:bg-black={completed} class:border-secondary={fillerExists} class:bg-dark={!completed} use:click={() => play(episode)}>
+            {#if image}
+              <div class='h-full'>
+                <img alt='thumbnail' src={image} class='img-cover h-full' />
               </div>
             {/if}
-          </div>
-          {#if completed}
-            <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
-              <div class='progress-bar w-full' />
-            </div>
-          {:else if progress}
-            <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
-              <div class='progress-bar' style='width: {progress}%' />
-            </div>
-          {/if}
-          <div class='font-size-12 overflow-hidden'>
-            {summary || ''}
-          </div>
-          <div class='pt-10 font-size-12 mt-auto'>
-            {#if airdate}
-              {since(new Date(airdate))}
+            {#if fillerExists}
+              <div class='position-absolute bottom-0 right-0 bg-secondary py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
+                {res?.filler ? 'Filler' : 'Recap'}
+              </div>
             {/if}
-          </div>
-          <div class='pt-20 font-size-12 mt-auto'>
-            {#await dubAiring then dubAiring}
-              {#if dubAiring}
-                <div class='position-absolute bottom-0 left-0 {dubAiring.delayed ? `bg-danger` : `bg-secondary`} py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
-                  {dubAiring.text}
+            <div class='h-full w-full px-20 py-15 d-flex flex-column'>
+              <div class='w-full d-flex flex-row mb-15'>
+                <div class='text-white font-weight-bold font-size-16 overflow-hidden title'>
+                  {episode}. {title || 'Episode ' + episode}
+                </div>
+                {#if length}
+                  <div class='ml-auto pl-5'>
+                    {length}m
+                  </div>
+                {/if}
+              </div>
+              {#if completed}
+                <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
+                  <div class='progress-bar w-full' />
+                </div>
+              {:else if progress}
+                <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
+                  <div class='progress-bar' style='width: {progress}%' />
                 </div>
               {/if}
-            {/await}
+              <div class='font-size-12 overflow-hidden'>
+                {summary || ''}
+              </div>
+              <div class='pt-10 font-size-12 mt-auto'>
+                {#if airdate}
+                  {since(new Date(airdate))}
+                {/if}
+              </div>
+              <div class='pt-20 font-size-12 mt-auto'>
+                {#await dubAiring then dubAiring}
+                  {#if dubAiring}
+                    <div class='position-absolute bottom-0 left-0 {dubAiring.delayed ? `bg-danger` : `bg-secondary`} py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
+                      {dubAiring.text}
+                    </div>
+                  {/if}
+                {/await}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-  {/await}
-{/each}
+      {/await}
+    {/each}
+  {/if}
+{/await}
 
 <style>
   .opacity-half {

@@ -146,7 +146,7 @@
     episodeCount = episodes?.length || null
   }
 
-  let episodeList
+  let episodeList = []
   let episodeLoad
   $: if (episodeLoad) {
       episodeLoad.then(episodes => {
@@ -267,12 +267,14 @@
             </div>
           {/if}
           <Following {media} />
-          <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer' use:click={() => { episodeOrder = !episodeOrder }}>
-            <hr class='w-full' />
-            <div class='position-absolute font-size-18 font-weight-semi-bold px-20 text-white' style="left: 50%; transform: translateX(-50%);">Episodes</div>
-            <hr class='w-full' />
-            <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>Reverse</div>
-          </div>
+          {#if episodeList}
+            <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer' use:click={() => { episodeOrder = !episodeOrder }}>
+              <hr class='w-full' />
+              <div class='position-absolute font-size-18 font-weight-semi-bold px-20 text-white' style="left: 50%; transform: translateX(-50%);">Episodes</div>
+              <hr class='w-full' />
+              <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>Reverse</div>
+            </div>
+          {/if}
           <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden'>
             <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
           </div>
