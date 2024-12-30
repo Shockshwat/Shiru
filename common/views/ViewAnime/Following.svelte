@@ -3,22 +3,33 @@
   import { click } from '@/modules/click.js'
   import IPC from '@/modules/ipc.js'
   import { ExternalLink } from 'lucide-svelte'
+  import Helper from '@/modules/helper.js'
 
   /** @type {import('@/modules/al.d.ts').Media} */
   export let media
   $: following = anilistClient.userID?.viewer?.data?.Viewer && anilistClient.following({ id: media.id })
+
+  let showMore = false
+  function toggleList () {
+    showMore = !showMore
+  }
 </script>
 
 {#await following then res}
-  {@const following = [...new Map(res?.data?.Page?.mediaList.map(item => [item.user.name, item])).values()]}
+  {@const following = [...new Map(res?.data?.Page?.mediaList.filter(item => !Helper.isAuthorized() || item.user.id !== Helper.getUser().id).map(item => [item.user.name, item])).values()]}
   {#if following?.length}
+    <span class='d-flex align-items-end pointer' use:click={toggleList}>
     <div class='w-full d-flex flex-row align-items-center pt-20 mt-10'>
       <hr class='w-full' />
-      <div class='font-size-18 font-weight-semi-bold px-20 text-white'>Following</div>
+      <div class='title position-absolute font-size-18 font-weight-semi-bold px-20 text-white'>Following</div>
       <hr class='w-full' />
+      {#if following.length > 4}
+        <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>{showMore ? 'Show Less' : 'Show More'}</div>
+      {/if}
     </div>
+  </span>
     <div class='px-15 pt-5 flex-column'>
-      {#each following as friend}
+      {#each following.slice(0, showMore ? 100 : 4) as friend}
         <div class='d-flex align-items-center w-full pt-20 font-size-16'>
           <img src={friend.user.avatar.medium} alt='avatar' class='w-50 h-50 img-fluid rounded cover-img' />
           <span class='my-0 pl-20 mr-auto text-truncate'>{friend.user.name}</span>
@@ -31,3 +42,13 @@
     </div>
   {/if}
 {/await}
+
+<style>
+  .title {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .more:hover {
+    color: var(--dm-link-text-color-hover) !important;
+  }
+</style>

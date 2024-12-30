@@ -106,6 +106,7 @@ export type Following = {
   status: string
   score: number
   user: {
+    id: number
     name: string
     avatar: {
       medium: string

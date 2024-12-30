@@ -1,13 +1,27 @@
 import { settings } from '@/modules/settings.js'
 
-export default function (t, { speed = 120, smooth = 10 } = {}) {
+export default function (t, { speed = 120, smooth = 10, prevent = null } = {}) {
   if (!settings.value.smoothScroll) return
   let moving = false
   let pos = 0
   let scrollTop = 0
   let lastTime = null
+
+  const isScrolledBottom = (e) => {
+    const scrollDirection = e.deltaY > 0 ? 'down' : 'up'
+    const targetElement = e.target.closest(`.${prevent}`)
+    return targetElement && scrollDirection === 'down' && targetElement.scrollHeight - targetElement.scrollTop === targetElement.clientHeight
+  }
+
+  const isScrolledTop = (e) => {
+    const scrollDirection = e.deltaY > 0 ? 'down' : 'up'
+    const targetElement = e.target.closest(`.${prevent}`)
+    return targetElement && scrollDirection === 'up' && targetElement.scrollTop === 0
+  }
+
   t.addEventListener('wheel', e => {
     e.preventDefault()
+    if (prevent && e.target.closest(`.${prevent}`) && !isScrolledBottom(e) && !isScrolledTop(e)) return
     // is trackpad
     const spd = (e.deltaY !== (e.deltaY | 0) || e.wheelDelta % 10 !== 0) ? speed / 10 : speed
     pos = Math.max(0, Math.min(pos - Math.max(-1, Math.min(1, e.deltaY * -1)) * spd, (t.scrollHeight - t.clientHeight) + (smooth * 2)))

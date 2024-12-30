@@ -813,6 +813,7 @@ class AnilistClient {
             status,
             score,
             user {
+              id,
               name,
               avatar {
                 medium

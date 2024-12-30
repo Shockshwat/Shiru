@@ -1,10 +1,11 @@
 <script context='module'>
-  import {derived, writable} from 'simple-store-svelte'
-  import {click, hoverChange} from '@/modules/click.js'
-  import {createListener, debounce, since} from '@/modules/util.js'
+  import { derived, writable } from 'simple-store-svelte'
+  import { click, hoverChange } from '@/modules/click.js'
+  import { createListener, debounce, since } from '@/modules/util.js'
   import { notify, updateNotify } from '@/modules/settings.js'
-  import {MailCheck, MailOpen, Play, X} from 'lucide-svelte'
+  import { MailCheck, MailOpen, Play, X } from 'lucide-svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import smoothScroll from '@/modules/scroll.js'
 
   export const notifyView = writable(false)
   export const notifications = writable(notify.value.notifications || [])
@@ -105,9 +106,9 @@
   let currentNotifications = []
   function handleScroll(event) {
     const container = event.target
-    if (container.scrollTop + container.clientHeight + 10 >= container.scrollHeight) {
+    if (currentNotifications.length !== $notifications.length && container.scrollTop + container.clientHeight + 10 >= container.scrollHeight) {
       const nextBatch = $notifications.slice(currentNotifications.length, currentNotifications.length + notificationCount)
-      currentNotifications = [...currentNotifications, ...nextBatch]
+      currentNotifications = [...new Set([...currentNotifications, ...nextBatch])]
     }
   }
 </script>
@@ -122,7 +123,7 @@
               <X size='1.7rem' strokeWidth='3'/>
             </button>
           </div>
-          <div class='notification-list mt-10 overflow-y-auto h-auto' class:mh-350={currentNotifications.length > 0} on:scroll={handleScroll}>
+          <div class='notification-list mt-10 overflow-y-auto h-auto' class:mh-350={currentNotifications.length > 0} use:smoothScroll on:scroll={handleScroll}>
             {#each currentNotifications as notification, index}
               {@const delayed = notification.delayed }
               {@const announcement = notification.click_action === 'VIEW' && !delayed}

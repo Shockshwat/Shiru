@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from 'svelte'
+  import { getContext, onMount } from 'svelte'
   import { getMediaMaxEp, formatMap, playMedia } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { add } from '@/modules/torrent.js'
@@ -153,11 +153,26 @@
         episodeList = episodes
       })
     }
+
+  let leftColumn, rightColumn
+  function episodeHeight() {
+    if (leftColumn && rightColumn) {
+      const leftHeight = leftColumn.offsetHeight
+      if (rightColumn.style.height !== `${leftHeight}px`) {
+        rightColumn.style.height = `${leftHeight}px`
+      }
+    }
+  }
+
+  onMount(() => {
+    setInterval(() => episodeHeight(), 500)
+    window.addEventListener('resize', episodeHeight)
+  })
 </script>
 
 <div class='modal modal-full z-50' class:show={media} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
-  {#if media}
-    <div class='h-full modal-content bg-very-dark p-0 overflow-y-auto position-relative' bind:this={container} use:smoothScroll>
+    <div class='h-full modal-content bg-very-dark p-0 overflow-y-auto position-relative' bind:this={container} use:smoothScroll={{ prevent: 'episode-list' }}>
+      {#if media}
       {#if mediaList.length > 1}
         <button class='close back pointer z-30 bg-dark top-20 left-0 position-fixed' use:click={back}>
           <ArrowLeft size='1.8rem' />
@@ -167,159 +182,161 @@
       <img class='w-full cover-img banner position-absolute' alt='banner' src={media.bannerImage || ' '} />
       <div class='row px-20'>
         <div class='col-lg-7 col-12 pb-10'>
-          <div class='d-flex flex-sm-row flex-column align-items-sm-end pb-20 mb-15'>
-            <div class='cover d-flex flex-row align-items-sm-end align-items-center justify-content-center mw-full mb-sm-0 mb-20 w-full' style='max-height: 50vh;'>
-              <img class='rounded cover-img overflow-hidden h-full' alt='cover-art' src={media.coverImage?.extraLarge || media.coverImage?.medium} />
-            </div>
-            <div class='pl-sm-20 ml-sm-20'>
-              <h1 class='font-weight-very-bold text-white select-all mb-0'>{anilistClient.title(media)}</h1>
-              <div class='d-flex flex-row font-size-18 flex-wrap mt-5'>
-                {#if media.averageScore}
-                  <div class='d-flex flex-row mt-10' title='{media.averageScore / 10} by {anilistClient.reviews(media)} reviews'>
-                    <TrendingUp class='mx-10' size='2.2rem' />
-                    <span class='mr-20'>
-                      Rating: {media.averageScore + '%'}
-                    </span>
-                  </div>
-                {/if}
-                {#if media.format}
+          <div bind:this={leftColumn}>
+            <div class='d-flex flex-sm-row flex-column align-items-sm-end pb-20 mb-15'>
+              <div class='cover d-flex flex-row align-items-sm-end align-items-center justify-content-center mw-full mb-sm-0 mb-20 w-full' style='max-height: 50vh;'>
+                <img class='rounded cover-img overflow-hidden h-full' alt='cover-art' src={media.coverImage?.extraLarge || media.coverImage?.medium} />
+              </div>
+              <div class='pl-sm-20 ml-sm-20'>
+                <h1 class='font-weight-very-bold text-white select-all mb-0'>{anilistClient.title(media)}</h1>
+                <div class='d-flex flex-row font-size-18 flex-wrap mt-5'>
+                  {#if media.averageScore}
+                    <div class='d-flex flex-row mt-10' title='{media.averageScore / 10} by {anilistClient.reviews(media)} reviews'>
+                      <TrendingUp class='mx-10' size='2.2rem' />
+                      <span class='mr-20'>
+                        Rating: {media.averageScore + '%'}
+                      </span>
+                    </div>
+                  {/if}
+                  {#if media.format}
+                    <div class='d-flex flex-row mt-10'>
+                      <Tv class='mx-10' size='2.2rem' />
+                      <span class='mr-20 text-capitalize'>
+                        Format: {formatMap[media.format]}
+                      </span>
+                    </div>
+                  {/if}
+                  {#if media.episodes !== 1}
+                    <div class='d-flex flex-row mt-10'>
+                      <Clapperboard class='mx-10' size='2.2rem' />
+                      <span class='mr-20'>
+                        Episodes: {getMediaMaxEp(media) || media?.episodes || episodeCount || '?'}
+                      </span>
+                    </div>
+                  {:else if media.duration}
+                    <div class='d-flex flex-row mt-10'>
+                      <Timer class='mx-10' size='2.2rem' />
+                      <span class='mr-20'>
+                        Length: {media.duration + ' min'}
+                      </span>
+                    </div>
+                  {/if}
+                  {#if media.averageScore && media.stats?.scoreDistribution}
+                    <div class='d-flex flex-row mt-10'>
+                      <Users class='mx-10' size='2.2rem' />
+                      <span class='mr-20' title='{media.averageScore / 10} by {anilistClient.reviews(media)} reviews'>
+                        Reviews: {anilistClient.reviews(media)}
+                      </span>
+                    </div>
+                  {/if}
                   <div class='d-flex flex-row mt-10'>
-                    <Tv class='mx-10' size='2.2rem' />
-                    <span class='mr-20 text-capitalize'>
-                      Format: {formatMap[media.format]}
-                    </span>
+                    <AudioLabel {media} viewAnime={true}/>
                   </div>
-                {/if}
-                {#if media.episodes !== 1}
-                  <div class='d-flex flex-row mt-10'>
-                    <Clapperboard class='mx-10' size='2.2rem' />
-                    <span class='mr-20'>
-                      Episodes: {getMediaMaxEp(media) || media?.episodes || episodeCount || '?'}
-                    </span>
-                  </div>
-                {:else if media.duration}
-                  <div class='d-flex flex-row mt-10'>
-                    <Timer class='mx-10' size='2.2rem' />
-                    <span class='mr-20'>
-                      Length: {media.duration + ' min'}
-                    </span>
-                  </div>
-                {/if}
-                {#if media.averageScore && media.stats?.scoreDistribution}
-                  <div class='d-flex flex-row mt-10'>
-                    <Users class='mx-10' size='2.2rem' />
-                    <span class='mr-20' title='{media.averageScore / 10} by {anilistClient.reviews(media)} reviews'>
-                      Reviews: {anilistClient.reviews(media)}
-                    </span>
-                  </div>
-                {/if}
-                <div class='d-flex flex-row mt-10'>
-                  <AudioLabel {media} viewAnime={true}/>
                 </div>
-              </div>
-              <div class='d-flex flex-row flex-wrap'>
-                <button class='btn btn-lg btn-secondary w-250 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center mr-10 mt-20'
-                  use:click={() => play()}
-                  disabled={media.status === 'NOT_YET_RELEASED'}>
-                  <Play class='mr-10' fill='currentColor' size='1.6rem' />
-                  {playButtonText}
-                </button>
-                <div class='mt-20 d-flex'>
-                  {#if Helper.isAuthorized()}
-                    <Scoring {media} viewAnime={true} />
-                  {/if}
-                  {#if Helper.isAniAuth()}
-                    <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
-                      <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
-                    </button>
-                  {/if}
-                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0' class:ml-10={Helper.isAuthorized()} use:click={() => copyToClipboard(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
-                    <Share2 size='1.7rem' />
+                <div class='d-flex flex-row flex-wrap'>
+                  <button class='btn btn-lg btn-secondary w-250 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center mr-10 mt-20'
+                    use:click={() => play()}
+                    disabled={media.status === 'NOT_YET_RELEASED'}>
+                    <Play class='mr-10' fill='currentColor' size='1.6rem' />
+                    {playButtonText}
                   </button>
-                  <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => openInBrowser(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
-                    <ExternalLink size='1.7rem' />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <Details {media} alt={recommendations} />
-          <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
-            {#each media.tags as tag}
-              <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'>
-                <Hash class='mr-5' size='1.8rem' /><span class='font-weight-bolder'>{tag.name}</span><span class='font-weight-light'>: {tag.rank}%</span>
-              </div>
-          {/each}
-          </div>
-          <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
-            {#each media.genres as genre}
-              <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'><svelte:component this={genreIcons[genre]} class='mr-5' size='1.8rem' /> {genre}</div> <!-- || Drama-->
-            {/each}
-          </div>
-          {#if media.description}
-            <div class='w-full d-flex flex-row align-items-center pt-20 mt-10'>
-              <hr class='w-full' />
-              <div class='font-size-18 font-weight-semi-bold px-20 text-white'>Synopsis</div>
-              <hr class='w-full' />
-            </div>
-            <div class='font-size-16 pre-wrap pt-20 select-all'>
-              {media.description?.replace(/<[^>]*>/g, '') || ''}
-            </div>
-          {/if}
-          <Following {media} />
-          {#if episodeList}
-            <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer' use:click={() => { episodeOrder = !episodeOrder }}>
-              <hr class='w-full' />
-              <div class='position-absolute font-size-18 font-weight-semi-bold px-20 text-white' style="left: 50%; transform: translateX(-50%);">Episodes</div>
-              <hr class='w-full' />
-              <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>Reverse</div>
-            </div>
-          {/if}
-          <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden'>
-            <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
-          </div>
-          <ToggleList list={ media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
-                const typeComparison = a.relationType.localeCompare(b.relationType)
-                if (typeComparison !== 0) return typeComparison
-                return (a.node.seasonYear || 0) - (b.node.seasonYear || 0)
-              }) } promise={searchIDS} let:item let:promise title='Relations'>
-            <div class='small-card'>
-              {#await promise}
-                <SkeletonCard />
-              {:then res }
-                {#if res}
-                  {#if anilistClient.mediaCache.value[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
-                    <SmallCard media={anilistClient.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
-                  {/if}
-                {/if}
-              {/await}
-            </div>
-          </ToggleList>
-          {#await recommendations then res}
-            {@const media = res?.data?.Media}
-            {#if media}
-              <ToggleList list={ media.recommendations?.edges?.filter(({ node }) => node.mediaRecommendation).sort((a, b) => b.node.rating - a.node.rating) } promise={searchIDS} let:item let:promise title='Recommendations'>
-                <div class='small-card'>
-                  {#await promise}
-                    <SkeletonCard />
-                  {:then res}
-                    {#if res}
-                      {#if anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
-                        <SmallCard media={anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
-                      {/if}
+                  <div class='mt-20 d-flex'>
+                    {#if Helper.isAuthorized()}
+                      <Scoring {media} viewAnime={true} />
                     {/if}
-                  {/await}
+                    {#if Helper.isAniAuth()}
+                      <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
+                        <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
+                      </button>
+                    {/if}
+                    <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0' class:ml-10={Helper.isAuthorized()} use:click={() => copyToClipboard(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
+                      <Share2 size='1.7rem' />
+                    </button>
+                    <button class='btn bg-dark btn-lg btn-square d-flex align-items-center justify-content-center shadow-none border-0 ml-10' use:click={() => openInBrowser(Helper.isAniAuth() || !media.idMal ? `https://anilist.co/anime/${media.id}` : `https://myanimelist.net/anime/${media.idMal}`)}>
+                      <ExternalLink size='1.7rem' />
+                    </button>
+                  </div>
                 </div>
-              </ToggleList>
+              </div>
+            </div>
+            <Details {media} alt={recommendations} />
+            <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
+              {#each media.tags as tag}
+                <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'>
+                  <Hash class='mr-5' size='1.8rem' /><span class='font-weight-bolder'>{tag.name}</span><span class='font-weight-light'>: {tag.rank}%</span>
+                </div>
+            {/each}
+            </div>
+            <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
+              {#each media.genres as genre}
+                <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'><svelte:component this={genreIcons[genre]} class='mr-5' size='1.8rem' /> {genre}</div> <!-- || Drama-->
+              {/each}
+            </div>
+            {#if media.description}
+              <div class='w-full d-flex flex-row align-items-center pt-20 mt-10'>
+                <hr class='w-full' />
+                <div class='font-size-18 font-weight-semi-bold px-20 text-white'>Synopsis</div>
+                <hr class='w-full' />
+              </div>
+              <div class='font-size-16 pre-wrap pt-20 select-all'>
+                {media.description?.replace(/<[^>]*>/g, '') || ''}
+              </div>
             {/if}
-          {/await}
+            <Following {media} />
+            {#if episodeList}
+              <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer' use:click={() => { episodeOrder = !episodeOrder }}>
+                <hr class='w-full' />
+                <div class='position-absolute font-size-18 font-weight-semi-bold px-20 text-white' style="left: 50%; transform: translateX(-50%);">Episodes</div>
+                <hr class='w-full' />
+                <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>Reverse</div>
+              </div>
+            {/if}
+            <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden h-600 mt-20'>
+              <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
+            </div>
+            <ToggleList list={ media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
+                  const typeComparison = a.relationType.localeCompare(b.relationType)
+                  if (typeComparison !== 0) return typeComparison
+                  return (a.node.seasonYear || 0) - (b.node.seasonYear || 0)
+                }) } promise={searchIDS} let:item let:promise title='Relations'>
+              <div class='small-card'>
+                {#await promise}
+                  <SkeletonCard />
+                {:then res }
+                  {#if res}
+                    {#if anilistClient.mediaCache.value[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                      <SmallCard media={anilistClient.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
+                    {/if}
+                  {/if}
+                {/await}
+              </div>
+            </ToggleList>
+            {#await recommendations then res}
+              {@const media = res?.data?.Media}
+              {#if media}
+                <ToggleList list={ media.recommendations?.edges?.filter(({ node }) => node.mediaRecommendation).sort((a, b) => b.node.rating - a.node.rating) } promise={searchIDS} let:item let:promise title='Recommendations'>
+                  <div class='small-card'>
+                    {#await promise}
+                      <SkeletonCard />
+                    {:then res}
+                      {#if res}
+                        {#if anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                          <SmallCard media={anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
+                        {/if}
+                      {/if}
+                    {/await}
+                  </div>
+                </ToggleList>
+              {/if}
+            {/await}
+          </div>
         </div>
-        <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20 overflow-x-hidden'>
+        <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20 overflow-x-hidden' bind:this={rightColumn}>
           <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
         </div>
       </div>
+      {/if}
     </div>
-  {/if}
 </div>
 
 <style>
