@@ -25,7 +25,7 @@
 </p>
 
 ## **About**
-**Shiru** is a fork of [Miru](https://github.com/ThaUnknown/miru/) that is focused on providing a better feature rich experience with free mobile support. The overall goal was to implement feature and a similar experience to using a website with similar functionality to MalSync and AniSkip.
+**Shiru** is a fork of [Miru](https://github.com/ThaUnknown/miru/) that is focused on providing a better feature rich experience with free mobile support. The overall goal was to implement features and design a similar experience to using a streaming website with functionality akin to MalSync and AniSkip.
 
 This is a pure JS BitTorrent streaming environment, with a built-in list manager. Imagine qBit + Taiga + MPV, all in a single package, but streamed real-time. Completly ad free with no tracking/data collection.
 
