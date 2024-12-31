@@ -1,5 +1,6 @@
 <script context='module'>
   import { animeSchedule } from '@/modules/animeschedule.js'
+  import { malDubs } from '@/modules/animedubs.js'
   import { past } from '@/modules/util.js'
 
   async function dubbedEpisode(i, media) {
@@ -18,6 +19,8 @@
       }
     } else if (episodeEntry) {
       return { text: `Dub: ${since(new Date(episodeEntry.episode.airedAt))}`, delayed: false }
+    } else if (malDubs.dubLists.value.incomplete.includes(media.idMal) && (await animeSchedule.dubAiredLists.value).find(entry => entry?.id === media.id && entry?.episode?.aired === 1)) {
+      return { text: `Dub: Not Planned`, delayed: true }
     }
   }
 </script>
