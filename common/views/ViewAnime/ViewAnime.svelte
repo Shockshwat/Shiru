@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from 'svelte'
-  import { getMediaMaxEp, formatMap, playMedia } from '@/modules/anime.js'
+  import { getMediaMaxEp, formatMap, playMedia, genreIcons } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
@@ -18,9 +18,8 @@
   import SmallCard from '@/components/cards/SmallCard.svelte'
   import SkeletonCard from '@/components/cards/SkeletonCard.svelte'
   import Helper from '@/modules/helper.js'
-  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash, Drama, BookHeart, MountainSnow, Laugh, TriangleAlert, Droplets, FlaskConical, Ghost, Skull, HeartPulse, VolleyBall, Car, Brain, FootPrints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
-  const genreIcons = { 'Action': Activity, 'Adventure': MountainSnow, 'Comedy': Laugh, 'Drama': Drama, 'Ecchi': Droplets, 'Fantasy': WandSparkles, 'Hentai': TriangleAlert, 'Horror': Skull, 'Mahou Shoujo': Drama,
-    'Mecha': Bot, 'Music': Guitar, 'Mystery': FootPrints, 'Psychological': Brain, 'Romance': BookHeart, 'Sci-Fi': FlaskConical, 'Slice of Life': Car, 'Sports': VolleyBall, 'Supernatural': Ghost, 'Thriller': HeartPulse }
+  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash } from 'lucide-svelte'
+
 
   export let overlay
   const view = getContext('view')
@@ -135,15 +134,12 @@
     IPC.emit('overlay-check')
   })
 
-  let episodeCount = 1
-  $: {
-    if (media && (!media.episodes || media.episodes === 0)) {
-      fetchEpisodes(media.idMal)
-    } else if (media) episodeCount = media.episodes
-  }
+  $: episodeCount = fetchEpisodes(media?.idMal)
   async function fetchEpisodes(idMal) {
-    const episodes = await episodesList.getEpisodeData(idMal)
-    episodeCount = episodes?.length || null
+    if (media && (!media.episodes || (media.episodes === 0))) {
+      const episodes = await episodesList.getEpisodeData(idMal)
+      return (episodes && episodes[episodes.length - 1]?.episode_id) || getMediaMaxEp(media)
+    } else if (media) return media.episodes
   }
 
   let episodeList = []
@@ -210,7 +206,11 @@
                     <div class='d-flex flex-row mt-10'>
                       <Clapperboard class='mx-10' size='2.2rem' />
                       <span class='mr-20'>
-                        Episodes: {getMediaMaxEp(media) || media?.episodes || episodeCount || '?'}
+                      {#await episodeCount}
+                        Episodes: {getMediaMaxEp(media) || media?.episodes || '?'}
+                      {:then episodes}
+                        Episodes: {getMediaMaxEp(media) || media?.episodes || episodes || '?'}
+                      {/await}
                       </span>
                     </div>
                   {:else if media.duration}
@@ -292,7 +292,7 @@
               </div>
             {/if}
             <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden h-600 mt-20'>
-              <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
+              <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} bind:episodeCount={episodeCount} {play} />
             </div>
             <ToggleList list={ media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
                   const typeComparison = a.relationType.localeCompare(b.relationType)
@@ -332,7 +332,7 @@
           </div>
         </div>
         <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20 overflow-x-hidden' bind:this={rightColumn}>
-          <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
+          <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} bind:episodeCount={episodeCount} {play} />
         </div>
       </div>
       {/if}

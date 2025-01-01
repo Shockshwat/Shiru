@@ -2,8 +2,9 @@
   const badgeKeys = ['title', 'search', 'genre', 'tag', 'season', 'year', 'format', 'status', 'status_not', 'sort', 'hideSubs', 'hideMyAnime', 'hideStatus']
   const badgeDisplayNames = { title: BookUser, search: Type, genre: Drama, tag: Hash, season: CalendarRange, year: Leaf, format: Tv, status: MonitorPlay, status_not: MonitorX, sort: ArrowDownWideNarrow, hideMyAnime: SlidersHorizontal, hideSubs: Mic }
   const sortOptions = { TITLE_ROMAJI: 'Title', START_DATE_DESC: 'Release Date', SCORE_DESC: 'Score', POPULARITY_DESC: 'Popularity', UPDATED_AT_DESC: 'Date Updated', UPDATED_TIME_DESC: 'Last Updated', STARTED_ON_DESC: 'Start Date', FINISHED_ON_DESC: 'Completed Date', PROGRESS_DESC: 'Your Progress', USER_SCORE_DESC: 'Your Score' }
+  const formatOptions = { TV: 'TV Show', MOVIE: 'Movie', TV_SHORT: 'TV Short', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA' }
 
-  export function searchCleanup (search, badge) {
+  export function searchCleanup(search, badge) {
     return Object.fromEntries(Object.entries(search).map((entry) => {
       return (!badge || badgeKeys.includes(entry[0])) && entry
     }).filter(a => a?.[1]))
@@ -11,7 +12,7 @@
 </script>
 
 <script>
-  import { traceAnime, genreList, tagList } from '@/modules/anime.js'
+  import { traceAnime, genreIcons, genreList, tagList } from '@/modules/anime.js'
   import { settings } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
   import { page } from '@/App.svelte'
@@ -81,6 +82,10 @@
 
   function getSortDisplayName(value) {
     return sortOptions[value] || value
+  }
+
+  function getFormatDisplayName(value) {
+    return formatOptions[value] || value
   }
 
   function removeBadge(badge) {
@@ -280,6 +285,7 @@
           <option value='TV'>TV Show</option>
           <option value='MOVIE'>Movie</option>
           <option value='TV_SHORT'>TV Short</option>
+          <option value='SPECIAL'>Special</option>
           <option value='OVA'>OVA</option>
           <option value='ONA'>ONA</option>
         </select>
@@ -400,11 +406,9 @@
             {#each matchingBadges as badge}
               {#if badge.key === key && (badge.key !== 'hideStatus' && (search.userList || badge.key !== 'title')) }
                 <div class='badge border-0 py-5 px-10 text-capitalize mr-10 text-white text-nowrap d-flex align-items-center mb-5' class:bg-light={!badge.key.includes('_not')} class:bg-danger-dark={badge.key.includes('_not')}>
-                  <svelte:component this={badgeDisplayNames[badge.key]} class='mr-5' size='1.8rem' />
-                  <div class='font-size-12 mr-5'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</div>
-                  {#if !search.scheduleList || (badge.key !== 'season' && badge.key !== 'year')}
-                    <button on:click={() => removeBadge(badge)} class='pointer bg-transparent border-0 text-white font-size-12 position-relative ml-5 pr-0 pt-0 x-filter' title='Remove Filter' type='button'>x</button>
-                  {/if}
+                  <svelte:component this={badge.key === 'genre' ? genreIcons[badge.value] || badgeDisplayNames[badge.key] : badgeDisplayNames[badge.key]} class='mr-5' size='1.8rem' />
+                  <div class='font-size-12 mr-5'>{badge.key === 'sort' ? getSortDisplayName(badge.value) : badge.key === 'format' ? getFormatDisplayName(badge.value) : (badge.key === 'hideMyAnime' ? 'Hide My Anime' : badge.key === 'hideSubs' ? 'Dubbed' : ('' + badge.value).replace(/_/g, ' ').toLowerCase())}</div>
+                  <button on:click={() => removeBadge(badge)} class='pointer bg-transparent border-0 text-white font-size-12 position-relative ml-5 pr-0 pt-0 x-filter' title='Remove Filter' type='button'>x</button>
                 </div>
               {/if}
             {/each}

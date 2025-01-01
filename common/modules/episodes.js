@@ -17,7 +17,7 @@ class Episodes {
         reservoirRefreshAmount: 60,
         reservoirRefreshInterval: 60 * 1000,
         maxConcurrent: 3,
-        minTime: 300
+        minTime: 333
     })
 
     rateLimitPromise = null
@@ -25,31 +25,42 @@ class Episodes {
 
     constructor() {
         this.limiter.on('failed', async (error) => {
-            if (error.status === 500) return 1
+            let info = (await error.json()) || error
+            if (info.status === 500) return 1
 
-            if (!error.statusText) {
-                if (!this.rateLimitPromise) this.rateLimitPromise = sleep(61 * 1000).then(() => { this.rateLimitPromise = null })
-                return 61 * 1000
-            }
-            const time = ((error.headers.get('retry-after') || 60) + 1) * 1000
+            const time = ((error.headers.get('retry-after') || 2) + 1) * 1000
             if (!this.rateLimitPromise) this.rateLimitPromise = sleep(time).then(() => { this.rateLimitPromise = null })
             return time
         })
     }
 
     async getEpisodeData(idMal) {
+        if (!idMal) return []
         let page = 1
         const res = await this.requestEpisodes(idMal, page)
-        return res.data.map(e => ({
-            filler: e.filler,
-            recap: e.recap,
-            episode_id: e.mal_id, // mal_id is the episode_id in the v4 API very stupid
-            title: e.title || e.title_romanji || e.title_japanese,
-            aired: e.aired,
-        })) || []
+        if (res && res.pagination?.has_next_page && res.pagination?.last_visible_page) {
+            const lastRes = await this.requestEpisodes(idMal, res.pagination.last_visible_page * 100)
+            const arr = lastRes.data.map(e => ({
+                filler: e.filler,
+                recap: e.recap,
+                episode_id: e.mal_id, // mal_id is the episode_id in the v4 API very stupid
+                title: e.title || e.title_romanji || e.title_japanese,
+                aired: e.aired,
+            }))
+            return arr || []
+        } else {
+            return res?.data?.map(e => ({
+                filler: e.filler,
+                recap: e.recap,
+                episode_id: e.mal_id, // mal_id is the episode_id in the v4 API very stupid
+                title: e.title || e.title_romanji || e.title_japanese,
+                aired: e.aired,
+            })) || []
+        }
     }
 
     async getSingleEpisode(idMal, episode) {
+        if (!idMal) return []
         const res = await this.requestEpisodes(idMal, Number(episode) !== 0 ? episode : 1)
         const singleEpisode = res.data.find(e => (e.mal_id === episode) || (e.mal_id === Number(episode)))
         return singleEpisode ? {

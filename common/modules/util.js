@@ -132,21 +132,13 @@ export function getRandomInt(min, max) {
  * @returns {boolean} If the target phrase has been found.
  */
 export function matchKeys(nest, phrase, keys, threshold = 0.4) {
-  if (!phrase) {
-    return true
-  }
-  const options = {
-    includeScore: true,
-    threshold,
-    keys: keys
-  }
-  if (new Fuse([nest], options).search(phrase).length > 0) return true
-  const fuse = new Fuse([phrase], options)
-  return keys.some(key => {
+  if (!phrase) return true
+  if (!nest) return false
+  if (new Fuse([nest], { includeScore: true, threshold, keys: keys }).search(phrase).length > 0) return true
+  const fuse = new Fuse([phrase], { includeScore: true, threshold, })
+  return keys.some((key) => {
     const valueToMatch = nest[key]
-    if (valueToMatch) {
-      return fuse.search(valueToMatch).length > 0
-    }
+    if (valueToMatch) return fuse.search(valueToMatch).length > 0
     return false
   })
 }

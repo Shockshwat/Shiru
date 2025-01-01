@@ -28,7 +28,7 @@
 <script>
   import { since } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
-  import { onDestroy } from 'svelte'
+  import { afterUpdate, onDestroy } from 'svelte'
   import { episodeByAirDate } from '@/modules/extensions/index.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { liveAnimeProgress } from '@/modules/animeprogress.js'
@@ -68,7 +68,7 @@
     const { episodes, specialCount, episodeCount: newEpisodeCount } = await getAniMappings(id)
 
     /** @type {{ airingAt: number; episode: number; filler?: boolean; dubAiring?: object; }[]} */
-    episodeList = Array.from({ length: (episodeCount || newEpisodeCount) }, (_, i) => ({
+    episodeList = Array.from({ length: ((await episodeCount) || newEpisodeCount) }, (_, i) => ({
       episode: i + 1, image: null, summary: null, rating: null, title: null, length: null, airdate: null, airingAt: null, filler: episodesList.getSingleEpisode(idMal, (i + 1)), dubAiring: dubbedEpisode(i, media)
     }))
     let alEpisodes = episodeList
@@ -93,11 +93,12 @@
       }
     }
 
-    if (alEpisodes.length === 0 && !episodeCount && !newEpisodeCount) {
+    if ((alEpisodes.length < (await episodeCount)) && !newEpisodeCount) {
       const eps = await episodesList.getEpisodeData(idMal)
       if (eps?.length > 0) {
-        alEpisodes = Array.from({ length: (eps.length) }, (_, i) => ({
-          episode: i + 1, image: null, summary: null, rating: null, title: eps.find(e => e.episode_id === (i + 1))?.title, length: null, airdate: null, airingAt: eps.find(e => e.episode_id === (i + 1))?.aired, filler: episodesList.getSingleEpisode(idMal, (i + 1)), dubAiring: dubbedEpisode(i, media)
+        const lastId = eps[eps.length - 1].episode_id
+        alEpisodes = Array.from({ length: (lastId) }, (_, i) => ({
+          episode: i + 1, image: null, summary: null, rating: null, title: (lastId <= 100 ? eps.find(e => e.episode_id === (i + 1)) : episodesList.getSingleEpisode(idMal, (i + 1)))?.title, length: null, airdate: null, airingAt: (lastId <= 100 ? eps.find(e => e.episode_id === (i + 1)) : episodesList.getSingleEpisode(idMal, (i + 1)))?.aired, filler: episodesList.getSingleEpisode(idMal, (i + 1)), dubAiring: dubbedEpisode(i, media)
         }))
       } else if ((media?.status === 'RELEASING' || media?.status === 'FINISHED')) {
         alEpisodes = Array.from({ length: (media?.mediaListEntry?.progress > 0 ? media?.mediaListEntry?.progress : 1) }, (_, i) => ({
@@ -107,7 +108,8 @@
     }
 
     for (const { episode, title: oldTitle, airingAt, filler, dubAiring } of alEpisodes) {
-      const alDate = new Date(typeof airingAt === 'number' ? (airingAt || 0) * 1000 : (airingAt || 0))
+      const airingPromise = await airingAt
+      const alDate = new Date(typeof airingPromise === 'number' ? (airingPromise || 0) * 1000 : (airingPromise || 0))
       // validate by air date if the anime has specials AND doesn't have matching episode count
       const needsValidation = !(!specialCount || (media.episodes && media.episodes === newEpisodeCount && episodes && episodes[Number(episode)]))
       const { image, summary, rating, title: newTitle, length, airdate } = needsValidation ? episodeByAirDate(null, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
@@ -117,21 +119,21 @@
       episodeList[episode - 1] = { episode, image, summary, rating, title, length: length || duration, airdate: +alDate || airdate, airingAt: +alDate || airdate, filler, dubAiring }
     }
 
-    currentEpisodes = episodeList.slice(0, maxEpisodes)
-    return episodeList?.length > 0 ? episodeList : null
+    currentEpisodes = episodeList?.slice(0, maxEpisodes)
+    return episodeList && episodeList?.length > 0 ? episodeList : null
   }
-
 
   $: if (media) {
     episodeList = []
+    episodeOrder = true
     currentEpisodes = []
     mobileWaiting = null
     if (!mobileList) episodeLoad = load()
   }
 
   $: {
-    if (episodeOrder) currentEpisodes = episodeList.slice(0, maxEpisodes)
-    else currentEpisodes = [...episodeList].reverse().slice(0, maxEpisodes)
+    if (episodeOrder) currentEpisodes = episodeList?.slice(0, maxEpisodes)
+    else currentEpisodes = [...episodeList]?.reverse()?.slice(0, maxEpisodes)
   }
 
   function mobileWait(condition, interval = 1000) {
@@ -151,10 +153,11 @@
 
   const animeProgress = liveAnimeProgress(id)
 
-  let maxEpisodes = 15
+  let maxEpisodes = 100
   let currentEpisodes = []
-  function handleScroll(event) {
-    const container = event.target
+  let container
+  function handleScroll() {
+    if (!container) return;
     if (currentEpisodes.length !== episodeList.length && container.scrollTop + container.clientHeight + 80 >= container.scrollHeight) {
       const nextBatch = episodeList.slice(currentEpisodes.length, currentEpisodes.length + maxEpisodes)
       currentEpisodes = [...new Set([...currentEpisodes, ...nextBatch])]
@@ -168,7 +171,7 @@
   })
 </script>
 
-<div class='episode-list overflow-y-auto overflow-x-hidden' use:smoothScroll on:scroll={handleScroll}>
+<div bind:this={container} class='episode-list overflow-y-auto overflow-x-hidden' use:smoothScroll on:scroll={handleScroll}>
   {#await (episodeLoad || mobileWait(() => episodeList?.length > 0 || !episodeList)?.then(() => episodeList))}
     {#each Array.from({ length: Math.max(Math.min(episodeCount || 0, maxEpisodes), 1) }) as _}
       <div class='w-full px-20 my-20 content-visibility-auto scale h-150'>
@@ -178,13 +181,13 @@
   {:then _}
     {#if episodeList}
       {#each currentEpisodes as { episode, image, summary, rating, title, length, airdate, filler, dubAiring }, index}
-        {#await Promise.all([filler, dubAiring])}
+        {#await Promise.all([title, filler, dubAiring])}
           {#each Array.from({ length: Math.min(episodeCount || 0, maxEpisodes) }) as _, index}
             <div class='w-full px-20 content-visibility-auto scale h-150' class:my-20={!mobileList || index !== 0}>
               <EpisodeSkeletonCard />
             </div>
           {/each}
-        {:then [filler, dubAiring]}
+        {:then [title, filler, dubAiring]}
           {@const completed = !watched && userProgress >= episode}
           {@const target = userProgress + 1 === episode}
           {@const hasFiller = filler?.filler || filler?.recap}

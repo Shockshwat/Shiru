@@ -55,7 +55,7 @@
   async function fetchEpisodes(idMal) {
     const episodes = await episodesList.getEpisodeData(idMal)
     if (episodes && ((new Date(episodes[episodes.length]?.aired) > new Date()) || !['RELEASING', 'NOT_YET_RELEASED'].includes(media.status))) {
-      episodeCount = episodes?.length
+      episodeCount = episodes[episodes.length - 1]?.episode_id
     } else episodeCount = null
   }
 </script>

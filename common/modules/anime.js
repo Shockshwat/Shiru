@@ -12,8 +12,10 @@ import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
 import { animeSchedule } from '@/modules/animeschedule.js'
 import {caches, settings, updateCache} from '@/modules/settings.js'
 import Helper from '@/modules/helper.js'
-import Debug from 'debug'
 
+import { Drama, BookHeart, MountainSnow, Laugh, TriangleAlert, Droplets, FlaskConical, Ghost, Skull, HeartPulse, VolleyBall, Car, Brain, Footprints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
+
+import Debug from 'debug'
 const debug = Debug('ui:anime')
 
 const imageRx = /\.(jpeg|jpg|gif|png|webp)/i
@@ -219,6 +221,28 @@ export const statusColorMap = {
   PAUSED: 'rgb(250,122,122)',
   REPEATING: '#3baeea',
   DROPPED: 'rgb(232,93,117)'
+}
+
+export const genreIcons = {
+  'Action': Activity,
+  'Adventure': MountainSnow,
+  'Comedy': Laugh,
+  'Drama': Drama,
+  'Ecchi': Droplets,
+  'Fantasy': WandSparkles,
+  'Hentai': TriangleAlert,
+  'Horror': Skull,
+  'Mahou Shoujo': Drama,
+  'Mecha': Bot,
+  'Music': Guitar,
+  'Mystery': Footprints,
+  'Psychological': Brain,
+  'Romance': BookHeart,
+  'Sci-Fi': FlaskConical,
+  'Slice of Life': Car,
+  'Sports': VolleyBall,
+  'Supernatural': Ghost,
+  'Thriller': HeartPulse
 }
 
 export const genreList = [
@@ -515,33 +539,30 @@ export async function getEpisodeMetadataForMedia (media) {
   return episodes
 }
 
-export function episode(media, variables) {
-  if (variables?.hideSubs) {
-    const entry = animeSchedule.dubAiring.value.find(entry => entry.media?.media?.id === media.id)
-    const nodes = entry?.media?.media?.airingSchedule?.nodes
+export function episode(media) {
+  const entry = animeSchedule.dubAiring.value.find(entry => entry.media?.media?.id === media.id)
+  const nodes = entry?.media?.media?.airingSchedule?.nodes
 
-    if (!nodes || nodes.length === 0) return `Episode 1 in`
-    if (entry?.delayedIndefinitely && nodes[0]) return `Episode ${nodes[0].episode} is`
-    if (nodes.length === 1) return `Episode ${nodes[0].episode} in`
+  if (!nodes || nodes.length === 0) return `Episode 1 in`
+  if (entry?.delayedIndefinitely && nodes[0]) return `Episode ${nodes[0].episode} is`
+  if (nodes.length === 1) return `Episode ${nodes[0].episode} in`
 
-    let lastEpisode = nodes[0].episode
-    for (let i = 1; i < nodes.length; i++) {
-      if (new Date(nodes[i].airingAt).getTime() !== new Date(nodes[i - 1].airingAt).getTime()) {
-        lastEpisode = nodes[i - 1].episode
-        break
-      }
-      if (i === nodes.length - 1) lastEpisode = nodes[i].episode
+  let lastEpisode = nodes[0].episode
+  for (let i = 1; i < nodes.length; i++) {
+    if (new Date(nodes[i].airingAt).getTime() !== new Date(nodes[i - 1].airingAt).getTime()) {
+      lastEpisode = nodes[i - 1].episode
+      break
     }
-
-    return `Episode ${nodes[0].episode === lastEpisode ? `${nodes[0].episode}` : `${nodes[0].episode} ~ ${lastEpisode}`} in`
+    if (i === nodes.length - 1) lastEpisode = nodes[i].episode
   }
-  return `Episode ${media.airingSchedule?.nodes?.[0]?.episode} in`
+
+  return `Episode ${nodes[0].episode === lastEpisode ? `${nodes[0].episode}` : `${nodes[0].episode} ~ ${lastEpisode}`} in`
 }
 
 export function airingAt(media, variables) {
   if (variables?.hideSubs) {
     const entry = animeSchedule.dubAiring.value.find((entry) => entry.media?.media?.id === media.id)
-    if (entry?.delayedIndefinitely) return "Suspended"
+    if (entry?.delayedIndefinitely) return 'Suspended'
     const airingAt = entry?.media?.media?.airingSchedule?.nodes?.[0]?.airingAt
     return airingAt ? countdown((new Date(airingAt).getTime() / 1000) - Date.now() / 1000) : null
   }
