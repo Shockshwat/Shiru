@@ -2,7 +2,7 @@
   <div class='h-full bg-dark-light'>
     <div class='skeleloader-swipe img-cover h-full w-266'></div>
   </div>
-  <div class='h-full w-full px-20 py-15 d-flex flex-column'>
+  <div class='h-full w-full px-20 pt-15 d-flex flex-column'>
     <div class='w-full d-flex flex-row mb-20 mt-0 title'>
       <div class='skeloader episode-title w-full bg-dark-light h-25 rounded'>
         <div class='skeleloader-swipe'></div>
@@ -17,7 +17,7 @@
     <div class='skeloader n-description bg-dark-light w-full h-10 overflow-hidden rounded'>
       <div class='skeleloader-swipe'></div>
     </div>
-    <div class='skeloader description bg-dark-light w-full h-10 overflow-hidden rounded'>
+    <div class='skeloader n-description bg-dark-light w-full h-10 overflow-hidden rounded'>
       <div class='skeleloader-swipe'></div>
     </div>
     <div class='skeloader description bg-dark-light w-full h-10 overflow-hidden rounded'>
@@ -26,7 +26,7 @@
     <div class='skeloader description bg-dark-light w-full h-10 overflow-hidden rounded'>
       <div class='skeleloader-swipe'></div>
     </div>
-    <div class='skeloader bg-dark-light h-10 rounded pt-10 mt-20 date'>
+    <div class='skeloader bg-dark-light h-20 rounded mt-15 date'>
       <div class='skeleloader-swipe'></div>
     </div>
   </div>
@@ -39,6 +39,9 @@
   .w-30 {
     width: 3rem !important;
   }
+  .h-20 {
+    height: 2rem !important;
+  }
   .episode-title {
     max-width: 40rem !important;
     margin-right: 4rem;
@@ -50,8 +53,8 @@
     margin-top: 0.8rem;
     display: none;
   }
-  .date{
-    max-width: 10rem !important;
+  .date {
+    max-width: 30rem !important;
   }
 
   /* Behavior for narrow screens (mobile) */
@@ -66,7 +69,8 @@
       margin-top: .5rem !important;
     }
     .date {
-      margin-bottom: 3rem !important;
+      max-width: 100% !important;
+      margin-bottom: 1rem !important;
     }
     .img-cover {
       width: 100% !important;

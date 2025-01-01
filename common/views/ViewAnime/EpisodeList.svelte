@@ -28,7 +28,7 @@
 <script>
   import { since } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
-  import { afterUpdate, onDestroy } from 'svelte'
+  import { onDestroy } from 'svelte'
   import { episodeByAirDate } from '@/modules/extensions/index.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { liveAnimeProgress } from '@/modules/animeprogress.js'
@@ -153,11 +153,10 @@
 
   const animeProgress = liveAnimeProgress(id)
 
-  let maxEpisodes = 100
+  let maxEpisodes = 15
   let currentEpisodes = []
-  let container
-  function handleScroll() {
-    if (!container) return;
+  function handleScroll(event) {
+    const container = event.target
     if (currentEpisodes.length !== episodeList.length && container.scrollTop + container.clientHeight + 80 >= container.scrollHeight) {
       const nextBatch = episodeList.slice(currentEpisodes.length, currentEpisodes.length + maxEpisodes)
       currentEpisodes = [...new Set([...currentEpisodes, ...nextBatch])]
@@ -171,80 +170,96 @@
   })
 </script>
 
-<div bind:this={container} class='episode-list overflow-y-auto overflow-x-hidden' use:smoothScroll on:scroll={handleScroll}>
-  {#await (episodeLoad || mobileWait(() => episodeList?.length > 0 || !episodeList)?.then(() => episodeList))}
-    {#each Array.from({ length: Math.max(Math.min(episodeCount || 0, maxEpisodes), 1) }) as _}
-      <div class='w-full px-20 my-20 content-visibility-auto scale h-150'>
-        <EpisodeSkeletonCard />
-      </div>
-    {/each}
-  {:then _}
-    {#if episodeList}
-      {#each currentEpisodes as { episode, image, summary, rating, title, length, airdate, filler, dubAiring }, index}
-        {#await Promise.all([title, filler, dubAiring])}
-          {#each Array.from({ length: Math.min(episodeCount || 0, maxEpisodes) }) as _, index}
-            <div class='w-full px-20 content-visibility-auto scale h-150' class:my-20={!mobileList || index !== 0}>
-              <EpisodeSkeletonCard />
-            </div>
-          {/each}
-        {:then [title, filler, dubAiring]}
-          {@const completed = !watched && userProgress >= episode}
-          {@const target = userProgress + 1 === episode}
-          {@const hasFiller = filler?.filler || filler?.recap}
-          {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
-          <div class='w-full content-visibility-auto scale' class:my-20={!mobileList || index !== 0} class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target} class:h-150={image || summary}>
-            <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative' class:border={target || hasFiller} class:bg-black={completed} class:border-secondary={hasFiller} class:bg-dark={!completed} use:click={() => play(episode)}>
-              {#if image}
-                <div class='h-full'>
-                  <img alt='thumbnail' src={image} class='img-cover h-full' />
-                </div>
-              {/if}
-              {#if hasFiller}
-                <div class='position-absolute bottom-0 right-0 bg-secondary py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
-                  {filler?.filler ? 'Filler' : 'Recap'}
-                </div>
-              {/if}
-              <div class='h-full w-full px-20 py-15 d-flex flex-column'>
-                <div class='w-full d-flex flex-row mb-15'>
-                  <div class='text-white font-weight-bold font-size-16 overflow-hidden title'>
-                    {episode}. {title || 'Episode ' + episode}
-                  </div>
-                  {#if length}
-                    <div class='ml-auto pl-5'>
-                      {length}m
-                    </div>
-                  {/if}
-                </div>
-                {#if completed}
-                  <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
-                    <div class='progress-bar w-full' />
-                  </div>
-                {:else if progress}
-                  <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
-                    <div class='progress-bar' style='width: {progress}%' />
+<div class='episode-list overflow-y-auto overflow-x-hidden' use:smoothScroll on:scroll={handleScroll}>
+  {#await episodeCount}
+    <div class='w-full px-20 my-20 content-visibility-auto scale h-150'>
+      <EpisodeSkeletonCard />
+    </div>
+  {:then episodeCount}
+    {#await (episodeLoad || mobileWait(() => episodeList?.length > 0 || !episodeList)?.then(() => episodeList))}
+      {#each Array.from({ length: Math.max(Math.min(episodeCount || 0, maxEpisodes), 1) }) as _}
+        <div class='w-full px-20 my-20 content-visibility-auto scale h-150'>
+          <EpisodeSkeletonCard />
+        </div>
+      {/each}
+    {:then _}
+      {#if episodeList}
+        {#each currentEpisodes as { episode, image, summary, rating, title, length, airdate, filler, dubAiring}, index}
+          {#await Promise.all([title, filler, dubAiring])}
+            {#each Array.from({length: Math.min(episodeCount || 0, maxEpisodes)}) as _, index}
+              <div class='w-full px-20 content-visibility-auto scale h-150' class:my-20={!mobileList || index !== 0}>
+                <EpisodeSkeletonCard/>
+              </div>
+            {/each}
+          {:then [title, filler, dubAiring]}
+            {@const completed = !watched && userProgress >= episode}
+            {@const target = userProgress + 1 === episode}
+            {@const hasFiller = filler?.filler || filler?.recap}
+            {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
+            <div class='w-full content-visibility-auto scale' class:my-20={!mobileList || index !== 0}
+                 class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target}
+                 class:h-150={image || summary}>
+              <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative'
+                   class:border={target || hasFiller} class:bg-black={completed} class:border-secondary={hasFiller}
+                   class:bg-dark={!completed} use:click={() => play(episode)}>
+                {#if image}
+                  <div class='h-full'>
+                    <img alt='thumbnail' src={image} class='img-cover h-full'/>
                   </div>
                 {/if}
-                <div class='font-size-12 overflow-hidden'>
-                  {summary || ''}
-                </div>
-                <div class='pt-10 font-size-12 mt-auto'>
-                  {#if airdate}
-                    {since(new Date(airdate))}
-                  {/if}
-                </div>
-                <div class='pt-20 font-size-12 mt-auto'>
-                  {#if dubAiring}
-                    <div class='position-absolute bottom-0 left-0 {dubAiring.delayed ? `bg-danger` : `bg-secondary`} py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
-                      {dubAiring.text}
+                {#if hasFiller}
+                  <div class='position-absolute bottom-0 right-0 bg-secondary py-5 px-10 text-dark rounded-top rounded-left font-weight-bold'>
+                    {filler?.filler ? 'Filler' : 'Recap'}
+                  </div>
+                {/if}
+                <div class='h-full w-full px-20 pt-15 d-flex flex-column'>
+                  <div class='w-full d-flex flex-row mb-15'>
+                    <div class='text-white font-weight-bold font-size-16 overflow-hidden title'>
+                      {episode}. {title || 'Episode ' + episode}
+                    </div>
+                    {#if length}
+                      <div class='ml-auto pl-5'>
+                        {length}m
+                      </div>
+                    {/if}
+                  </div>
+                  {#if completed}
+                    <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
+                      <div class='progress-bar w-full'/>
+                    </div>
+                  {:else if progress}
+                    <div class='progress mb-15' style='height: 2px; min-height: 2px;'>
+                      <div class='progress-bar' style='width: {progress}%'/>
                     </div>
                   {/if}
+                  <div class='font-size-12 overflow-hidden'>
+                    {summary || ''}
+                  </div>
+                  <div class='font-size-12 mt-auto' class:pt-10={dubAiring} class:pt-15={!dubAiring} class:mb-5={dubAiring} class:mb-10={!dubAiring}>
+                    {#if dubAiring}
+                      <div class='d-flex flex-row date-row'>
+                        <div class='{dubAiring.delayed ? `bg-danger` : `bg-secondary`} py-5 px-10 text-dark text-nowrap rounded-top rounded-left font-weight-bold'>
+                          {dubAiring.text}
+                        </div>
+                        {#if airdate}
+                          <div class='ml-5 py-5 px-10 sub-color text-dark text-nowrap rounded-top rounded-left font-weight-bold'>
+                            Sub: {since(new Date(airdate))}
+                          </div>
+                        {/if}
+                      </div>
+                    {:else}
+                      {#if airdate}
+                        {since(new Date(airdate))}
+                      {/if}
+                    {/if}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        {/await}
-      {/each}
-    {/if}
+          {/await}
+        {/each}
+      {/if}
+    {/await}
   {/await}
 </div>
 
@@ -252,18 +267,25 @@
   .opacity-half {
     opacity: 30%;
   }
+  .episode-list {
+    max-height: 250rem;
+  }
   .title {
     display: -webkit-box !important;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
   }
+  .sub-color {
+    border-color: rgb(154, 72, 255) !important;
+    background-color: rgb(154, 72, 255) !important;
+  }
   .scale {
     transition: transform 0.2s ease;
   }
-  .scale:hover{
+  .scale:hover {
     transform: scale(1.04);
   }
-  .scale-target:hover{
+  .scale-target:hover {
     transform: scale(1.02) !important;
   }
   .border {
@@ -275,6 +297,9 @@
     }
     .scale {
       height: auto !important;
+    }
+    .date-row {
+      justify-content: center !important;
     }
     img {
       width: 100%;
