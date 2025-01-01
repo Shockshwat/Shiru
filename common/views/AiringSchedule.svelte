@@ -1,18 +1,17 @@
 <script context='module'>
   import SectionsManager from '@/modules/sections.js'
   import Search, { search } from './Search.svelte'
-  import { anilistClient, currentSeason, currentYear } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/anilist.js'
   import { animeSchedule } from '@/modules/animeschedule.js'
   import Helper from '@/modules/helper.js'
 
-  const vars = { scheduleList: true, format: 'TV', season: currentSeason, year: currentYear }
+  const vars = { scheduleList: true, format: 'TV' }
 
   async function fetchAllScheduleEntries (_variables) {
     const { season, year, status, ...variables } = _variables
     const results = { data: { Page: { media: [], pageInfo: { hasNextPage: false } } } }
-    const opts = { ...vars, ...SectionsManager.sanitiseObject(variables) }
-    const airingLists = await animeSchedule.dubAiringLists.value
-    const hideSubs = variables.hideSubs ? { idMal: airingLists.map(entry => entry.media?.media?.idMal).filter(idMal => idMal !== undefined) } : {}
+    const airingLists = await (variables.hideSubs ? animeSchedule.dubAiringLists.value : animeSchedule.subAiringLists.value)
+    const ids = { idMal: airingLists.map(entry => variables.hideSubs ? entry.media?.media?.idMal : entry.idMal).filter(idMal => idMal !== undefined) }
     const hideMyAnime = (variables.hideMyAnime && Helper.isAuthorized()) ? {[Helper.isAniAuth() ? 'id_not' : 'idMal_not']:
             await Helper.userLists(variables).then(res => {
                 if (!res?.data && res?.errors) throw res.errors[0]
@@ -20,19 +19,7 @@
                     ? Array.from(new Set(res.data.MediaListCollection.lists.filter(({ status }) => variables.hideStatus.includes(status)).flatMap(list => list.entries.map(({ media }) => media.id))))
                     : res.data.MediaList.filter(({ node }) => variables.hideStatus.includes(Helper.statusMap(node.my_list_status.status))).map(({ node }) => node.id)
             })} : {}
-    for (let page = 1, hasNextPage = true; hasNextPage && page < 5; ++page) {
-      const res = await anilistClient.search({ ...opts, ...hideSubs, ...hideMyAnime, page, perPage: 50 })
-      if (!res?.data && res?.errors) throw res.errors[0]
-      hasNextPage = res.data.Page.pageInfo.hasNextPage
-      results.data.Page.media = results.data.Page.media.concat(res.data.Page.media)
-    }
-    const seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL']
-    const schedule = !variables.hideSubs ? {
-        year: vars.season === 'WINTER' ? vars.year - 1 : vars.year,
-        season: seasons.at(seasons.indexOf(vars.season) - 1),
-        status: 'RELEASING'
-    } : {}
-    const res = await anilistClient.search({ ...hideSubs, ...hideMyAnime, ...SectionsManager.sanitiseObject(variables), ...schedule, page: 1, perPage: 50 })
+    const res = await anilistClient.searchAllIDS({ ...ids, ...hideMyAnime, ...SectionsManager.sanitiseObject(variables), page: 1, perPage: 50 })
     if (!res?.data && res?.errors) throw res.errors[0]
     results.data.Page.media = results.data.Page.media.concat(res.data.Page.media)
     if (variables.hideSubs) {
