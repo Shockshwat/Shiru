@@ -74,6 +74,7 @@
   let ended = false
   let volume = Number(localStorage.getItem(`volume_${cacheID}`)) || 1
   let playbackRate = 1
+  let externalPlayerReady = false
   $: localStorage.setItem(`volume_${cacheID}`, (volume || 0).toString())
   $: safeduration = (isFinite(duration) ? duration : currentTime) || 0
   $: {
@@ -195,6 +196,7 @@
         const duration = current.media?.media?.duration
         client.removeEventListener('externalWatched', watchedListener)
         watchedListener = ({ detail }) => {
+          externalPlayerReady = true
           checkCompletionByTime(detail, duration)
         }
         client.on('externalWatched', watchedListener)
@@ -990,10 +992,11 @@
 
   function checkCompletionByTime (currentTime, safeduration) {
     const fromend = Math.max(180, safeduration / 10)
-    if (safeduration && currentTime && video?.readyState && safeduration - fromend < currentTime) {
+    if (safeduration && currentTime && (video?.readyState || externalPlayerReady) && safeduration - fromend < currentTime) {
       if (media?.media?.episodes || media?.media?.nextAiringEpisode?.episode) {
         if (media.media.episodes || media.media.nextAiringEpisode?.episode > media.episode) {
           completed = true
+          externalPlayerReady = false
           Helper.updateEntry(media)
         }
       }
