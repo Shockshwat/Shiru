@@ -39,7 +39,7 @@
     {#if $page === 'schedule'}
       <div class='w-full text-center pb-10'>
         {#if airingAt(media, _variables)}
-          { episode(media) }&nbsp;
+          { episode(media, _variables) }&nbsp;
           <span class='font-weight-bold text-light'>
             {airingAt(media, _variables)}
           </span>

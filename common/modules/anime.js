@@ -10,7 +10,7 @@ import { search, key } from '@/views/Search.svelte'
 
 import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
 import { animeSchedule } from '@/modules/animeschedule.js'
-import {caches, settings, updateCache} from '@/modules/settings.js'
+import { caches, settings, updateCache } from '@/modules/settings.js'
 import Helper from '@/modules/helper.js'
 
 import { Drama, BookHeart, MountainSnow, Laugh, TriangleAlert, Droplets, FlaskConical, Ghost, Skull, HeartPulse, VolleyBall, Car, Brain, Footprints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
@@ -162,11 +162,9 @@ export async function getChaptersAniSkip (file, duration) {
 }
 
 export function getMediaMaxEp (media, playable) {
-  if (playable) {
-    return media.nextAiringEpisode?.episode - 1 || media.airingSchedule?.nodes?.[0]?.episode - 1 || media.episodes
-  } else {
-    return media.episodes || media.nextAiringEpisode?.episode - 1 || media.airingSchedule?.nodes?.[0]?.episode - 1
-  }
+  if (!media) return 0
+  if (playable) return media.nextAiringEpisode?.episode - 1 || nextAiring(media.airingSchedule?.nodes)?.episode - 1 || media.episodes
+  else return Math.max(media.airingSchedule?.nodes?.[media.airingSchedule?.nodes?.length - 1]?.episode || 0, media.streamingEpisodes?.length || 0, Number((/Episode (\d+) - (.*)/).exec(media.streamingEpisodes?.[0]?.title)?.[1]) || 0, media.episodes || 0, media.nextAiringEpisode?.episode || 0)
 }
 
 // utility method for correcting anitomyscript woes for what's needed
@@ -539,35 +537,41 @@ export async function getEpisodeMetadataForMedia (media) {
   return episodes
 }
 
-export function episode(media) {
-  const entry = animeSchedule.dubAiring.value.find(entry => entry.media?.media?.id === media.id)
-  const nodes = entry?.media?.media?.airingSchedule?.nodes
+export function episode(media, variables) {
+  const entry = variables?.hideSubs && animeSchedule.dubAiring.value?.find(entry => entry.media?.media?.id === media.id)
+  const nodes = variables?.hideSubs ? entry?.media?.media?.airingSchedule?.nodes : media?.airingSchedule?.nodes
 
   if (!nodes || nodes.length === 0) return `Episode 1 in`
   if (entry?.delayedIndefinitely && nodes[0]) return `Episode ${nodes[0].episode} is`
   if (nodes.length === 1) return `Episode ${nodes[0].episode} in`
 
+  let firstEpisode = nextAiring(nodes, variables)?.episode
   let lastEpisode = nodes[0].episode
   for (let i = 1; i < nodes.length; i++) {
-    if (new Date(nodes[i].airingAt).getTime() !== new Date(nodes[i - 1].airingAt).getTime()) {
+    if (new Date(nodes[i].airingAt).getTime() !== new Date(nodes[i - 1].airingAt).getTime() && new Date(variables?.hideSubs ? nodes[i].airingAt : (nodes[i].airingAt * 1000)) > new Date() && new Date(variables?.hideSubs ? nodes[i].airingAt : (nodes[i - 1].airingAt * 1000)) > new Date()) {
       lastEpisode = nodes[i - 1].episode
       break
     }
     if (i === nodes.length - 1) lastEpisode = nodes[i].episode
   }
 
-  return `Episode ${nodes[0].episode === lastEpisode ? `${nodes[0].episode}` : `${nodes[0].episode} ~ ${lastEpisode}`} in`
+  return `Episode ${firstEpisode === lastEpisode ? `${firstEpisode}` : `${firstEpisode} ~ ${lastEpisode}`} in`
 }
 
 export function airingAt(media, variables) {
   if (variables?.hideSubs) {
     const entry = animeSchedule.dubAiring.value.find((entry) => entry.media?.media?.id === media.id)
     if (entry?.delayedIndefinitely) return 'Suspended'
-    const airingAt = entry?.media?.media?.airingSchedule?.nodes?.[0]?.airingAt
+    const airingAt = nextAiring(entry?.media?.media?.airingSchedule?.nodes, variables)?.airingAt
     return airingAt ? countdown((new Date(airingAt).getTime() / 1000) - Date.now() / 1000) : null
   }
-  const airingAt = media.airingSchedule?.nodes?.[0]?.airingAt
+  const airingAt = nextAiring(media.airingSchedule?.nodes, variables)?.airingAt
   return airingAt ? countdown( (new Date(airingAt).getTime()) - Date.now() / 1000) : null
+}
+
+export function nextAiring(nodes, variables) {
+  const currentTime = new Date()
+  return nodes?.filter(node => new Date(variables?.hideSubs ? node.airingAt : (node.airingAt * 1000)) > currentTime)?.sort((a, b) => a.airingAt - b.airingAt)?.shift()
 }
 
 export async function getAniMappings(anilistID) {

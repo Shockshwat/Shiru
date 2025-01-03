@@ -5,7 +5,6 @@
   import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
   import { anilistClient } from '@/modules/anilist.js'
-  import { episodesList } from '@/modules/episodes.js'
   import { click } from '@/modules/click.js'
   import Details from '@/views/ViewAnime/Details.svelte'
   import EpisodeList from '@/views/ViewAnime/EpisodeList.svelte'
@@ -134,14 +133,6 @@
     IPC.emit('overlay-check')
   })
 
-  $: episodeCount = fetchEpisodes(media?.idMal)
-  async function fetchEpisodes(idMal) {
-    if (media && (!media.episodes || (media.episodes === 0))) {
-      const episodes = await episodesList.getEpisodeData(idMal)
-      return (episodes && episodes[episodes.length - 1]?.episode_id) || getMediaMaxEp(media)
-    } else if (media) return media.episodes
-  }
-
   let episodeList = []
   let episodeLoad
   $: if (episodeLoad) {
@@ -203,14 +194,11 @@
                     </div>
                   {/if}
                   {#if media.episodes !== 1}
+                    {@const maxEp = getMediaMaxEp(media)}
                     <div class='d-flex flex-row mt-10'>
                       <Clapperboard class='mx-10' size='2.2rem' />
                       <span class='mr-20'>
-                      {#await episodeCount}
-                        Episodes: {getMediaMaxEp(media) || media?.episodes || '?'}
-                      {:then episodes}
-                        Episodes: {getMediaMaxEp(media) || media?.episodes || episodes || '?'}
-                      {/await}
+                      Episodes: {maxEp && maxEp !== 0 ? maxEp : '?'}
                       </span>
                     </div>
                   {:else if media.duration}
@@ -292,7 +280,7 @@
               </div>
             {/if}
             <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden h-600 mt-20'>
-              <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} bind:episodeCount={episodeCount} {play} />
+              <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
             </div>
             <ToggleList list={ media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
                   const typeComparison = a.relationType.localeCompare(b.relationType)
@@ -332,7 +320,7 @@
           </div>
         </div>
         <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20 overflow-x-hidden' bind:this={rightColumn}>
-          <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} bind:episodeCount={episodeCount} {play} />
+          <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
         </div>
       </div>
       {/if}

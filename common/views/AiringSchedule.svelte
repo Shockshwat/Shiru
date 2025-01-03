@@ -2,6 +2,7 @@
   import SectionsManager from '@/modules/sections.js'
   import Search, { search } from './Search.svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import { nextAiring } from '@/modules/anime.js'
   import { animeSchedule } from '@/modules/animeschedule.js'
   import Helper from '@/modules/helper.js'
 
@@ -47,7 +48,7 @@
       })
     } else {
       // filter out entries without airing schedule and duplicates [only allow first occurrence], then sort entries from first airing to last airing.
-      results.data.Page.media = results.data.Page.media.filter((media, index, self) => media.airingSchedule?.nodes?.[0]?.airingAt && self.findIndex(m => m.id === media.id) === index).sort((a, b) => a.airingSchedule?.nodes?.[0]?.airingAt - b.airingSchedule?.nodes?.[0]?.airingAt)
+      results.data.Page.media = results.data.Page.media.filter((media, index, self) => nextAiring(media.airingSchedule?.nodes)?.airingAt && self.findIndex(m => m.id === media.id) === index).sort((a, b) => nextAiring(a.airingSchedule?.nodes)?.airingAt - nextAiring(b.airingSchedule?.nodes)?.airingAt)
     }
     return results
   }

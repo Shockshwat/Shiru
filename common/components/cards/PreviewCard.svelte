@@ -1,7 +1,6 @@
 <script>
-  import { formatMap, playMedia } from '@/modules/anime.js'
+  import { formatMap, getMediaMaxEp, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
-  import { episodesList } from '@/modules/episodes.js'
   import { click } from '@/modules/click.js'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
@@ -12,6 +11,8 @@
   export let media
   export let type = null
   export let variables
+
+  $: maxEp = getMediaMaxEp(media)
 
   let hide = true
 
@@ -44,19 +45,6 @@
   let muted = true
   function toggleMute () {
     muted = !muted
-  }
-
-  let episodeCount = 1
-  $: {
-    if (media && (!media.episodes || media.episodes === 0)) {
-      fetchEpisodes(media.idMal, media.status)
-    } else if (media) episodeCount = media.episodes
-  }
-  async function fetchEpisodes(idMal) {
-    const episodes = await episodesList.getEpisodeData(idMal)
-    if (episodes && ((new Date(episodes[episodes.length]?.aired) > new Date()) || !['RELEASING', 'NOT_YET_RELEASED'].includes(media.status))) {
-      episodeCount = episodes[episodes.length - 1]?.episode_id
-    } else episodeCount = null
   }
 </script>
 
@@ -129,16 +117,10 @@
           {formatMap[media.format]}
         {/if}
       </span>
-      {#if episodeCount !== 1}
-        {#if ['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress }
-            <span class='text-nowrap d-flex align-items-center'>
-              {media.mediaListEntry.progress} / {episodeCount || '?'} Episodes
-            </span>
-        {:else if episodeCount}
-            <span class='text-nowrap d-flex align-items-center'>
-              {episodeCount} Episodes
-            </span>
-        {/if}
+      {#if maxEp > 1 || (maxEp !== 1 && ['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress)}
+        <span class='text-nowrap d-flex align-items-center'>
+          {['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'} Episodes
+        </span>
       {:else if media.duration}
         <span class='text-nowrap d-flex align-items-center'>
           {media.duration + ' Minutes'}
