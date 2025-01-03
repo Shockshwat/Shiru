@@ -33,11 +33,6 @@ export default class App {
     height: 900,
     frame: process.platform === 'darwin', // Only keep the native frame on Mac
     titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#17191c',
-      symbolColor: '#eee',
-      height: 28
-    },
     backgroundColor: '#17191c',
     autoHideMenuBar: true,
     webPreferences: {
@@ -77,6 +72,11 @@ export default class App {
     this.mainWindow.on('closed', () => this.destroy())
     this.webtorrentWindow.on('closed', () => this.destroy())
     ipcMain.on('close', () => { this.close = true; this.destroy() })
+    ipcMain.on('minimize', () => this.mainWindow?.minimize())
+    ipcMain.on('maximize', () => {
+      const focusedWindow = this.mainWindow
+      focusedWindow?.isMaximized() ? focusedWindow.unmaximize() : focusedWindow.maximize()
+    })
 
     this.mainWindow.on('close', (event) => {
       if (!this.close) {
