@@ -30,9 +30,8 @@
 <script>
   import { since } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
-  import { onDestroy } from 'svelte'
+  import { onMount, onDestroy } from 'svelte'
   import { episodeByAirDate } from '@/modules/extensions/index.js'
-  import { anilistClient } from '@/modules/anilist.js'
   import { liveAnimeProgress } from '@/modules/animeprogress.js'
   import { episodesList } from '@/modules/episodes.js'
   import { getAniMappings } from '@/modules/anime.js'
@@ -150,6 +149,15 @@
     else currentEpisodes = [...episodeList]?.reverse()?.slice(0, maxEpisodes)
   }
 
+  let container
+  function renderVisible() {
+    if (!container || container.scrollHeight === 0 || container.clientHeight === 0) return
+    if (currentEpisodes.length !== episodeList.length && !(container.scrollHeight > container.clientHeight)) {
+      const nextBatch = (episodeOrder ? episodeList : [...episodeList]?.reverse())?.slice(currentEpisodes.length, currentEpisodes.length + maxEpisodes)
+      currentEpisodes = [...new Set([...currentEpisodes, ...nextBatch])]
+    }
+  }
+
   function mobileWait(condition, interval = 1000) {
     if (mobileWaiting) return mobileList ? mobileWaiting : null
     mobileWaiting = new Promise(resolve => setTimeout(resolve, 1000))
@@ -165,6 +173,12 @@
     return mobileWaiting
   }
 
+  onMount(() => {
+    setInterval(() => {
+      if (!mobileList && episodeList?.length > maxEpisodes) renderVisible()
+    }, 100)
+  })
+
   onDestroy(() => {
     mobileWaiting = null
     episodeList = []
@@ -172,7 +186,7 @@
   })
 </script>
 
-<div class='episode-list overflow-y-auto overflow-x-hidden' use:smoothScroll on:scroll={handleScroll}>
+<div bind:this={container} class='episode-list overflow-y-auto overflow-x-hidden' use:smoothScroll on:scroll={handleScroll}>
   {#await (episodeLoad || mobileWait(() => episodeList?.length > 0 || !episodeList)?.then(() => episodeList))}
     {#each Array.from({ length: Math.max(Math.min(episodeCount || 0, maxEpisodes), 1) }) as _}
       <div class='w-full px-20 my-20 content-visibility-auto scale h-150'>
@@ -193,12 +207,8 @@
           {@const target = userProgress + 1 === episode}
           {@const hasFiller = filler?.filler || filler?.recap}
           {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
-          <div class='w-full content-visibility-auto scale' class:my-20={!mobileList || index !== 0}
-               class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target}
-               class:h-150={image || summary}>
-            <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative'
-                 class:border={target || hasFiller} class:bg-black={completed} class:border-secondary={hasFiller}
-                 class:bg-dark={!completed} use:click={() => play(episode)}>
+          <div class='w-full content-visibility-auto scale' class:my-20={!mobileList || index !== 0} class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target} class:h-150={image || summary}>
+            <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative' class:border={target || hasFiller} class:bg-black={completed} class:border-secondary={hasFiller} class:bg-dark={!completed} use:click={() => play(episode)}>
               {#if image}
                 <div class='h-full'>
                   <img alt='thumbnail' src={image} class='img-cover h-full'/>
@@ -264,9 +274,6 @@
 <style>
   .opacity-half {
     opacity: 30%;
-  }
-  .episode-list {
-    max-height: 150rem;
   }
   .title {
     display: -webkit-box !important;
