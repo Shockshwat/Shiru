@@ -54,8 +54,8 @@ importers:
         specifier: ^5.0.2
         version: 5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0)
       webtorrent:
-        specifier: ^2.4.11
-        version: 2.4.11
+        specifier: ^2.5.11
+        version: 2.5.11
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20240222.0
@@ -141,7 +141,7 @@ importers:
         version: 4.1.5
       webpack-cli:
         specifier: ^5.1.4
-        version: 5.1.4(webpack-dev-server@5.0.2)(webpack@5.93.0)
+        version: 5.1.4(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0)
       webpack-merge:
         specifier: ^6.0.1
         version: 6.0.1
@@ -1070,11 +1070,8 @@ packages:
   '@thaunknown/ani-resourced@1.0.3':
     resolution: {integrity: sha512-flrfEMbSwwdhu+5wVsMgX0tGG+njCtAQ4jnA7ywjLNhSil/KirlzN34q3l0lKCnitFJgp1vOoHNCgkkkMWQ85Q==}
 
-  '@thaunknown/idb-chunk-store@1.0.4':
-    resolution: {integrity: sha512-4/XDQZHKHyJCGeqnVjHyqeAXClZJ9l90rRvoTslUiuvwTGAUpIb3poL0LfGJEdSuWV+zzGdDjIm/3L4x6crwbg==}
-
-  '@thaunknown/simple-peer@10.0.9':
-    resolution: {integrity: sha512-oS+iZWrMp/kd0pygyCAoZYYWoZCshKbjFLRuyRH58zYJ/Yyjzksgwj1g+m6wHY7pznl2+cKXttuLDD9Td4QXWA==}
+  '@thaunknown/simple-peer@10.0.11':
+    resolution: {integrity: sha512-A5MdmtZ6HUzRa4gwPOS4jG+09HvpTv2rFo4kk7Vwveo2ELm+WmbO124ZrJrQnZc2D7z2Q3AWKSitjl9OKXO88g==}
 
   '@thaunknown/simple-peer@9.12.1':
     resolution: {integrity: sha512-IS5BXvXx7cvBAzaxqotJf4s4rJCPk5JABLK6Gbnn7oAmWVcH4hYABabBBrvvJtv/xyUqR4v/H3LalnGRJJfEog==}
@@ -1668,8 +1665,8 @@ packages:
     resolution: {integrity: sha512-kUTatQb/mBd8uhvdLrUkouGDBUQiJaIOvPlptUwOWp6MFqih4d1MiVf0m3ATxfZSzu+LjW/awFeABltYa62uIA==}
     engines: {node: '>=8'}
 
-  bittorrent-dht@11.0.6:
-    resolution: {integrity: sha512-iDScIyLDKuuXOSIlPIxnvzH3llqatVkugjn3CSPPpjcHO+4dyahHiiPRpzR39k4l9qW79YAbI/AzSjNWoLchHQ==}
+  bittorrent-dht@11.0.9:
+    resolution: {integrity: sha512-aM6m9zvIGi8lMANaxUWcF3yytUxloUCc4gzqa0SOvo22FyeNDHecOXccw6FIZyk4I0IN9KDCj7We+n+RpqnYgg==}
     engines: {node: '>=12.20.0'}
 
   bittorrent-lsd@2.0.0:
@@ -1679,8 +1676,8 @@ packages:
   bittorrent-peerid@1.3.6:
     resolution: {integrity: sha512-VyLcUjVMEOdSpHaCG/7odvCdLbAB1y3l9A2V6WIje24uV7FkJPrQrH/RrlFmKxP89pFVDEnE+YlHaFujlFIZsg==}
 
-  bittorrent-protocol@4.1.13:
-    resolution: {integrity: sha512-tUF8HBy/CwexDgEiFmmgWx7RCXC02gc72ZEoFxdRnqraZBUVFN611hYLfB/zArlhFeaUErfJZOa8CWtrDeXQsA==}
+  bittorrent-protocol@4.1.16:
+    resolution: {integrity: sha512-93t8h77uAyD8BGSpBo8SqxYyKBA/xgv9N8+WghnXpH2I+JmlmJmddUt8nugPRgj/LNuL1VrWJ26jhYhiVWpRaQ==}
     engines: {node: '>=12.20.0'}
 
   bittorrent-tracker@10.0.12:
@@ -1688,8 +1685,8 @@ packages:
     engines: {node: '>=12.20.0'}
     hasBin: true
 
-  bittorrent-tracker@11.1.2:
-    resolution: {integrity: sha512-mzINNIJ3FjNBcqQPKPQoxpNzzqEVfbBohwdVxblaOKGQVxagMzipCWwbxiAt+J35WC3xs1wFeCDUXpzQ3TBA+A==}
+  bittorrent-tracker@11.2.0:
+    resolution: {integrity: sha512-OldLpVVevCCgPzarDOHB7jc3Au/NApNCXyFluQM4P0B3xZgyNUZtTDrnpge6u4LV5g6pvIFahDuIdk4sP1U+Hg==}
     engines: {node: '>=16.0.0'}
     hasBin: true
 
@@ -2164,8 +2161,8 @@ packages:
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
 
-  create-torrent@6.0.17:
-    resolution: {integrity: sha512-GGrNP1mu3WSyJHyo+x6AnJlQWW7bbyUfoEDFfo/U2kpeTVYRCgWdQC4/sq4oreltpMTEP8UUB3U3niHIgLU/gQ==}
+  create-torrent@6.0.18:
+    resolution: {integrity: sha512-rN1y6A0pnM/ijMcUfbcmAGFGjegtc76TpVsleOWLxxm6hkjbx2q2F0zN4u3LDweAzd6hM6sQySNgFEGZA1geCQ==}
     engines: {node: '>=12'}
     hasBin: true
 
@@ -2272,8 +2269,8 @@ packages:
       supports-color:
         optional: true
 
-  debug@4.3.5:
-    resolution: {integrity: sha512-pt0bNEmneDIvdL1Xsd9oDQ/wrQRkXDT4AUWlNZNPKvW5x/jyO9VFXkJUP07vQ2upmw5PlaITaPKc31jK13V+jg==}
+  debug@4.3.6:
+    resolution: {integrity: sha512-O/09Bd4Z1fBrU4VzkhFqVgpPzaGbw6Sm9FEkBT1A/YBXQFGuuSxa1dN2nxgxS34JmKXqYx8CZAwEVoJFImUXIg==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -2281,8 +2278,8 @@ packages:
       supports-color:
         optional: true
 
-  debug@4.3.6:
-    resolution: {integrity: sha512-O/09Bd4Z1fBrU4VzkhFqVgpPzaGbw6Sm9FEkBT1A/YBXQFGuuSxa1dN2nxgxS34JmKXqYx8CZAwEVoJFImUXIg==}
+  debug@4.4.0:
+    resolution: {integrity: sha512-6WTZ/IxCY/T6BALoZHaE4ctp9xm+Z5kY/pzYaCHRFeyVhojxlrm+46y68HA6hr0TcwEssoxNiDEUJQjfPZ/RYA==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -2961,8 +2958,8 @@ packages:
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  fsa-chunk-store@1.1.5:
-    resolution: {integrity: sha512-+3G6d/syYrw4tGJCivHWjtTKNeP7rOXfX1wgnwzsu81CVHKVOah74XxGdlRHRrMTN5dU15lWbnhgtRsBop3V5A==}
+  fsa-chunk-store@1.3.0:
+    resolution: {integrity: sha512-0WCfuxqqSB6Tz/g7Ar/nwAxMoigXaIXuvfrnLIEFYIA9uc6w9eNaHuBGzU1X3lyM4cpLKCOTUmKAA/gCiTvzMQ==}
 
   fsctl@2.0.0:
     resolution: {integrity: sha512-TbWp5Iz1HEcg76mWIoGScYiTFIM1iTe0cRN0hdwUfd4IgpvgWB0forIrmDXJHfBpV2aQ/qOjnh7RZ0azQKLlyw==}
@@ -3253,9 +3250,6 @@ packages:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
 
-  hybrid-chunk-store@1.2.6:
-    resolution: {integrity: sha512-D8DkY6FT+exjw4b6uQ8z5QfUokcIb0YYPHaa/zpBdFIoS1CS7mjM4wnd2mGoo2XUeM5Y10C23AXOQRExoifPbA==}
-
   hyperdyperid@1.2.0:
     resolution: {integrity: sha512-Y93lCzHYgGWdrJ66yIktxiaGULYc6oGiABxhcO5AufBeOyoIdZF7bIfLaOrbM0iGIOXQQgxxRrFEnb+Y6w1n4A==}
     engines: {node: '>=10.18'}
@@ -3278,9 +3272,6 @@ packages:
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.1.0
-
-  idb@7.1.1:
-    resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -3781,8 +3772,8 @@ packages:
     resolution: {integrity: sha512-5OUtoiVIGU4VXBOshidmtOsvBIvcQR6FD/RzWSvaeHyxCGB+PCUCu+52lqMfdc0h/2CLvHhZS4TwUmMQrrMbBQ==}
     engines: {node: '>= 0.4.0'}
 
-  lt_donthave@2.0.1:
-    resolution: {integrity: sha512-GhiKG7CGTXzOQq56tIx40Ae26EbrgBq1owuuPqgCTaJDQYO1qW5G+YGaurOLx7s+Aaeta8MputrVFDr0kuiogg==}
+  lt_donthave@2.0.4:
+    resolution: {integrity: sha512-VIKjdxflF8+6vFb3t8LQ4czRYvw6OyxPLDr5YV5qOieu4qwl0wX2DA18WyaHJjBKyKSHXvdo1JcrrUag5MmMiA==}
     engines: {node: '>=12.20.0'}
 
   lucide-svelte@0.455.0:
@@ -4071,8 +4062,8 @@ packages:
   node-addon-api@6.1.0:
     resolution: {integrity: sha512-+eawOlIgy680F0kBzPUNFhMZGtJ1YmqM6l4+Crf4IkImjYrO/mqPwRMh352g23uIaQKFItcQ64I7KMaJxHgAVA==}
 
-  node-datachannel@0.9.1:
-    resolution: {integrity: sha512-b6Uc6YN5We2/aZA6QGicxSdWUDSwlR+vcO/Dn44BY5gieF3AOwsL/zPD+Ril+1KvYDwVJkVbRIovbG76E4PpwA==}
+  node-datachannel@0.12.0:
+    resolution: {integrity: sha512-pZ9FsVZpHdUKqyWynuCc9IBLkZPJMpDzpNk4YNPCizbIXHYifpYeWqSF35REHGIWi9JMCf11QzapsyQGo/Y4Ig==}
     engines: {node: '>=16.0.0'}
 
   node-domexception@1.0.0:
@@ -4663,6 +4654,9 @@ packages:
   pump@3.0.0:
     resolution: {integrity: sha512-LwZy+p3SFs1Pytd/jYct4wpv49HiYCqd9Rlc5ZVdk0V+8Yzv6jR5Blk3TRmPL1ft69TxP0IMZGJ+WPFU2BFhww==}
 
+  pump@3.0.2:
+    resolution: {integrity: sha512-tUPXtzlGM8FE3P0ZL6DVs/3P58k9nk8/jZeQCurTJylQA8qFYzHFfhBJkuqyE0FifOsQ0uKWekiZ5g8wtr28cw==}
+
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
@@ -5198,11 +5192,11 @@ packages:
     resolution: {integrity: sha512-uyQK/mx5QjHun80FLJTfaWE7JtwfRMKBLkMne6udYOmvH0CawotVa7TfgYHzAnpphn4+TweIx1QKMnRIbipmUg==}
     engines: {node: '>= 0.10.0'}
 
-  streamx@2.17.0:
-    resolution: {integrity: sha512-mzRXEeafEA0skX5XLiDht/zdIqEVs4kgayUTFHDoMjiaZ2kC7DoFsQDJVXRILI2Qme/kWXxLpuU6P0B+xcXpFA==}
-
   streamx@2.18.0:
     resolution: {integrity: sha512-LLUC1TWdjVdn1weXGcSxyTR3T4+acB6tVGXT95y0nGbca4t4o/ng1wKAGTljm9VicuCVLvRlqFYXYy5GwgM7sQ==}
+
+  streamx@2.20.2:
+    resolution: {integrity: sha512-aDGDLU+j9tJcUdPGOaHmVF1u/hhI+CsGkT02V3OKlHDV7IukOI+nTWAGkiZEKCO35rWN1wIr4tS7YFr1f4qSvA==}
 
   string-width@4.2.3:
     resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
@@ -5508,8 +5502,8 @@ packages:
     resolution: {integrity: sha512-6udB24Q737UD/SDsKAHI9FCRP7Bqc9D/MQUV02ORQg5iskjtLJlZJNdN4kKtcdtwCeWIwIHDGaUsTsCCAa8sFQ==}
     engines: {node: '>=10'}
 
-  torrent-discovery@11.0.6:
-    resolution: {integrity: sha512-9gnsBZLuOzbWlTIv0lx3pjmZ2Bj4WZfY06iO9AXKiNxA7/k508CWIE80PojYsgsR9SyjDkIVfnHLyJOgnDycvQ==}
+  torrent-discovery@11.0.14:
+    resolution: {integrity: sha512-qkSRkV7y5SsaYS2dQ/qVXXaaPWO6A8t96SOpcZr1OA/cefVodmwSQNVqYKYzMIQ2RA7Mbxr7A5RF/A6Lp2roTQ==}
     engines: {node: '>=16.0.0'}
 
   torrent-piece@3.0.0:
@@ -5900,8 +5894,8 @@ packages:
       webpack-cli:
         optional: true
 
-  webrtc-polyfill@1.1.6:
-    resolution: {integrity: sha512-sB9m4P5ZF6Af1zNiMc/jW+PMVtvPSRuE3f0FNhje5iplljZ5mAUTUtZTdaoi+l5Z17/ePQinJbNDfT+YzB6fdQ==}
+  webrtc-polyfill@1.1.10:
+    resolution: {integrity: sha512-sOn0bj3/noUdzQX7rvk0jFbBurqWDGGo2ipl+WfgoOe/x3cxbGLk/ZUY+WHCISSlLaIeBumi1X3wxQZnUESExQ==}
     engines: {node: '>=16.0.0'}
 
   websocket-driver@0.7.4:
@@ -5912,8 +5906,8 @@ packages:
     resolution: {integrity: sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==}
     engines: {node: '>=0.8.0'}
 
-  webtorrent@2.4.11:
-    resolution: {integrity: sha512-aRq8gJTm7JGuGgBggitv+o5QZ8vGS64un3Sx3MPl9eBPbhDRKyYKouPUh4NIJqNAPvUBIOGu6nB1IOjcJ5wUhw==}
+  webtorrent@2.5.11:
+    resolution: {integrity: sha512-Yg1uTpabopjH9zk/pAsapDgPA3aaVT5+u0AK02Jfvz3ILvO9GFfDzG4ty1X5+ZDs9mJZZwCm96bDBDiMjfdwrw==}
     engines: {node: '>=16'}
 
   whatwg-fetch@3.6.20:
@@ -6971,7 +6965,7 @@ snapshots:
     dependencies:
       chrome-dgram: 3.0.6
       cross-fetch-ponyfill: 1.0.3
-      debug: 4.3.6
+      debug: 4.4.0
       default-gateway: 6.0.3
       unordered-array-remove: 1.0.2
       xml2js: 0.6.2
@@ -7038,18 +7032,13 @@ snapshots:
 
   '@thaunknown/ani-resourced@1.0.3': {}
 
-  '@thaunknown/idb-chunk-store@1.0.4':
+  '@thaunknown/simple-peer@10.0.11':
     dependencies:
-      idb: 7.1.1
-      queue-microtask: 1.2.3
-
-  '@thaunknown/simple-peer@10.0.9':
-    dependencies:
-      debug: 4.3.6
+      debug: 4.4.0
       err-code: 3.0.1
-      streamx: 2.18.0
+      streamx: 2.20.2
       uint8-util: 2.2.5
-      webrtc-polyfill: 1.1.6
+      webrtc-polyfill: 1.1.10
     transitivePeerDependencies:
       - supports-color
 
@@ -7429,7 +7418,7 @@ snapshots:
   '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.93.0)':
     dependencies:
       webpack: 5.93.0(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-dev-server@5.0.2)(webpack@5.93.0)
+      webpack-cli: 5.1.4(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0)
 
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.91.0)':
     dependencies:
@@ -7439,19 +7428,19 @@ snapshots:
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.93.0)':
     dependencies:
       webpack: 5.93.0(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-dev-server@5.0.2)(webpack@5.93.0)
+      webpack-cli: 5.1.4(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0)
+
+  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0)':
+    dependencies:
+      webpack: 5.93.0(webpack-cli@5.1.4)
+      webpack-cli: 5.1.4(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0)
+    optionalDependencies:
+      webpack-dev-server: 5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0)
 
   '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.0.2)(webpack@5.91.0)':
     dependencies:
       webpack: 5.91.0(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack-dev-server@5.0.2)(webpack@5.91.0)
-    optionalDependencies:
-      webpack-dev-server: 5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0)
-
-  '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.0.2)(webpack@5.93.0)':
-    dependencies:
-      webpack: 5.93.0(webpack-cli@5.1.4)
-      webpack-cli: 5.1.4(webpack-dev-server@5.0.2)(webpack@5.93.0)
     optionalDependencies:
       webpack-dev-server: 5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0)
 
@@ -7806,10 +7795,10 @@ snapshots:
 
   bitfield@4.2.0: {}
 
-  bittorrent-dht@11.0.6:
+  bittorrent-dht@11.0.9:
     dependencies:
       bencode: 4.0.0
-      debug: 4.3.6
+      debug: 4.4.0
       k-bucket: 5.1.0
       k-rpc: 5.1.0
       last-one-wins: 1.0.4
@@ -7822,19 +7811,19 @@ snapshots:
   bittorrent-lsd@2.0.0:
     dependencies:
       chrome-dgram: 3.0.6
-      debug: 4.3.6
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
   bittorrent-peerid@1.3.6: {}
 
-  bittorrent-protocol@4.1.13:
+  bittorrent-protocol@4.1.16:
     dependencies:
       bencode: 4.0.0
       bitfield: 4.2.0
-      debug: 4.3.6
+      debug: 4.4.0
       rc4: 0.1.5
-      streamx: 2.18.0
+      streamx: 2.20.2
       throughput: 1.0.1
       uint8-util: 2.2.5
       unordered-array-remove: 1.0.2
@@ -7871,16 +7860,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  bittorrent-tracker@11.1.2:
+  bittorrent-tracker@11.2.0:
     dependencies:
-      '@thaunknown/simple-peer': 10.0.9
+      '@thaunknown/simple-peer': 10.0.11
       '@thaunknown/simple-websocket': 9.1.3(bufferutil@4.0.8)(utf-8-validate@6.0.4)
       bencode: 4.0.0
       bittorrent-peerid: 1.3.6
       chrome-dgram: 3.0.6
       compact2string: 1.4.1
       cross-fetch-ponyfill: 1.0.3
-      debug: 4.3.6
+      debug: 4.4.0
       ip: 2.0.1
       lru: 3.1.0
       minimist: 1.2.8
@@ -8485,7 +8474,7 @@ snapshots:
 
   create-require@1.1.1: {}
 
-  create-torrent@6.0.17:
+  create-torrent@6.0.18:
     dependencies:
       bencode: 4.0.0
       block-iterator: 1.1.1
@@ -8603,13 +8592,13 @@ snapshots:
     dependencies:
       ms: 2.1.2
 
-  debug@4.3.5:
-    dependencies:
-      ms: 2.1.2
-
   debug@4.3.6:
     dependencies:
       ms: 2.1.2
+
+  debug@4.4.0:
+    dependencies:
+      ms: 2.1.3
 
   decamelize-keys@1.1.1:
     dependencies:
@@ -9481,7 +9470,7 @@ snapshots:
 
   fs.realpath@1.0.0: {}
 
-  fsa-chunk-store@1.1.5:
+  fsa-chunk-store@1.3.0:
     dependencies:
       filename-reserved-regex: 3.0.0
 
@@ -9839,13 +9828,6 @@ snapshots:
 
   human-signals@2.1.0: {}
 
-  hybrid-chunk-store@1.2.6:
-    dependencies:
-      '@thaunknown/idb-chunk-store': 1.0.4
-      cache-chunk-store: 3.2.2
-      fsa-chunk-store: 1.1.5
-      memory-chunk-store: 1.3.5
-
   hyperdyperid@1.2.0: {}
 
   iconv-corefoundation@1.1.7:
@@ -9865,8 +9847,6 @@ snapshots:
   icss-utils@5.1.0(postcss@8.4.38):
     dependencies:
       postcss: 8.4.38
-
-  idb@7.1.1: {}
 
   ieee754@1.2.1: {}
 
@@ -10316,9 +10296,9 @@ snapshots:
     dependencies:
       inherits: 2.0.4
 
-  lt_donthave@2.0.1:
+  lt_donthave@2.0.4:
     dependencies:
-      debug: 4.3.6
+      debug: 4.4.0
       unordered-array-remove: 1.0.2
     transitivePeerDependencies:
       - supports-color
@@ -10600,7 +10580,7 @@ snapshots:
 
   node-addon-api@6.1.0: {}
 
-  node-datachannel@0.9.1:
+  node-datachannel@0.12.0:
     dependencies:
       node-domexception: 2.0.1
       prebuild-install: 7.1.2
@@ -11078,6 +11058,11 @@ snapshots:
   pstree.remy@1.1.8: {}
 
   pump@3.0.0:
+    dependencies:
+      end-of-stream: 1.4.4
+      once: 1.4.0
+
+  pump@3.0.2:
     dependencies:
       end-of-stream: 1.4.4
       once: 1.4.0
@@ -11679,7 +11664,7 @@ snapshots:
   speed-limiter@1.0.2:
     dependencies:
       limiter: 1.1.5
-      streamx: 2.18.0
+      streamx: 2.20.2
 
   split2@3.2.2:
     dependencies:
@@ -11705,14 +11690,15 @@ snapshots:
 
   stream-buffers@2.2.0: {}
 
-  streamx@2.17.0:
+  streamx@2.18.0:
     dependencies:
       fast-fifo: 1.3.2
       queue-tick: 1.0.1
+      text-decoder: 1.1.0
     optionalDependencies:
       bare-events: 2.4.2
 
-  streamx@2.18.0:
+  streamx@2.20.2:
     dependencies:
       fast-fifo: 1.3.2
       queue-tick: 1.0.1
@@ -12050,12 +12036,12 @@ snapshots:
       '@tokenizer/token': 0.3.0
       ieee754: 1.2.1
 
-  torrent-discovery@11.0.6:
+  torrent-discovery@11.0.14:
     dependencies:
-      bittorrent-dht: 11.0.6
+      bittorrent-dht: 11.0.9
       bittorrent-lsd: 2.0.0
-      bittorrent-tracker: 11.1.2
-      debug: 4.3.6
+      bittorrent-tracker: 11.2.0
+      debug: 4.4.0
       run-parallel: 1.2.0
     transitivePeerDependencies:
       - supports-color
@@ -12264,7 +12250,7 @@ snapshots:
     dependencies:
       bencode: 4.0.0
       bitfield: 4.2.0
-      debug: 4.3.6
+      debug: 4.4.0
       uint8-util: 2.2.5
     transitivePeerDependencies:
       - supports-color
@@ -12365,6 +12351,25 @@ snapshots:
   webidl-conversions@4.0.2:
     optional: true
 
+  webpack-cli@5.1.4(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0):
+    dependencies:
+      '@discoveryjs/json-ext': 0.5.7
+      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4)(webpack@5.93.0)
+      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4)(webpack@5.93.0)
+      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0)
+      colorette: 2.0.20
+      commander: 10.0.1
+      cross-spawn: 7.0.3
+      envinfo: 7.13.0
+      fastest-levenshtein: 1.0.16
+      import-local: 3.2.0
+      interpret: 3.1.1
+      rechoir: 0.8.0
+      webpack: 5.93.0(webpack-cli@5.1.4)
+      webpack-merge: 5.10.0
+    optionalDependencies:
+      webpack-dev-server: 5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0)
+
   webpack-cli@5.1.4(webpack-dev-server@5.0.2)(webpack@5.91.0):
     dependencies:
       '@discoveryjs/json-ext': 0.5.7
@@ -12380,25 +12385,6 @@ snapshots:
       interpret: 3.1.1
       rechoir: 0.8.0
       webpack: 5.91.0(webpack-cli@5.1.4)
-      webpack-merge: 5.10.0
-    optionalDependencies:
-      webpack-dev-server: 5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0)
-
-  webpack-cli@5.1.4(webpack-dev-server@5.0.2)(webpack@5.93.0):
-    dependencies:
-      '@discoveryjs/json-ext': 0.5.7
-      '@webpack-cli/configtest': 2.1.1(webpack-cli@5.1.4)(webpack@5.93.0)
-      '@webpack-cli/info': 2.0.2(webpack-cli@5.1.4)(webpack@5.93.0)
-      '@webpack-cli/serve': 2.0.5(webpack-cli@5.1.4)(webpack-dev-server@5.0.2)(webpack@5.93.0)
-      colorette: 2.0.20
-      commander: 10.0.1
-      cross-spawn: 7.0.3
-      envinfo: 7.13.0
-      fastest-levenshtein: 1.0.16
-      import-local: 3.2.0
-      interpret: 3.1.1
-      rechoir: 0.8.0
-      webpack: 5.93.0(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
     optionalDependencies:
       webpack-dev-server: 5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0)
@@ -12529,15 +12515,15 @@ snapshots:
       watchpack: 2.4.2
       webpack-sources: 3.2.3
     optionalDependencies:
-      webpack-cli: 5.1.4(webpack-dev-server@5.0.2)(webpack@5.93.0)
+      webpack-cli: 5.1.4(webpack-dev-server@5.0.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.93.0)
     transitivePeerDependencies:
       - '@swc/core'
       - esbuild
       - uglify-js
 
-  webrtc-polyfill@1.1.6:
+  webrtc-polyfill@1.1.10:
     dependencies:
-      node-datachannel: 0.9.1
+      node-datachannel: 0.12.0
       node-domexception: 1.0.0
 
   websocket-driver@0.7.4:
@@ -12548,42 +12534,42 @@ snapshots:
 
   websocket-extensions@0.1.4: {}
 
-  webtorrent@2.4.11:
+  webtorrent@2.5.11:
     dependencies:
       '@silentbot1/nat-api': 0.4.7
-      '@thaunknown/simple-peer': 10.0.9
+      '@thaunknown/simple-peer': 10.0.11
       '@webtorrent/http-node': 1.3.0
       addr-to-ip-port: 2.0.0
       bitfield: 4.2.0
-      bittorrent-dht: 11.0.6
-      bittorrent-protocol: 4.1.13
+      bittorrent-dht: 11.0.9
+      bittorrent-protocol: 4.1.16
       cache-chunk-store: 3.2.2
       chunk-store-iterator: 1.0.3
       cpus: 1.0.3
-      create-torrent: 6.0.17
+      create-torrent: 6.0.18
       cross-fetch-ponyfill: 1.0.3
-      debug: 4.3.5
+      debug: 4.4.0
       escape-html: 1.0.3
       fs-chunk-store: 4.1.0
-      hybrid-chunk-store: 1.2.6
+      fsa-chunk-store: 1.3.0
       immediate-chunk-store: 2.2.0
       join-async-iterator: 1.1.1
       load-ip-set: 3.0.1
-      lt_donthave: 2.0.1
+      lt_donthave: 2.0.4
       memory-chunk-store: 1.3.5
       mime: 3.0.0
       once: 1.4.0
       parse-torrent: 11.0.17
-      pump: 3.0.0
+      pump: 3.0.2
       queue-microtask: 1.2.3
       random-iterate: 1.0.1
       range-parser: 1.2.1
       run-parallel: 1.2.0
       run-parallel-limit: 1.1.0
       speed-limiter: 1.0.2
-      streamx: 2.17.0
+      streamx: 2.20.2
       throughput: 1.0.1
-      torrent-discovery: 11.0.6
+      torrent-discovery: 11.0.14
       torrent-piece: 3.0.0
       uint8-util: 2.2.5
       unordered-array-remove: 1.0.2
