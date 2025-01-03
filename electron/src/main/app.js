@@ -78,6 +78,11 @@ export default class App {
       focusedWindow?.isMaximized() ? focusedWindow.unmaximize() : focusedWindow.maximize()
     })
 
+    ipcMain.on('close-prompt', () => {
+      this.showAndFocus()
+      this.mainWindow.webContents.send('window-close')
+    })
+
     this.mainWindow.on('close', (event) => {
       if (!this.close) {
         event.preventDefault()
