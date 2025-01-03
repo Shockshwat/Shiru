@@ -1276,11 +1276,11 @@
     <!-- miniplayer buttons -->
     <div class='d-flex align-items-center position-relative' style='width: 100%'>
       {#if hasLast}
-        <span class='icon ctrl position-absolute' style='left: 20%' title='Last [B]' data-name='playPause' use:click={playLast}>
+        <span class='icon ctrl position-absolute rounded-10' style='left: 20%' title='Last [B]' data-name='playPause' use:click={playLast}>
           <SkipBack size='3rem' fill='white' />
         </span>
       {/if}
-      <span class='icon ctrl position-absolute' data-name='playPause' style='left: 50%; margin-left: -3rem;' use:click={playPause}>
+      <span class='icon ctrl position-absolute rounded-10' data-name='playPause' style='left: 50%; margin-left: -3rem;' use:click={playPause}>
         {#if ended}
           <RotateCw size='3rem' />
         {:else}
@@ -1292,7 +1292,7 @@
         {/if}
       </span>
       {#if hasNext}
-        <span class='icon ctrl position-absolute' style='right: 20%' title='Next [N]' data-name='playPause' use:click={playNext}>
+        <span class='icon ctrl position-absolute rounded-10' style='right: 20%' title='Next [N]' data-name='playPause' use:click={playNext}>
           <SkipForward size='3rem' fill='white' />
         </span>
       {/if}
@@ -1734,6 +1734,9 @@
 
   .h-20 {
     height: 2rem
+  }
+  .rounded-10 {
+    border-radius: 1rem;
   }
 
   .bottom .ts {
