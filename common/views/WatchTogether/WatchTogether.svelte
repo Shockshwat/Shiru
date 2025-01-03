@@ -71,7 +71,7 @@
     <div class='d-flex flex-row flex-wrap justify-content-center align-items-center h-full mb-20 pb-20 root position-relative w-full'>
       <div class='card d-flex flex-column align-items-center w-300 h-300 justify-content-end'>
         <Plus size='6rem' class='d-flex align-items-center h-full' />
-        <button class='btn btn-primary btn-lg mt-10 btn-block' type='button' use:click={() => joinLobby()}>Create Lobby</button>
+        <button class='btn btn-primary btn-lg mt-10 btn-block text-center' type='button' use:click={() => joinLobby()}>Create Lobby</button>
       </div>
       <div class='card d-flex flex-column align-items-center w-300 h-300 justify-content-end'>
         <UserPlus size='6rem' class='d-flex align-items-center h-full' />

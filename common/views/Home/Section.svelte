@@ -47,8 +47,8 @@
 
 <span class='d-flex px-20 align-items-end text-decoration-none' class:mv-10={lastEpisode} use:deferredLoad>
   <div class='font-size-24 font-weight-semi-bold glow text-muted pointer' use:click={_click}>{opts.title}</div>
-  <div class='ml-auto pr-5 pl-5 pt-5 font-size-12 glow text-muted pointer btn' use:click={() => scrollCarousel('left')}><ChevronLeft strokeWidth='3' size='2rem' /></div>
-  <div class='pr-5 pl-5 pt-5 ml-10 font-size-12 glow text-muted pointer btn' use:click={() => scrollCarousel('right')}><ChevronRight strokeWidth='3' size='2rem' /></div>
+  <div class='ml-auto pr-5 pl-5 font-size-12 glow text-muted pointer btn d-flex align-items-center justify-content-center' use:click={() => scrollCarousel('left')}><ChevronLeft strokeWidth='3' size='2rem' /></div>
+  <div class='pr-5 pl-5 ml-10 font-size-12 glow text-muted pointer btn d-flex align-items-center justify-content-center' use:click={() => scrollCarousel('right')}><ChevronRight strokeWidth='3' size='2rem' /></div>
 </span>
 <div class='position-relative'>
   <div class='pb-10 w-full d-flex flex-row justify-content-start gallery' bind:this={scrollContainer}>

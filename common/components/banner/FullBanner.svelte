@@ -96,7 +96,7 @@
     {/each}
   </div>
   <div class='d-flex flex-row pb-10 w-600 mw-full'>
-    <button class='btn bg-dark-light px-20 shadow-none border-0'
+    <button class='btn bg-dark-light px-20 shadow-none border-0 text-center'
       use:click={() => playMedia(current)}>
       Watch Now
     </button>

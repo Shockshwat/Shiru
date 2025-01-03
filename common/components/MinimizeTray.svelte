@@ -54,7 +54,7 @@
     <div class='modal-dialog' on:pointerup|self={close} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
       <div class='modal-content w-600 d-flex flex-column'>
         <div class='d-flex justify-content-between align-items-start w-auto'>
-          <button type='button' class='btn btn-square text-white font-size-24 font-weight-bold ml-auto' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
+          <button type='button' class='btn btn-square ml-auto d-flex align-items-center justify-content-center' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
         </div>
         <h3 class='mb-0 text-center'>Are You Sure You Want To Quit?</h3>
         <p class='mt-1 text-center text-wrap'>Shiru can be minimized to the system tray instead, useful if you want to receive notifications and seed torrents.</p>
@@ -69,13 +69,13 @@
             <span class='mr-10 d-flex align-items-center'>
               <Minimize2 size='1.7rem' />
             </span>
-            <span class='align-middle mr-5'>Minimize</span>
+            <span class='align-middle mr-5 text-center'>Minimize</span>
           </button>
           <button type='button' class='btn btn-danger d-flex justify-content-center align-items-center w-130' on:click={closeWindow}>
             <span class='mr-10 d-flex align-items-center'>
               <SquareX size='1.7rem' />
             </span>
-            <span class='align-middle mr-5'>Close</span>
+            <span class='align-middle mr-5 text-center'>Close</span>
           </button>
         </div>
       </div>

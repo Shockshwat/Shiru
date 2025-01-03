@@ -176,7 +176,7 @@
     <div
       class='input-group w-300 mw-full'>
       <div class='input-group-prepend'>
-        <button type='button' use:click={handleExecutable} class='btn btn-primary input-group-append'>Select Executable</button>
+        <button type='button' use:click={handleExecutable} class='btn btn-primary input-group-append text-center'>Select Executable</button>
       </div>
       <input type='url' class='form-control bg-dark' readonly value={settings.playerPath} />
     </div>

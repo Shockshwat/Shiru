@@ -105,7 +105,7 @@
     </div>
   </div>
 {/each}
-<button type='button' class='btn btn-primary' disabled={allowedHomeSections.every(([title]) => homeSections.some(([existingTitle]) => existingTitle === title))} use:click={() => { const remainingSections = allowedHomeSections.filter(([title]) => !homeSections.some(([existingTitle]) => existingTitle === title)); if (remainingSections.length > 0) homeSections = [...homeSections, remainingSections[Math.floor(Math.random() * remainingSections.length)]] }}>Add Section</button>
+<button type='button' class='btn btn-primary text-center' disabled={allowedHomeSections.every(([title]) => homeSections.some(([existingTitle]) => existingTitle === title))} use:click={() => { const remainingSections = allowedHomeSections.filter(([title]) => !homeSections.some(([existingTitle]) => existingTitle === title)); if (remainingSections.length > 0) homeSections = [...homeSections, remainingSections[Math.floor(Math.random() * remainingSections.length)]] }}>Add Section</button>
 
 <style>
   .w-509 {

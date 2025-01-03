@@ -4,6 +4,7 @@
   import { anilistClient } from '@/modules/anilist.js'
   import { sanitiseTerms } from './TorrentCard.svelte'
   import { click } from '@/modules/click.js'
+  import { X } from 'lucide-svelte'
   import getResultsFromExtensions from '@/modules/extensions/index.js'
   import Debug from 'debug'
 
@@ -146,7 +147,7 @@
 <div class='w-full bg-very-dark position-sticky top-0 z-10 pt-20 px-30'>
   <div class='d-flex'>
     <h3 class='mb-10 font-weight-bold text-white'>Find Torrents</h3>
-    <button class='btn btn-square rounded-circle ml-auto pointer' type='button' use:click={close}> &times; </button>
+    <button type='button' class='btn btn-square ml-auto d-flex align-items-center justify-content-center' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
   </div>
   <div class='metadata-container d-flex flex-wrap ml-20 mr-20'>
     <h4 class='mb-10 text-light'>Auto-Selected Torrent {$settings.rssAutoplay ? `[${countdown}]` : ''}</h4>

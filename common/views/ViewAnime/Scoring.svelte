@@ -4,7 +4,7 @@
   import { click } from '@/modules/click.js'
   import { writable } from 'svelte/store'
   import { toast } from 'svelte-sonner'
-  import { Bookmark, PencilLine } from 'lucide-svelte'
+  import { X, Bookmark, PencilLine } from 'lucide-svelte'
   import Helper from '@/modules/helper.js'
   import Debug from 'debug'
 
@@ -208,7 +208,7 @@
   <div bind:this={modal} class='modal scoring position-absolute bg-dark shadow-lg rounded-3 p-20 z-30 {$showModal ? "visible" : "invisible"} {!previewAnime && !viewAnime ? "banner w-auto h-auto" : (!previewAnime ? "viewAnime w-auto h-auto" : "previewAnime")}' use:click={() => {}}>
     <div class='d-flex justify-content-between align-items-center mb-2'>
       <h5 class='font-weight-bold'>List Editor</h5>
-      <button type='button' class='btn btn-square mb-20 text-white font-size-24 font-weight-bold' use:click={() => toggleModal({ toggle: false })}>&times;</button>
+      <button type='button' class='btn btn-square d-flex align-items-center justify-content-center' use:click={() => toggleModal({ toggle: false })}><X size='1.7rem' strokeWidth='3'/></button>
     </div>
     <div class='modal-body'>
       <div class='form-group mb-15'>
@@ -246,9 +246,9 @@
     </div>
     <div class='d-flex justify-content-center'>
       {#if !status.includes('NOT IN LIST') && media.mediaListEntry}
-        <button type='button' class='btn btn-delete btn-secondary text-dark mr-20 font-weight-bold shadow-none' use:click={() => toggleModal({ delete: true })}>Delete</button>
+        <button type='button' class='btn btn-delete btn-secondary text-dark mr-20 font-weight-bold shadow-none text-center' use:click={() => toggleModal({ delete: true })}>Delete</button>
       {/if}
-      <button type='button' class='btn btn-save btn-secondary text-dark font-weight-bold shadow-none' use:click={() => toggleModal({ save: true })}>Save</button>
+      <button type='button' class='btn btn-save btn-secondary text-dark font-weight-bold shadow-none text-center' use:click={() => toggleModal({ save: true })}>Save</button>
     </div>
   </div>
 {/if}

@@ -119,9 +119,7 @@
       <div class='modal-content mw-500 w-auto bg-transparent d-flex justify-content-center align-items-center pt-20 pb-20' class:h-full={currentNotifications.length > 0}>
         <div class='modal-content mw-500 w-auto d-flex justify-content-center flex-column' class:h-full={currentNotifications.length > 0}>
           <div class='d-flex justify-content-end align-items-start w-auto'>
-            <button type='button' class='btn btn-square text-white font-size-24 font-weight-bold' on:click={close}>
-              <X size='1.7rem' strokeWidth='3'/>
-            </button>
+            <button type='button' class='btn btn-square d-flex align-items-center justify-content-center' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
           </div>
           <div class='notification-list mt-10 overflow-y-auto h-auto' class:mh-350={currentNotifications.length > 0} use:smoothScroll on:scroll={handleScroll}>
             {#each currentNotifications as notification, index}

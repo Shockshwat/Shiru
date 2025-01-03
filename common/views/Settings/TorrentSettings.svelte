@@ -66,7 +66,7 @@
     <div class='input-group w-400 mw-full'>
       <input placeholder='Enter extension URL or NPM name' type='url' class='form-control w-400 bg-dark mw-full' bind:value={extensionUrl} />
       <div class='input-group-append'>
-        <button class='btn btn-primary' type='button' use:click={addExtension}>Add</button>
+        <button class='btn btn-primary text-center' type='button' use:click={addExtension}>Add</button>
       </div>
     </div>
     <div class='w-full d-flex flex-column pt-10'>
@@ -144,7 +144,7 @@
 <SettingCard title='Torrent Download Location' description='Path to the folder used to store torrents. By default this is the TMP folder, which might lose data when your OS tries to reclaim storage.  {SUPPORTS.isAndroid ? "RESTART IS REQUIRED. /sdcard/ is internal storage, not external SD Cards. /storage/AB12-34CD/ is external storage, not internal. Thank you Android!" : ""}'>
   <div class='input-group w-300 mw-full'>
     <div class='input-group-prepend'>
-      <button type='button' use:click={handleFolder} class='btn btn-primary input-group-append'>Select Folder</button>
+      <button type='button' use:click={handleFolder} class='btn btn-primary input-group-append text-center'>Select Folder</button>
     </div>
     {#if !SUPPORTS.isAndroid}
       <input type='url' class='form-control bg-dark' readonly bind:value={settings.torrentPathNew} placeholder='/tmp' />

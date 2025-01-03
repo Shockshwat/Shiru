@@ -110,27 +110,27 @@
 </SettingCard>
 
 <SettingCard title='App and Device Info' description='Copy app and device debug info and capabilities, such as GPU information, GPU capabilities, version information and settings to clipboard.'>
-  <button type='button' use:click={() => IPC.emit('get-device-info')} class='btn btn-primary'>Copy To Clipboard</button>
+  <button type='button' use:click={() => IPC.emit('get-device-info')} class='btn btn-primary text-center'>Copy To Clipboard</button>
 </SettingCard>
 
 {#if !SUPPORTS.isAndroid}
   <SettingCard title='Log Output' description='Copy debug logs to clipboard. Once you enable a logging level you can use this to quickly copy the created logs to clipboard instead of navigating to the log file in directories.'>
-    <button type='button' use:click={() => IPC.emit('get-log-contents')} class='btn btn-primary'>Copy To Clipboard</button>
+    <button type='button' use:click={() => IPC.emit('get-log-contents')} class='btn btn-primary text-center'>Copy To Clipboard</button>
   </SettingCard>
 
   <SettingCard title='Open Torrent Devtools' description="Open devtools for the detached torrent process, this allows to inspect code execution and memory. DO NOT PASTE ANY CODE IN THERE, YOU'RE LIKELY BEING SCAMMED IF SOMEONE TELLS YOU TO!">
-    <button type='button' use:click={() => IPC.emit('torrent-devtools')} class='btn btn-primary'>Open Devtools</button>
+    <button type='button' use:click={() => IPC.emit('torrent-devtools')} class='btn btn-primary text-center'>Open Devtools</button>
   </SettingCard>
 
   <SettingCard title='Open UI Devtools' description="Open devtools for the UI process, this allows to inspect media playback information, rendering performance and more. DO NOT PASTE ANY CODE IN THERE, YOU'RE LIKELY BEING SCAMMED IF SOMEONE TELLS YOU TO!">
-    <button type='button' use:click={() => IPC.emit('ui-devtools')} class='btn btn-primary'>Open Devtools</button>
+    <button type='button' use:click={() => IPC.emit('ui-devtools')} class='btn btn-primary text-center'>Open Devtools</button>
   </SettingCard>
 {/if}
 <SettingCard title='Reset Notifications' description="Resets all notifications that have been cached, this is not recommended unless you are experiencing issues. This will also reset the last time you have been notified, so expect previous notifications to appear again.">
-  <button type='button' use:click={() => resetNotifications()} class='btn btn-primary'>Reset Notifications</button>
+  <button type='button' use:click={() => resetNotifications()} class='btn btn-primary text-center'>Reset Notifications</button>
 </SettingCard>
 <SettingCard title='Reset Caches' description="Resets everything the app has cached, this is not recommended unless you are experiencing issues. Caching increases load times and decreases down time. This does not reset the notifications cache.">
-  <button type='button' use:click={() => resetCaches()} class='btn btn-primary'>Reset Caches</button>
+  <button type='button' use:click={() => resetCaches()} class='btn btn-primary text-center'>Reset Caches</button>
 </SettingCard>
 
 <h4 class='mb-10 font-weight-bold'>App Settings</h4>
@@ -154,24 +154,10 @@
 </SettingCard>
 
 <div class='d-inline-flex flex-column'>
-  <button use:click={importSettings} class='btn btn-primary mt-10' type='button'>
-    Import Settings From Clipboard
-  </button>
-  <button use:click={exportSettings} class='btn btn-primary mt-10' type='button'>
-    Export Settings To Clipboard
-  </button>
+  <button use:click={importSettings} class='btn btn-primary mt-10 text-center' type='button'>Import Settings From Clipboard</button>
+  <button use:click={exportSettings} class='btn btn-primary mt-10 text-center' type='button'>Export Settings To Clipboard</button>
   {#if SUPPORTS.update}
-    <button use:click={checkUpdate} class='btn btn-primary mt-10' type='button'>
-      Check For Updates
-    </button>
+    <button use:click={checkUpdate} class='btn btn-primary mt-10 text-center' type='button'>Check For Updates</button>
   {/if}
-  <button
-    use:click={restoreSettings}
-    class='btn btn-danger mt-10'
-    type='button'
-    data-toggle='tooltip'
-    data-placement='top'
-    data-title='Restores All Settings Back To Their Recommended Defaults'>
-    Restore Default Settings
-  </button>
+  <button use:click={restoreSettings} class='btn btn-danger mt-10 text-center' type='button' data-toggle='tooltip' data-placement='top' data-title='Restores All Settings Back To Their Recommended Defaults'>Restore Default Settings</button>
 </div>
