@@ -3,6 +3,7 @@
   import { click } from '@/modules/click.js'
   import IPC from '@/modules/ipc.js'
   import { ExternalLink } from 'lucide-svelte'
+  import ToggleTitle from '@/views/ViewAnime/ToggleTitle.svelte'
   import Helper from '@/modules/helper.js'
 
   /** @type {import('@/modules/al.d.ts').Media} */
@@ -18,16 +19,15 @@
 {#await following then res}
   {@const following = [...new Map(res?.data?.Page?.mediaList.filter(item => !Helper.isAuthorized() || item.user.id !== Helper.getUser().id).map(item => [item.user.name, item])).values()]}
   {#if following?.length}
-    <span class='d-flex align-items-end pointer' use:click={toggleList}>
-    <div class='w-full d-flex flex-row align-items-center pt-20 mt-10'>
-      <hr class='w-full' />
-      <div class='title position-absolute font-size-18 font-weight-semi-bold px-20 text-white'>Following</div>
-      <hr class='w-full' />
-      {#if following.length > 4}
-        <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>{showMore ? 'Show Less' : 'Show More'}</div>
-      {/if}
-    </div>
-  </span>
+    {#if following.length > 4}
+      <span class='d-flex align-items-end pointer' use:click={toggleList}>
+        <ToggleTitle size={following.length} title={'Following'} showMore={showMore}></ToggleTitle>
+      </span>
+    {:else}
+      <span class='d-flex align-items-end'>
+        <ToggleTitle size={following.length} title={'Following'} showMore={showMore}></ToggleTitle>
+      </span>
+    {/if}
     <div class='px-15 pt-5 flex-column'>
       {#each following.slice(0, showMore ? 100 : 4) as friend}
         <div class='d-flex align-items-center w-full pt-20 font-size-16'>
@@ -42,13 +42,3 @@
     </div>
   {/if}
 {/await}
-
-<style>
-  .title {
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  .more:hover {
-    color: var(--dm-link-text-color-hover) !important;
-  }
-</style>

@@ -151,7 +151,7 @@
   </div>
   <div class='metadata-container d-flex flex-wrap ml-20 mr-20'>
     <h4 class='mb-10 text-light'>Auto-Selected Torrent {$settings.rssAutoplay ? `[${countdown}]` : ''}</h4>
-    <div class='preferred-audio d-flex align-items-center ml-auto'>
+    <div class='preferred-audio d-flex align-items-center ml-auto mb-5'>
       <span class='text-nowrap'>Preferred Audio Language</span>
       <select class='form-control w-120 bg-dark ml-10' bind:value={$settings.audioLanguage}>
         <option value='jpn' selected>Japanese</option>
