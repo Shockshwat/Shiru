@@ -164,7 +164,7 @@
                       {:else if notification.format === 'MOVIE'}
                         <span class='badge badge-episode mr-5'>Movie</span>
                       {:else if !notification.season}
-                        <span class='badge badge-episode mr-5'>Episode {notification.episode}</span>
+                        <span class='badge badge-episode mr-5'>{notification.episode ? `Episode ${notification.episode}` : `Batch`} </span>
                       {:else if notification.season}
                       <span class='badge badge-episode mr-5'>Season {notification.episode}</span>
                       {/if}
