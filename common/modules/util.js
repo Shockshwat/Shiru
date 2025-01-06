@@ -149,12 +149,14 @@ export function matchPhrase(search, phrase, threshold) {
   phrase = Array.isArray(phrase) ? phrase : [phrase]
 
   for (let p of phrase) {
-    const normalizedPhrase = p.toLowerCase().replace(/[^\w\s]/g, '')
-    if (normalizedSearch.includes(normalizedPhrase)) return true
+    if (p) {
+      const normalizedPhrase = p.toLowerCase().replace(/[^\w\s]/g, '')
+      if (normalizedSearch.includes(normalizedPhrase)) return true
 
-    const wordsInFileName = normalizedSearch.split(/\s+/)
-    for (let word of wordsInFileName) {
-      if (levenshtein(word, normalizedPhrase) <= threshold) return true
+      const wordsInFileName = normalizedSearch.split(/\s+/)
+      for (let word of wordsInFileName) {
+        if (levenshtein(word, normalizedPhrase) <= threshold) return true
+      }
     }
   }
   return false

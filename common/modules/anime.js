@@ -163,8 +163,8 @@ export async function getChaptersAniSkip (file, duration) {
 
 export function getMediaMaxEp (media, playable) {
   if (!media) return 0
-  if (playable) return media.nextAiringEpisode?.episode - 1 || nextAiring(media.airingSchedule?.nodes)?.episode - 1 || media.episodes
-  else return Math.max(media.airingSchedule?.nodes?.[media.airingSchedule?.nodes?.length - 1]?.episode || 0, media.streamingEpisodes?.length || 0, Number((/Episode (\d+) - (.*)/).exec(media.streamingEpisodes?.[0]?.title)?.[1]) || 0, media.episodes || 0, media.nextAiringEpisode?.episode || 0)
+  else if (playable) return media.nextAiringEpisode?.episode - 1 || nextAiring(media.airingSchedule?.nodes)?.episode - 1 || media.episodes
+  else return Math.max(media.airingSchedule?.nodes?.[media.airingSchedule?.nodes?.length - 1]?.episode || 0, (!media.streamingEpisodes ? 0 : media.streamingEpisodes.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) : false}).length), media.status !== 'FINISHED' && Number((/Episode (\d+) - (.*)/).exec(media.streamingEpisodes?.[0]?.title)?.[1]) || 0, media.episodes || 0, media.nextAiringEpisode?.episode || 0)
 }
 
 // utility method for correcting anitomyscript woes for what's needed

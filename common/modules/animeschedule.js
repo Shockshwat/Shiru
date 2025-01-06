@@ -74,11 +74,9 @@ class AnimeSchedule {
             const cachedMedia = anilistClient.mediaCache.value[media?.id]
             const notify = (!cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes(cachedMedia?.mediaListEntry?.status))
             if (notify && media.format !== 'MUSIC') {
-                const delayDate = new Date(entry?.delayedUntil)
-                delayDate.setMinutes(Math.floor(delayDate.getMinutes() / 10) * 10)
                 const details = {
                     title: anilistClient.title(media),
-                    message: `Episode ${entry.episodeNumber} has been delayed until ` + (entry?.delayedIndefinitely && !entry.status?.toUpperCase()?.includes('FINISHED') ? 'further notice, production has been suspended' : entry.delayedIndefinitely ? 'further notice, this is determined to be a partial dub so this episode will likely not be dubbed' : (delayDate.toLocaleString('en-US', {
+                    message: `Episode ${entry.episodeNumber} has been delayed until ` + (entry?.delayedIndefinitely && !entry.status?.toUpperCase()?.includes('FINISHED') ? 'further notice, production has been suspended' : entry.delayedIndefinitely ? 'further notice, this is determined to be a partial dub so this episode will likely not be dubbed' : (new Date(entry?.delayedUntil).toLocaleString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'short',
@@ -144,11 +142,9 @@ class AnimeSchedule {
                     }
                     const notify = settings.value[key] === 'all' || isFollowing()
                     if (notify && media.format !== 'MUSIC') {
-                        const announcedDate = new Date(type === 'Dub' ? media?.airingSchedule?.nodes?.[0]?.airingAt : media?.airingSchedule?.nodes?.[0]?.airingAt * 1000)
-                        announcedDate.setMinutes(Math.floor(announcedDate.getMinutes() / 10) * 10)
                         const details = {
                             title: anilistClient.title(media),
-                            message: `${type === 'Dub' ? 'A dub has just been' : 'Was recently'} announced for ` + (announcedDate.toLocaleString('en-US', {
+                            message: `${type === 'Dub' ? 'A dub has just been' : 'Was recently'} announced for ` + (new Date(type === 'Dub' ? media?.airingSchedule?.nodes?.[0]?.airingAt : media?.airingSchedule?.nodes?.[0]?.airingAt * 1000).toLocaleString('en-US', {
                                 weekday: 'long',
                                 year: 'numeric',
                                 month: 'short',

@@ -1,5 +1,4 @@
 <script>
-    import { onMount } from 'svelte'
     import { settings } from '@/modules/settings.js'
     import { malDubs } from '@/modules/animedubs.js'
     import { writable } from 'svelte/store'
@@ -16,6 +15,12 @@
     let isDubbed = writable(false)
     let isPartial = writable(false)
 
+    $: {
+        if (!example && media) {
+            setLabel()
+        }
+    }
+
     function setLabel() {
         const dubLists = malDubs.dubLists.value
         if (media?.idMal && dubLists?.dubbed) {
@@ -24,12 +29,6 @@
             isPartial.set(episodeOrMedia && dubLists.incomplete.includes(media.idMal))
         }
     }
-
-    onMount(() => {
-        if (!example) {
-            setLabel()
-        }
-    })
 </script>
 
 {#if !banner && !viewAnime && !example}

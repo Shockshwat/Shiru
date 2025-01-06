@@ -150,7 +150,7 @@
                       <MailCheck size='1.7rem' strokeWidth='3'/>
                     {/if}
                   </button>
-                  <p class='font-size-12 mb-0'>{notification.message}</p>
+                  <p class='font-size-12 mb-0 mr-5'>{notification.message}</p>
                   <div class='d-flex justify-content-between align-items-center'>
                     <p class='font-size-10 text-muted mt-0 mb-0'>{since(new Date(notification.timestamp * 1000))}</p>
                     <div>

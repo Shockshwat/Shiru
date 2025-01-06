@@ -46,6 +46,8 @@
   }
   let modal
   let container = null
+  let scrollTags = null
+  let scrollGenres = null
   let mediaList = []
   $: media = anilistClient.mediaCache.value[$view?.id] || $view
   $: recommendations = media && anilistClient.recommendations({ id: media.id })
@@ -54,6 +56,12 @@
     return searchIDS.length > 0 ? anilistClient.searchAllIDS({ page: 1, perPage: 50, id: searchIDS }) : Promise.resolve([])
   })()
   $: media && (modal?.focus(), overlay = 'viewanime', saveMedia(), (container && container.dispatchEvent(new Event('scrolltop'))))
+  $: {
+    if (media) {
+      if (scrollTags) scrollTags.scrollLeft = 0
+      if (scrollGenres) scrollGenres.scrollLeft = 0
+    }
+  }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
@@ -248,14 +256,14 @@
               </div>
             </div>
             <Details {media} alt={recommendations} />
-            <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
+            <div bind:this={scrollTags} class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
               {#each media.tags as tag}
                 <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'>
                   <Hash class='mr-5' size='1.8rem' /><span class='font-weight-bolder'>{tag.name}</span><span class='font-weight-light'>: {tag.rank}%</span>
                 </div>
-            {/each}
+              {/each}
             </div>
-            <div class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
+            <div bind:this={scrollGenres} class='m-0 px-20 pb-0 pt-10 d-flex flex-row text-nowrap overflow-x-scroll text-capitalize align-items-start'>
               {#each media.genres as genre}
                 <div class='bg-dark px-20 py-10 mr-10 rounded text-nowrap d-flex align-items-center select-all'><svelte:component this={genreIcons[genre]} class='mr-5' size='1.8rem' /> {genre}</div> <!-- || Drama-->
               {/each}

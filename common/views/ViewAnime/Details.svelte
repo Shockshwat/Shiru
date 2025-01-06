@@ -4,6 +4,11 @@
   export let media = null
   export let alt = null
 
+  let scrollDetails
+  $: {
+    if (media && scrollDetails) scrollDetails.scrollLeft = 0
+  }
+
   const detailsMap = [
     { property: 'season', label: 'Season', icon: CalendarRange, custom: 'property' },
     { property: 'status', label: 'Status', icon: MonitorPlay },
@@ -45,7 +50,7 @@
   }
 </script>
 
-<div class='card m-0 px-20 pb-0 pt-10 d-flex flex-row overflow-x-scroll text-capitalize align-items-start'>
+<div bind:this={scrollDetails} class='card m-0 px-20 pb-0 pt-10 d-flex flex-row overflow-x-scroll text-capitalize align-items-start'>
   {#each detailsMap as detail}
     {@const property = getProperty(detail.property, media)}
     {#if property}

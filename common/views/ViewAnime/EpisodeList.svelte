@@ -28,7 +28,7 @@
 </script>
 
 <script>
-  import { since } from '@/modules/util.js'
+  import { since, matchPhrase } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
   import { onMount, onDestroy } from 'svelte'
   import { episodeByAirDate } from '@/modules/extensions/index.js'
@@ -120,16 +120,32 @@
       }
     }
 
+    let lastValidAirDate = null
     for (const { episode, title: oldTitle, airingAt, filler, dubAiring } of alEpisodes) {
       const airingPromise = await airingAt
-      const alDate = new Date(typeof airingPromise === 'number' ? (airingPromise || 0) * 1000 : (airingPromise || 0))
+      const alDate = airingPromise && new Date(typeof airingPromise === 'number' ? (airingPromise || 0) * 1000 : (airingPromise || 0))
+
       // validate by air date if the anime has specials AND doesn't have matching episode count
       const needsValidation = !(!specialCount || (media.episodes && media.episodes === newEpisodeCount && episodes && episodes[Number(episode)]))
       const { image, summary, rating, title: newTitle, length, airdate } = needsValidation ? episodeByAirDate(null, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
       const streamingTitle = !media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === (media?.episodes + 1)) && media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === episode && episodeRx.exec(ep.title)[2] && !episodeRx.exec(ep.title)[2].toLowerCase().trim().startsWith('episode'))
       const title = episodeRx.exec(streamingTitle?.title)?.[2] || newTitle?.en || oldTitle?.en || (await episodesList.getSingleEpisode(idMal, episode))?.title
 
-      episodeList[episode - 1] = { episode, image, summary, rating, title, length: length || duration, airdate: +alDate || airdate, airingAt: +alDate || airdate, filler, dubAiring }
+      // fix any weird dates when maintainers are lazy.
+      const fallbackAirDate = airdate ? new Date(airdate) : null
+      let validatedAiringAt = lastValidAirDate ? ((alDate || fallbackAirDate) >= lastValidAirDate) || (((alDate || fallbackAirDate)?.getDate() >= lastValidAirDate.getDate()) && ((alDate || fallbackAirDate)?.getMonth() >= lastValidAirDate.getMonth())) ? (alDate || fallbackAirDate) : null : (alDate || fallbackAirDate)
+      if (!validatedAiringAt) {
+        const scheduledEntry = media?.airingSchedule?.nodes.find((entry) => entry.episode === episode)
+        const scheduledDate = scheduledEntry ? new Date(scheduledEntry.airingAt * 1000) : null
+        validatedAiringAt = ((scheduledDate >= lastValidAirDate) || (scheduledDate?.getDate() >= lastValidAirDate.getDate() && scheduledDate?.getMonth() >= lastValidAirDate.getMonth())) ? scheduledDate : null;
+        if (validatedAiringAt) {
+          lastValidAirDate = validatedAiringAt
+        }
+      } else {
+        lastValidAirDate = validatedAiringAt
+      }
+
+      episodeList[episode - 1] = { episode, image: episodeList.some((ep) => ep.image === image) ? null : image, summary: episodeList.some((ep) => ep.summary === summary), rating, title, length: length || duration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
     }
 
     currentEpisodes = episodeList?.slice(0, maxEpisodes)
@@ -207,6 +223,7 @@
           {@const target = userProgress + 1 === episode}
           {@const hasFiller = filler?.filler || filler?.recap}
           {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
+          {@const resolvedTitle = episodeList.filter((ep) => ep.episode < episode).some((ep) => matchPhrase(ep.title, title, 0.1)) ? null : title}
           <div class='w-full content-visibility-auto scale' class:my-20={!mobileList || index !== 0} class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target} class:h-150={image || summary}>
             <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative' class:border={target || hasFiller} class:bg-black={completed} class:border-secondary={hasFiller} class:bg-dark={!completed} use:click={() => play(episode)}>
               {#if image}
@@ -222,7 +239,7 @@
               <div class='h-full w-full px-20 pt-15 d-flex flex-column'>
                 <div class='w-full d-flex flex-row mb-15'>
                   <div class='text-white font-weight-bold font-size-16 overflow-hidden title'>
-                    {episode}. {title || 'Episode ' + episode}
+                    {episode}. {resolvedTitle || 'Episode ' + episode}
                   </div>
                   {#if length}
                     <div class='ml-auto pl-5'>
