@@ -34,7 +34,7 @@
   import { episodeByAirDate } from '@/modules/extensions/index.js'
   import { liveAnimeProgress } from '@/modules/animeprogress.js'
   import { episodesList } from '@/modules/episodes.js'
-  import { getAniMappings } from '@/modules/anime.js'
+  import { getAniMappings, durationMap } from '@/modules/anime.js'
   import smoothScroll from '@/modules/scroll.js'
   import EpisodeSkeletonCard from '@/views/ViewAnime/EpisodeListSkeleton.svelte'
 
@@ -121,6 +121,7 @@
     }
 
     let lastValidAirDate = null
+    let lastDuration = durationMap[media?.format]
     for (const { episode, title: oldTitle, airingAt, filler, dubAiring } of alEpisodes) {
       const airingPromise = await airingAt
       const alDate = airingPromise && new Date(typeof airingPromise === 'number' ? (airingPromise || 0) * 1000 : (airingPromise || 0))
@@ -130,6 +131,7 @@
       const { image, summary, rating, title: newTitle, length, airdate } = needsValidation ? episodeByAirDate(null, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
       const streamingTitle = !media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === (media?.episodes + 1)) && media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === episode && episodeRx.exec(ep.title)[2] && !episodeRx.exec(ep.title)[2].toLowerCase().trim().startsWith('episode'))
       const title = episodeRx.exec(streamingTitle?.title)?.[2] || newTitle?.en || oldTitle?.en || (await episodesList.getSingleEpisode(idMal, episode))?.title
+      lastDuration = length || duration || lastDuration
 
       // fix any weird dates when maintainers are lazy.
       const fallbackAirDate = airdate ? new Date(airdate) : null
@@ -145,7 +147,7 @@
         lastValidAirDate = validatedAiringAt
       }
 
-      episodeList[episode - 1] = { episode, image: episodeList.some((ep) => ep.image === image) ? null : image, summary: episodeList.some((ep) => ep.summary === summary), rating, title, length: length || duration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
+      episodeList[episode - 1] = { episode, image: episodeList.some((ep) => ep.image === image && ep.episode !== episode) ? null : image, summary: episodeList.some((ep) => ep.summary === summary && ep.episode !== episode), rating, title, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
     }
 
     currentEpisodes = episodeList?.slice(0, maxEpisodes)
@@ -239,7 +241,7 @@
               <div class='h-full w-full px-20 pt-15 d-flex flex-column'>
                 <div class='w-full d-flex flex-row mb-15'>
                   <div class='text-white font-weight-bold font-size-16 overflow-hidden title'>
-                    {episode}. {resolvedTitle || 'Episode ' + episode}
+                    {#if !resolvedTitle || !resolvedTitle.includes(episode)}{episode}. {/if}{resolvedTitle || 'Episode ' + episode}
                   </div>
                   {#if length}
                     <div class='ml-auto pl-5'>
