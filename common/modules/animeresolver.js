@@ -213,7 +213,7 @@ export default new class AnimeResolver {
           if (parseInt(parseObj.episode_number[0]) === 1) {
             debug('Range starts at 1')
             // if it starts with #1 and overflows then it includes more than 1 season in a batch, cant fix this cleanly, name is parsed per-file basis so this shouldn't be an issue
-            episode = `${parseObj.episode_number[0]} ~ ${parseObj.episode_number[1]}`
+            episode = `${Number(parseObj.episode_number[0])} ~ ${Number(parseObj.episode_number[1])}`
           } else {
             if (maxep && parseInt(parseObj.episode_number[1]) > maxep) {
               // get root media to start at S1, instead of S2 or some OVA due to parsing errors
@@ -237,7 +237,7 @@ export default new class AnimeResolver {
               debug(`Found rootMedia for ${parseObj?.anime_title}: ${result?.rootMedia?.id}:${result?.rootMedia?.title?.userPreferred} from ${media?.id}:${media?.title?.userPreferred}`)
               media = result.rootMedia
               const diff = parseObj.episode_number[1] - result.episode
-              episode = `${parseObj.episode_number[0] - diff} ~ ${result.episode}`
+              episode = `${Number(parseObj.episode_number[0] - diff)} ~ ${Number(result.episode)}`
               failed = result.failed
               if (failed) debug(`Failed to resolve ${parseObj?.anime_title} ${parseObj?.episode_number} ${media?.title?.userPreferred}`)
             } else {

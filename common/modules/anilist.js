@@ -767,7 +767,7 @@ class AnilistClient {
       this.pendingCaches.delete(`${cache}:${key}`)
     }, 500)
     const res = await data
-    if (!res?.data || res.errors || res.errors.length > 0) return this.cachedEntry(cache, key, true) || res // best to return something rather than nothing...
+    if (!res?.data || (res.errors && res.errors.length > 0)) return this.cachedEntry(cache, key, true) || res // best to return something rather than nothing...
     updateCache(cache, key, { data: res, expiry })
     return caches.value[cache][key].data
   }
