@@ -1,8 +1,9 @@
 import { alToken, malToken, settings, sync, isAuthorized } from '@/modules/settings.js'
 import { anilistClient, codes } from '@/modules/anilist.js'
 import { malClient } from '@/modules/myanimelist.js'
-import { malDubs } from "@/modules/animedubs.js"
+import { malDubs } from '@/modules/animedubs.js'
 import { profiles } from '@/modules/settings.js'
+import { getMediaMaxEp } from '@/modules/anime.js'
 import { matchKeys } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
 import Debug from 'debug'
@@ -206,13 +207,13 @@ export default class Helper {
 
       debug(`Media viability: ${cachedMedia?.status}, Is from failed resolve: ${failed}`)
       if (failed) return
-      if (cachedMedia.status !== 'FINISHED' && cachedMedia.status !== 'RELEASING') return
+      if (cachedMedia.status !== 'FINISHED' && cachedMedia.status !== 'RELEASING' && cachedMedia.status !== 'NOT_YET_RELEASED') return // include not yet released as sometimes anilist is slow at updating or a few episodes were potentially leaked.
 
       // check if media can even be watched, ex: it was resolved incorrectly
       // some anime/OVA's can have a single episode, or some movies can have multiple episodes
       const singleEpisode = ((!cachedMedia.episodes && (Number(filemedia.episode) === 1 || isNaN(Number(filemedia.episode)))) || (cachedMedia.format === 'MOVIE' && cachedMedia.episodes === 1)) && 1 // movie check
       const videoEpisode = Number(filemedia.episode) || singleEpisode
-      const mediaEpisode = cachedMedia.episodes || cachedMedia.nextAiringEpisode?.episode || singleEpisode
+      const mediaEpisode = getMediaMaxEp(cachedMedia) || singleEpisode
 
       debug(`Episode viability: ${videoEpisode}, ${mediaEpisode}, ${singleEpisode}`)
       if (!videoEpisode || !mediaEpisode) return
@@ -238,7 +239,7 @@ export default class Helper {
         episode: videoEpisode,
         lists
       }
-      if (videoEpisode === mediaEpisode) {
+      if (videoEpisode === mediaEpisode && cachedMedia.status !== 'NOT_YET_RELEASED') { // no chance you can watch all episodes while it's not yet released, maybe a few but not a whole season...
         variables.status = 'COMPLETED'
         if (cachedMedia.mediaListEntry?.status === 'REPEATING') variables.repeat = cachedMedia.mediaListEntry.repeat + 1
       }
@@ -246,7 +247,7 @@ export default class Helper {
       Object.assign(variables, this.getFuzzyDate(cachedMedia, status))
       if (cachedMedia.mediaListEntry?.status !== variables.status || cachedMedia.mediaListEntry?.progress !== variables.episode || cachedMedia.mediaListEntry?.score !== (this.isAniAuth() ? (variables.score / 10) : variables.score) || cachedMedia.mediaListEntry?.repeat !== variables.repeat) {
         let res
-        const description = `Title: ${anilistClient.title(cachedMedia)}\nStatus: ${this.statusName[variables.status]}\nEpisode: ${videoEpisode} / ${cachedMedia.episodes ? cachedMedia.episodes : '?'}${variables.score !== 0 ? `\nYour Score: ${this.isAniAuth() ? (variables.score / 10) : variables.score}` : ''}`
+        const description = `Title: ${anilistClient.title(cachedMedia)}\nStatus: ${this.statusName[variables.status]}\nEpisode: ${videoEpisode} / ${getMediaMaxEp(cachedMedia) ? getMediaMaxEp(cachedMedia) : '?'}${variables.score !== 0 ? `\nYour Score: ${this.isAniAuth() ? (variables.score / 10) : variables.score}` : ''}`
         if (this.isAniAuth()) {
           res = await anilistClient.alEntry(lists, variables)
         } else if (this.isMalAuth()) {
