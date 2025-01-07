@@ -4,6 +4,7 @@
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { anilistClient } from '@/modules/anilist.js'
   import { episodesList } from '@/modules/episodes.js'
+  import { getMediaMaxEp } from '@/modules/anime.js'
   import { client } from '@/modules/torrent.js'
   import { createEventDispatcher } from 'svelte'
   import Subtitles from '@/modules/subtitles.js'
@@ -21,6 +22,9 @@
   import 'rvfc-polyfill'
   import IPC from '@/modules/ipc.js'
   import { ArrowDown, ArrowUp, Captions, Cast, CircleHelp, Contrast, FastForward, Keyboard, List, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX } from 'lucide-svelte'
+  import Debug from 'debug'
+
+  const debug = Debug('ui:player')
 
   const emit = createEventDispatcher()
 
@@ -212,10 +216,10 @@
   let hasNext = false
   let hasLast = false
   function checkAvail (media, current) {
-    if (((media?.media?.nextAiringEpisode?.episode - 1 || media?.media?.episodes) > media?.episode) || (!media?.media?.nextAiringEpisode?.episode && !media?.media?.airingSchedule?.nodes?.[0]?.episode && !media?.media?.episodes)) hasNext = true
-    else hasNext = videos.indexOf(current) !== videos.length - 1;
+    if (((media?.media?.nextAiringEpisode?.episode - 1 || getMediaMaxEp(media?.media)) > media?.episode) || (!media?.media?.nextAiringEpisode?.episode && !media?.media?.airingSchedule?.nodes?.[0]?.episode && !media?.media?.episodes)) hasNext = true
+    else hasNext = videos.indexOf(current) !== videos.length - 1
     if (media?.episode > 1) hasLast = true
-    else hasLast = videos.indexOf(current) > 0;
+    else hasLast = videos.indexOf(current) > 0
   }
 
   async function loadAnimeProgress () {
@@ -339,7 +343,7 @@
         currentTime = currentTime + 85
       } else {
         const endtime = current.end / 1000
-        if ((safeduration - endtime | 0) === 0 && hasNext) return playNext()
+        if ((safeduration - endtime | 0) === 0 && hasNext && settings.value.playerAutoplay) return playNext()
         currentTime = endtime
         currentSkippable = null
       }
@@ -460,7 +464,7 @@
                 }
               }).catch(e => {
                 cleanup()
-                console.warn('Failed To Burn In Subtitles ' + e)
+                debug('Failed To Burn In Subtitles ' + e)
               })
             } else {
               cleanup()
@@ -869,6 +873,7 @@
       }
       return chapter
     })
+    chapters[chapters.length - 1].end = safeduration * 1000 // fix the final chapter so its duration actually reaches the end of the video...
     const sanitised = []
     const first = chapters[0]
     if (first.start !== 0) {
@@ -1013,10 +1018,10 @@
     // video playback failed - show a message saying why
     switch (target.error?.code) {
       case target.error.MEDIA_ERR_ABORTED:
-        console.log('You aborted the video playback.')
+        debug('You aborted the video playback.')
         break
       case target.error.MEDIA_ERR_NETWORK:
-        console.warn('A network error caused the video download to fail part-way.', target.error)
+        debug('A network error caused the video download to fail part-way.', target.error)
         toast.error('Video Network Error', {
           description: 'A network error caused the video download to fail part-way. Dismiss this toast to reload the video.',
           duration: Infinity,
@@ -1024,7 +1029,7 @@
         })
         break
       case target.error.MEDIA_ERR_DECODE:
-        console.warn('The video playback was aborted due to a corruption problem or because the video used features your browser did not support.', target.error)
+        debug('The video playback was aborted due to a corruption problem or because the video used features your browser did not support.', target.error)
         toast.error('Video Decode Error', {
           description: 'The video playback was aborted due to a corruption problem. Dismiss this toast to reload the video.',
           duration: Infinity,
@@ -1033,7 +1038,7 @@
         break
       case target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
         if (target.error.message !== 'MEDIA_ELEMENT_ERROR: Empty src attribute') {
-          console.warn('The video could not be loaded, either because the server or network failed or because the format is not supported.', target.error)
+          debug('The video could not be loaded, either because the server or network failed or because the format is not supported.', target.error)
           toast.error('Video Codec Unsupported', {
             description: 'The video could not be loaded, either because the server or network failed or because the format is not supported. Try a different release by disabling Autoplay Torrents in RSS settings.',
             duration: 30000
@@ -1041,7 +1046,7 @@
         }
         break
       default:
-        console.warn('An unknown video playback error occurred.')
+        debug('An unknown video playback error occurred.')
         break
     }
   }
@@ -1075,7 +1080,7 @@
     if (!browsing) {
       const w2g = state.value?.code
       const details = np.title || undefined
-      const timeLeft = safeduration - targetTime;
+      const timeLeft = safeduration - targetTime
       const timestamps = !paused ? {
         start: Date.now() - (targetTime > 0 ? targetTime * 1000 : 0),
         end: Date.now() + timeLeft * 1000
