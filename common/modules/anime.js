@@ -13,7 +13,7 @@ import { animeSchedule } from '@/modules/animeschedule.js'
 import { caches, settings, updateCache } from '@/modules/settings.js'
 import Helper from '@/modules/helper.js'
 
-import { Drama, BookHeart, MountainSnow, Laugh, TriangleAlert, Droplets, FlaskConical, Ghost, Skull, HeartPulse, VolleyBall, Car, Brain, Footprints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
+import { Drama, BookHeart, MountainSnow, Laugh, TriangleAlert, Droplets, FlaskConical, Ghost, Skull, HeartPulse, Volleyball, Car, Brain, Footprints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
 
 import Debug from 'debug'
 const debug = Debug('ui:anime')
@@ -250,7 +250,7 @@ export const genreIcons = {
   'Romance': BookHeart,
   'Sci-Fi': FlaskConical,
   'Slice of Life': Car,
-  'Sports': VolleyBall,
+  'Sports': Volleyball,
   'Supernatural': Ghost,
   'Thriller': HeartPulse
 }
