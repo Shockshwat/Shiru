@@ -134,12 +134,12 @@
       lastDuration = length || duration || lastDuration
 
       // fix any weird dates when maintainers are lazy.
-      const fallbackAirDate = airdate ? new Date(airdate) : null
-      let validatedAiringAt = lastValidAirDate ? ((alDate || fallbackAirDate) >= lastValidAirDate) || (((alDate || fallbackAirDate)?.getDate() >= lastValidAirDate.getDate()) && ((alDate || fallbackAirDate)?.getMonth() >= lastValidAirDate.getMonth())) ? (alDate || fallbackAirDate) : null : (alDate || fallbackAirDate)
+      const scheduledEntry = media?.airingSchedule?.nodes.find((entry) => entry.episode === episode)
+      const scheduledDate = scheduledEntry ? new Date(scheduledEntry.airingAt * 1000) : null
+      let validatedAiringAt = lastValidAirDate ? (((scheduledDate >= lastValidAirDate) || ((scheduledDate?.getDate() >= lastValidAirDate.getDate()) && (scheduledDate?.getMonth() >= lastValidAirDate.getMonth()) && (scheduledDate?.getFullYear() >= lastValidAirDate.getFullYear()))) ? scheduledDate : null) : scheduledDate;
       if (!validatedAiringAt) {
-        const scheduledEntry = media?.airingSchedule?.nodes.find((entry) => entry.episode === episode)
-        const scheduledDate = scheduledEntry ? new Date(scheduledEntry.airingAt * 1000) : null
-        validatedAiringAt = ((scheduledDate >= lastValidAirDate) || (scheduledDate?.getDate() >= lastValidAirDate.getDate() && scheduledDate?.getMonth() >= lastValidAirDate.getMonth())) ? scheduledDate : null;
+        const fallbackAirDate = airdate ? new Date(airdate) : null
+        validatedAiringAt = lastValidAirDate ? ((alDate || fallbackAirDate) >= lastValidAirDate) || (((alDate || fallbackAirDate)?.getDate() >= lastValidAirDate.getDate()) && ((alDate || fallbackAirDate)?.getMonth() >= lastValidAirDate.getMonth()) && ((alDate || fallbackAirDate)?.getFullYear() >= lastValidAirDate.getFullYear())) ? (alDate || fallbackAirDate) : null : (alDate || fallbackAirDate)
         if (validatedAiringAt) {
           lastValidAirDate = validatedAiringAt
         }
@@ -147,7 +147,7 @@
         lastValidAirDate = validatedAiringAt
       }
 
-      episodeList[episode - 1] = { episode, image: episodeList.some((ep) => ep.image === image && ep.episode !== episode) ? null : image, summary: episodeList.some((ep) => ep.summary === summary && ep.episode !== episode), rating, title, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
+      episodeList[episode - 1] = { episode, image: episodeList.some((ep) => ep.image === image && ep.episode !== episode) ? null : image, summary: episodeList.some((ep) => ep.summary === summary && ep.episode !== episode) ? null : summary, rating, title, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
     }
 
     currentEpisodes = episodeList?.slice(0, maxEpisodes)

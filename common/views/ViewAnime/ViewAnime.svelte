@@ -49,7 +49,11 @@
   let scrollTags = null
   let scrollGenres = null
   let mediaList = []
-  $: media = anilistClient.mediaCache.value[$view?.id] || $view
+  let mediaCache
+  anilistClient.mediaCache.subscribe(value => mediaCache = value)
+  $: media = mediaCache[$view?.id] || $view
+  $: watched = media?.mediaListEntry?.status === 'COMPLETED'
+  $: userProgress =  ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media?.mediaListEntry?.status) && media?.mediaListEntry?.progress
   $: recommendations = media && anilistClient.recommendations({ id: media.id })
   $: searchIDS = media && (async () => {
     const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
@@ -288,7 +292,7 @@
               </div>
             {/if}
             <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden h-600 mt-20'>
-              <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
+              <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} bind:userProgress bind:watched episodeCount={getMediaMaxEp(media)} {play} />
             </div>
             <ToggleList list={ media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
                   const typeComparison = a.relationType.localeCompare(b.relationType)
@@ -328,7 +332,7 @@
           </div>
         </div>
         <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20 overflow-x-hidden' bind:this={rightColumn}>
-          <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} userProgress={['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry.progress} watched={media.mediaListEntry?.status === 'COMPLETED'} episodeCount={getMediaMaxEp(media)} {play} />
+          <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} bind:userProgress bind:watched episodeCount={getMediaMaxEp(media)} {play} />
         </div>
       </div>
       {/if}

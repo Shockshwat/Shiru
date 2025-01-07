@@ -1,6 +1,7 @@
 <script>
   import { anilistClient, codes } from '@/modules/anilist.js'
   import { profiles, settings, sync } from '@/modules/settings.js'
+  import { getMediaMaxEp } from '@/modules/anime.js'
   import { click } from '@/modules/click.js'
   import { writable } from 'svelte/store'
   import { toast } from 'svelte-sonner'
@@ -50,7 +51,7 @@
       score = (media.mediaListEntry?.score ? media.mediaListEntry?.score : 0)
       status = (media.mediaListEntry?.status ? media.mediaListEntry?.status : 'NOT IN LIST')
       episode = (media.mediaListEntry?.progress ? media.mediaListEntry?.progress : 0)
-      totalEpisodes = (media.episodes ? `${media.episodes}` : '?')
+      totalEpisodes = (getMediaMaxEp(media) ? `${getMediaMaxEp(media)}` : '?')
       showModal.set(!$showModal)
     }
   }
@@ -166,7 +167,7 @@
   function handleEpisodes(event) {
     const enteredValue = event.currentTarget.value
     if (/^\d+$/.test(enteredValue)) {
-      const maxEpisodes = media.episodes || (media.nextAiringEpisode?.episode - 1)
+      const maxEpisodes = getMediaMaxEp(media)
       if (parseInt(enteredValue) > maxEpisodes) {
         episode = maxEpisodes
       } else {

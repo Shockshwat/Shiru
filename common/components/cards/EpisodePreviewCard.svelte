@@ -13,7 +13,7 @@
   /** @type {import('@/modules/al.d.ts').Media | null} */
   const media = data.media && anilistClient.mediaCache.value[data.media.id]
 
-  const episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
+  const episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
   let hide = true
 
   const progress = liveAnimeEpisodeProgress(media?.id, data?.episode)
@@ -72,7 +72,7 @@
       <div class='col-auto d-flex flex-column align-items-end text-right' title={data.parseObject?.file_name} >
         <div class='text-white font-weight-bold font-weight-very-bold'>
           {#if data.episode}
-            Episode {data.episode}
+            Episode {Number(data.episode) || data.episode}
           {:else if media?.format === 'MOVIE' }
             Movie
           {:else if data.parseObject?.anime_title?.match(/S(\d{2})/)}

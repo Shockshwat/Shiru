@@ -21,7 +21,7 @@
   /** @type {import('@/modules/al.d.ts').Media | null} */
   $: media = data.media && mediaCache[data.media.id]
 
-  $: episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
+  $: episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
 
   const view = getContext('view')
   function viewMedia () {
@@ -81,7 +81,7 @@
       <div class='col-auto d-flex flex-column align-items-end text-right'>
         <div class='text-white font-weight-bold'>
           {#if data.episode}
-            Episode {data.episode}
+            Episode {Number(data.episode) || data.episode}
           {:else if media?.format === 'MOVIE' }
             Movie
           {:else if data.parseObject?.anime_title?.match(/S(\d{2})/)}

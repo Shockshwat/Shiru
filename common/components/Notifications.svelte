@@ -154,14 +154,12 @@
                   <div class='d-flex justify-content-between align-items-center'>
                     <p class='font-size-10 text-muted mt-0 mb-0'>{since(new Date(notification.timestamp * 1000))}</p>
                     <div>
-                      {#if delayed}
-                        <span class='badge badge-delayed mr-5'>Delayed</span>
-                        <span class='badge badge-episode mr-5'>Episode {notification.episode}</span>
-                      {:else if announcement}
+                      {#if announcement}
                         <span class='badge badge-announcement mr-5'>Announcement</span>
                       {:else if notification.format === 'MOVIE'}
                         <span class='badge badge-episode mr-5'>Movie</span>
                       {:else if !notification.season}
+                        {#if delayed}<span class='badge badge-delayed mr-5'>Delayed</span>{/if}
                         <span class='badge badge-episode mr-5'>{notification.episode ? `Episode ${notification.episode}` : `Batch`} </span>
                       {:else if notification.season}
                       <span class='badge badge-episode mr-5'>Season {notification.episode}</span>
