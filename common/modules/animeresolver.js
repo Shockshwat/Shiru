@@ -308,7 +308,7 @@ export default new class AnimeResolver {
       debug(`${failed || !(media?.title?.userPreferred) ? `Failed to resolve` : `Resolved`} ${parseObj.anime_title} ${parseObj.episode_number} ${episode} ${media?.id}:${media?.title?.userPreferred}`)
       fileAnimes.push({
         episode: episode || parseObj.episode_number,
-        season: parseObj?.anime_season ? Number(parseObj.anime_season) : 1,
+        ...(!media || media.format !== 'MOVIE' || parseObj?.anime_season ? {season: parseObj?.anime_season ? Number(parseObj.anime_season) : 1} : {}),
         parseObject: parseObj,
         media,
         failed

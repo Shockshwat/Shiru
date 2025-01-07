@@ -92,38 +92,41 @@
 
   const TYPE_EXCLUSIONS = ['ED', 'ENDING', 'NCED', 'NCOP', 'OP', 'OPENING', 'PREVIEW', 'PV']
 
-  // find best media in batch to play
+  // find the best media in batch to play
   // currently in progress or unwatched
-  // tv, movie, ona, ova
+  // tv, movie, ona, ova, special
   function findPreferredPlaybackMedia (videoFiles) {
     for (const { media } of videoFiles) {
-      if (media.media?.mediaListEntry?.status === 'CURRENT') return { media: media.media, episode: (media.media.mediaListEntry.progress || 0) + 1 }
+      const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+      if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + 1 }
     }
 
     for (const { media } of videoFiles) {
-      if (media.media?.mediaListEntry?.status === 'REPEATING') return { media: media.media, episode: (media.media.mediaListEntry.progress || 0) + 1 }
+      const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+      if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + 1 }
     }
 
     let lowestPlanning
     for (const { media } of videoFiles) {
-        if (media.media?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || (Number(lowestPlanning.episode) >= Number(media?.episode) && Number(lowestPlanning.season) >= Number(media?.season)))) lowestPlanning = { media: media.media, episode: media?.episode, season: media?.season }
+      const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+      if (cachedMedia?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || (((Number(lowestPlanning.episode) >= Number(media?.episode)) || (media?.episode && !lowestPlanning.episode)) && Number(lowestPlanning.season) >= Number(media?.season)))) lowestPlanning = { media: cachedMedia, episode: media?.episode, season: media?.season }
     }
     if (lowestPlanning) return lowestPlanning
 
     // unwatched
-    for (const format of ['TV', 'MOVIE', 'ONA', 'OVA']) {
-      let lowestUnwatched
+    let lowestUnwatched
+    for (const format of ['TV', 'MOVIE', 'ONA', 'OVA', 'SPECIAL']) {
       for (const { media } of videoFiles) {
-        if (media.media?.format === format && !media.media.mediaListEntry && (!lowestUnwatched || (Number(lowestUnwatched.episode) >= Number(media?.episode) && Number(lowestUnwatched.season) >= Number(media?.season)))) lowestUnwatched = { media: media.media, episode: media?.episode, season: media?.season }
+        const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+        if (cachedMedia?.format === format && !cachedMedia.mediaListEntry && (!lowestUnwatched || (((Number(lowestUnwatched.episode) >= Number(media?.episode)) || (media?.episode && !lowestUnwatched.episode)) && Number(lowestUnwatched.season) >= Number(media?.season)))) lowestUnwatched = { media: cachedMedia, episode: media?.episode, season: media?.season }
       }
-      if (lowestUnwatched) return lowestUnwatched
     }
+    if (lowestUnwatched) return lowestUnwatched
 
     // highest occurrence if all else fails - unlikely
-
     const max = highestOccurrence(videoFiles, file => file.media.media?.id).media
     if (max?.media) {
-      return { media: max.media, episode: (max.media.mediaListEntry?.progress + 1 || 1) }
+      return { media: max.media, episode: ((anilistClient.mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + 1 || 1) }
     }
   }
 
@@ -161,8 +164,15 @@
           return file
       })
     }
-
-    videoFiles = videoFiles.filter(file => !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type?.toUpperCase()))
+    videoFiles = videoFiles.filter(file => {
+        if (typeof file.media.parseObject.anime_type === 'string') return !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type.toUpperCase())
+        else if (Array.isArray(file.media.parseObject.anime_type)) { // rare edge cases where the type is an array, only batches like a full season + movie + special.
+            for (let animeType of file.media.parseObject.anime_type) {
+                if (TYPE_EXCLUSIONS.includes(animeType.toUpperCase())) return false
+            }
+        }
+        return true
+    })
     if (newPlaying?.verified && videoFiles.length === 1) {
       debug('Media was verified, skipping verification')
       videoFiles[0].media.media = newPlaying.media

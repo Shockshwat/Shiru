@@ -61,8 +61,8 @@ class Episodes {
 
     async getSingleEpisode(idMal, episode) {
         if (!idMal) return []
-        const res = await this.requestEpisodes(idMal, Number(episode) !== 0 ? episode : 1)
-        const singleEpisode = res.data.find(e => (e.mal_id === episode) || (e.mal_id === Number(episode)))
+        const res = await this.requestEpisodes(idMal, Number(episode || 1) !== 0 ? (episode || 1) : 1)
+        const singleEpisode = res.data.find(e => (e.mal_id === episode) || (e.mal_id === Number(episode || 1)))
         return singleEpisode ? {
             filler: singleEpisode.filler,
             recap: singleEpisode.recap,
