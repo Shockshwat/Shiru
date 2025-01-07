@@ -207,7 +207,11 @@ class AnilistClient {
     })
 
     if (this.userID?.viewer?.data?.Viewer) {
-      this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC' })
+      this.userLists.value = this.getUserLists({ sort: 'UPDATED_TIME_DESC'}, true)
+      setTimeout(async () => {
+        const updatedLists = await this.getUserLists({sort: 'UPDATED_TIME_DESC'})
+        this.userLists.value = Promise.resolve(updatedLists) // no need to have userLists await the entire query process while we already have previous values, (it's awful to wait 15+ seconds for the query to succeed with large lists)
+      })
       this.findNewNotifications().catch((error) => debug(`Failed to get new anilist notifications at the scheduled interval, this is likely a temporary connection issue: ${JSON.stringify(error)}`))
       // update userLists every 15 mins
       setInterval(async () => {
@@ -611,10 +615,12 @@ class AnilistClient {
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{ MediaListCollection: import('./al.d.ts').MediaListCollection }>>} */
-  async getUserLists (variables = {}) {
+  async getUserLists (variables = {}, ignoreExpiry) {
     debug('Getting user lists')
     variables.id = !variables.userID ? this.userID?.viewer?.data?.Viewer.id : variables.userID
     variables.sort = variables.sort?.replace('USER_SCORE_DESC', 'SCORE_DESC') || 'UPDATED_TIME_DESC' // doesn't exist, AniList uses SCORE_DESC for both MediaSort and MediaListSort.
+    const cachedEntry = this.cachedEntry('userLists', JSON.stringify(variables), ignoreExpiry)
+    if (cachedEntry) return cachedEntry
     const query = /* js */` 
       query($id: Int, $sort: [MediaListSort]) {
         MediaListCollection(userId: $id, type: ANIME, sort: $sort, forceSingleCompletedList: true) {
@@ -642,8 +648,7 @@ class AnilistClient {
     }
 
     if (!variables.token) await this.updateMediaCache(res?.data?.MediaListCollection?.lists?.flatMap(list => list.entries.map(entry => entry.media)))
-    // return the cached user lists if fetching fails. Better to keep old data than none at all.
-    return res?.data?.MediaListCollection ? res : (this.userLists?.value && ((Object.keys(this.userLists.value).length > 0) || this.userLists.value.length > 0)) ? this.userLists.value : res
+    return await this.cacheEntry('userLists', JSON.stringify(variables), res, Date.now() + 14 * 60 * 1000) // expire after 14 minutes as this will be recached by our 15 minute interval.
   }
 
   async updateListEntry(mediaId, listEntry) {
@@ -742,13 +747,13 @@ class AnilistClient {
   }
 
   pendingCaches = new Map()
-  cachedEntry(cache, key) {
+  cachedEntry(cache, key, ignoreExpiry) {
     if (this.pendingCaches.has(`${cache}:${key}`)) {
       debug(`Found pending query ${cache} for ${key}`)
       return this.pendingCaches.get(`${cache}:${key}`)
     } else {
       const cachedEntry = caches.value[cache][key]
-      if (cachedEntry && Date.now() < cachedEntry.expiry) {
+      if (cachedEntry && cachedEntry.data && ((Date.now() < cachedEntry.expiry) || ignoreExpiry)) {
         debug(`Found cached ${cache} for ${key}`)
         return cachedEntry.data
       }
@@ -758,10 +763,12 @@ class AnilistClient {
 
   async cacheEntry(cache, key, data, expiry) {
     this.pendingCaches.set(`${cache}:${key}`, data)
-    updateCache(cache, key, { data: await data, expiry })
     setTimeout(() => {
       this.pendingCaches.delete(`${cache}:${key}`)
     }, 500)
+    const res = await data
+    if (!res?.data || res.errors || res.errors.length > 0) return this.cachedEntry(cache, key, true) || res // best to return something rather than nothing...
+    updateCache(cache, key, { data: res, expiry })
     return caches.value[cache][key].data
   }
 

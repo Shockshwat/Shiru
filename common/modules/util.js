@@ -299,6 +299,7 @@ export const defaults = {
 export const cacheDefaults = {
   recommendations: {},
   following: {},
+  userLists: {},
   episodes: {},
   search: {},
   compound: {},
