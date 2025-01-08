@@ -113,7 +113,7 @@ class Episodes {
             if (!res.ok) {
                 if (json) {
                     for (const error of json?.errors || []) {
-                        this.printError(error)
+                        this.printError(error, true)
                     }
                 } else {
                     this.printError(res)
@@ -128,11 +128,11 @@ class Episodes {
         return requestPromise
     }
 
-    printError(error) {
+    printError(error, silent) {
         debug(`Error: ${error.status || 429} - ${error.message || codes[error.status || 429]}`)
-        if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+        if (!silent && (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors'))) {
             toast.error('Episode Fetching Failed', {
-                description: `Failed to fetch anime episodes!\n${error.status || 429} - ${error.message || codes[error.status || 429]}`,
+                description: `Failed to fetch anime episodes!\n${error.status || 429} - ${error.message || error.detail || codes[error.status || 429]}`,
                 duration: 3000
             })
         }
