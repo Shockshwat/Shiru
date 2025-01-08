@@ -19,7 +19,6 @@
   import Helper from '@/modules/helper.js'
   import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash } from 'lucide-svelte'
 
-
   export let overlay
   const view = getContext('view')
   function close () {
@@ -50,8 +49,10 @@
   let scrollGenres = null
   let mediaList = []
   let mediaCache
+  let mediaId
   anilistClient.mediaCache.subscribe(value => mediaCache = value)
   $: media = mediaCache[$view?.id] || $view
+  $: mediaId = media?.id
   $: watched = media?.mediaListEntry?.status === 'COMPLETED'
   $: userProgress =  ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media?.mediaListEntry?.status) && media?.mediaListEntry?.progress
   $: recommendations = media && anilistClient.recommendations({ id: media.id })
@@ -59,7 +60,7 @@
     const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
     return searchIDS.length > 0 ? anilistClient.searchAllIDS({ page: 1, perPage: 50, id: searchIDS }) : Promise.resolve([])
   })()
-  $: media && (modal?.focus(), overlay = 'viewanime', saveMedia(), (container && container.dispatchEvent(new Event('scrolltop'))))
+  $: mediaId && (modal?.focus(), overlay = 'viewanime', saveMedia(), (container && container.dispatchEvent(new Event('scrolltop'))))
   $: {
     if (media) {
       if (scrollTags) scrollTags.scrollLeft = 0
