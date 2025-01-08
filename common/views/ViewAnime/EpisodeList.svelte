@@ -11,18 +11,18 @@
       const airingSchedule = entry?.media?.media?.airingSchedule?.nodes[episode - 1] || entry?.airingSchedule?.media?.media?.nodes[0]
       const delayed = !!(entry.episodeDate && (((new Date(entry.delayedUntil) >= new Date(entry.episodeDate)) && (new Date(entry.delayedUntil) > new Date())) || entry.delayedIndefinitely))
       if (entry.episodeDate && (entry.episodeNumber <= episode)) {
-        return { text: `Dub: ${entry.delayedIndefinitely && !entry.status?.toUpperCase()?.includes('FINISHED') ? 'Suspended' : entry.delayedIndefinitely ? 'Not Planned' : since(past(new Date(delayed ? entry.delayedUntil : entry.episodeDate), entry.episodeNumber >= episode ? 0 : episode - entry.episodeNumber, true)) + (delayed ? ` (${entry.delayedText || 'Delayed'})` : '')}`, delayed: delayed }
+        return { text: `${entry.delayedIndefinitely && !entry.status?.toUpperCase()?.includes('FINISHED') ? 'Suspended' : entry.delayedIndefinitely ? 'Not Planned' : since(past(new Date(delayed ? entry.delayedUntil : entry.episodeDate), entry.episodeNumber >= episode ? 0 : episode - entry.episodeNumber, true)) + (delayed ? ` (${entry.delayedText || 'Delayed'})` : '')}`, delayed: delayed }
       } else if (airingSchedule && airingSchedule.episode <= episode) {
-        return { text: `Dub: ${since(new Date(airingSchedule.airingAt))}`, delayed: delayed && !entry.delayedIndefinitely }
+        return { text: `${since(new Date(airingSchedule.airingAt))}`, delayed: delayed && !entry.delayedIndefinitely }
       } else {
-        return { text: `Dubbed`, delayed: false }
+        return { text: `Finished`, delayed: false }
       }
     } else if (episodeEntry) {
-      return { text: `Dub: ${since(new Date(episodeEntry.episode.airedAt))}`, delayed: false }
+      return { text: `${since(new Date(episodeEntry.episode.airedAt))}`, delayed: false }
     } else if (malDubs.dubLists.value.incomplete.includes(media.idMal) && (await animeSchedule.dubAiredLists.value).find(entry => entry?.id === media.id && entry?.episode?.aired === 1)) {
-      return { text: `Dub: Not Planned`, delayed: true }
+      return { text: `Not Planned`, delayed: true }
     } else if (!entry && !episodeEntry && (media.seasonYear >= (new Date().getFullYear() - 2)) && malDubs.isDubMedia(media)) {
-      return { text: `Dub: In Production`, delayed: false }
+      return { text: `In Production`, delayed: false }
     }
   }
 </script>
@@ -281,11 +281,11 @@
                   {#if dubAiring}
                     <div class='d-flex flex-row date-row'>
                       <div class='{dubAiring.delayed ? `bg-danger` : `bg-secondary`} py-5 px-10 text-dark text-nowrap rounded-top rounded-left font-weight-bold'>
-                        {dubAiring.text}
+                        Dub: {dubAiring.text}
                       </div>
-                      {#if airdate}
-                        <div class='ml-5 py-5 px-10 sub-color text-dark text-nowrap rounded-top rounded-left font-weight-bold'>
-                          Sub: {since(new Date(airdate))}
+                      {#if airdate || dubAiring.delayed}
+                        <div class='ml-5 py-5 px-10 {!airdate && dubAiring.delayed ? `bg-danger` : `sub-color`} text-dark text-nowrap rounded-top rounded-left font-weight-bold'>
+                          Sub: {airdate ? since(new Date(airdate)) : dubAiring.text}
                         </div>
                       {/if}
                     </div>
