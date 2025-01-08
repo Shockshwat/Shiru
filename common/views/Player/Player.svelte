@@ -845,7 +845,7 @@
     ['Outro', /^outro$/mi],
     ['Ending', /^ed$|ending$|^nced/mi],
     ['Credits', /^credits$/mi],
-    ['Preview', /^preview$|previews$|pv$/mi],
+    ['Preview', /^preview$|previews$|pv$|next$/mi],
     ['Recap', /recap/mi]
   ]
   function isChapterSkippable (chapter) {
@@ -1238,8 +1238,8 @@
         {/if}
       </div>
       <div class='font-weight-normal overflow-hidden text-truncate font-size-16 text-muted d-none d-md-block'>
-        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE'}Episode {media.episode}{/if}
-        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && media?.episodeTitle}{' - '}{/if}
+        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (!media?.episodeTitle || !media.episodeTitle.includes(media.episode))}Episode {media.episode}{/if}
+        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (media?.episodeTitle && !media.episodeTitle.includes(media.episode))}{' - '}{/if}
         {#if media?.episodeTitle}{media.episodeTitle}{/if}
       </div>
     </div>
