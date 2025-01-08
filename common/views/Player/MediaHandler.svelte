@@ -52,8 +52,8 @@
 
   async function handleMedia ({ media, episode, parseObject }, newPlaying) {
     if (media || episode || parseObject) {
-      const ep = Number(episode || parseObject?.episode_number) === 0 ? 0 : (Number(episode || parseObject?.episode_number) || null)
-
+      const zeroEpisode = media && await hasZeroEpisode(media)
+      const ep = (Number(episode || parseObject?.episode_number) === 0) || (zeroEpisode && !episode) ? 0 : (Number(episode || parseObject?.episode_number) || null)
       const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
       let streamingEpisode = streamingTitle
       if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {

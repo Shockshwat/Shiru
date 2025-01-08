@@ -86,9 +86,8 @@
     }))
     let alEpisodes = episodeList
 
-    let missingEpisodes = !(media.episodes && media.episodes === newEpisodeCount && media.status === 'FINISHED')
     // fallback: pull episodes from airing schedule if anime doesn't have expected episode count
-    if (missingEpisodes) {
+    if (!(media.episodes && media.episodes === newEpisodeCount && media.status === 'FINISHED')) {
       const settled = media.airingSchedule
       if (settled?.length >= newEpisodeCount) {
         alEpisodes = settled.map((episode, i) => ({
