@@ -133,7 +133,7 @@
 
       // validate by air date if the anime has specials AND doesn't have matching episode count
       const needsValidation = !(!specialCount || (media.episodes && media.episodes === newEpisodeCount && episodes && episodes[Number(episode)]))
-      const { image, summary, rating, title: newTitle, length, airdate } = needsValidation ? episodeByAirDate(null, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
+      const { image, summary, overview, rating, title: newTitle, length, airdate } = needsValidation ? episodeByAirDate(null, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
       const streamingTitle = !media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === (media?.episodes + 1)) && media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === episode && episodeRx.exec(ep.title)[2] && !episodeRx.exec(ep.title)[2].toLowerCase().trim().startsWith('episode'))
       const title = episode === 0 ? oldTitle : episodeRx.exec(streamingTitle?.title)?.[2] || newTitle?.en || oldTitle?.en || (await episodesList.getSingleEpisode(idMal, episode))?.title
       lastDuration = length || duration || lastDuration
@@ -163,7 +163,10 @@
         lastDuration = zeroEpisode?.length || zeroEpisode[0]?.length || lastDuration
       }
 
-      episodeList[episode - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === image && ep.episode !== episode) ? null : image, summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === summary && ep.episode !== episode) ? null : summary, rating, title, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
+      let kitsuMappings
+      if (episode !== 0 && !((summary || overview) && image && title)) kitsuMappings = (await episodesList.getKitsuEpisodes(media.id))?.data?.find(ep => ep?.attributes?.number === episode)?.attributes
+
+      episodeList[episode - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === (image || kitsuMappings?.thumbnail?.original) && ep.episode !== episode) ? null : (image || kitsuMappings?.thumbnail?.original), summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === (summary || overview || kitsuMappings?.synopsis || kitsuMappings?.description) && ep.episode !== episode) ? null : (summary || overview || kitsuMappings?.synopsis || kitsuMappings?.description), rating, title: title || kitsuMappings?.titles?.en_us || kitsuMappings?.titles?.en_jp, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
     }
 
     currentEpisodes = episodeList?.slice(0, maxEpisodes)

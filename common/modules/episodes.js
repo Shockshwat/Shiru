@@ -1,6 +1,7 @@
 import { toast } from 'svelte-sonner'
 import { codes } from '@/modules/anilist.js'
 import { caches, settings, updateCache } from '@/modules/settings.js'
+import { getKitsuMappings } from '@/modules/anime.js'
 import { getRandomInt, sleep } from '@/modules/util.js'
 import Bottleneck from 'bottleneck'
 import Debug from 'debug'
@@ -37,9 +38,9 @@ class Episodes {
     async getEpisodeData(idMal) {
         if (!idMal) return []
         let page = 1
-        const res = await this.requestEpisodes(idMal, page)
+        const res = await this.requestEpisodes(true, idMal, page)
         if (res && res.pagination?.has_next_page && res.pagination?.last_visible_page) {
-            const lastRes = await this.requestEpisodes(idMal, res.pagination.last_visible_page * 100)
+            const lastRes = await this.requestEpisodes(true, idMal, res.pagination.last_visible_page * 100)
             const arr = lastRes.data.map(e => ({
                 filler: e.filler,
                 recap: e.recap,
@@ -61,7 +62,7 @@ class Episodes {
 
     async getSingleEpisode(idMal, episode) {
         if (!idMal) return []
-        const res = await this.requestEpisodes(idMal, Number(episode || 1) !== 0 ? (episode || 1) : 1)
+        const res = await this.requestEpisodes(true, idMal, Number(episode || 1) !== 0 ? (episode || 1) : 1)
         const singleEpisode = res.data.find(e => (e.mal_id === episode) || (e.mal_id === Number(episode || 1)))
         return singleEpisode ? {
             filler: singleEpisode.filler,
@@ -72,22 +73,31 @@ class Episodes {
         } : []
     }
 
-    async getMedia(idMal) {
-        if (!idMal) return []
-        return await this.requestEpisodes(idMal, 1, true)
+    async getKitsuEpisodes(id) {
+        const mappings = await getKitsuMappings(id)
+        const kitsuId = mappings?.data?.[0]?.relationships?.data?.id || mappings?.included?.[0]?.id
+        if (kitsuId) {
+            return await this.requestEpisodes(false, kitsuId, 1)
+        }
+        return null
     }
 
-    async requestEpisodes(idMal, episode, root) {
+    async getMedia(idMal) {
+        if (!idMal) return []
+        return await this.requestEpisodes(true, idMal, 1, true)
+    }
+
+    async requestEpisodes(jikan, id, episode, root) {
         const page = Math.ceil(episode / 100)
-        const cachedEntry = caches.value['episodes'][`${idMal}:${page}:${root}`]
+        const cachedEntry = caches.value['episodes'][`${id}:${page}:${root}`]
         if (cachedEntry && Date.now() < cachedEntry.expiry) return cachedEntry.data
-        if (this.concurrentRequests.has(`${idMal}:${page}:${root}`)) return this.concurrentRequests.get(`${idMal}:${page}:${root}`)
+        if (this.concurrentRequests.has(`${id}:${page}:${root}`)) return this.concurrentRequests.get(`${id}:${page}:${root}`)
         const requestPromise = this.limiter.wrap(async () => {
             await this.rateLimitPromise
-            debug(`Fetching Episode ${episode} for ${idMal} with Page ${page}`)
+            debug(`Fetching Episode ${episode} for ${id} with Page ${page}`)
             let res = {}
             try {
-                res = await fetch(`https://api.jikan.moe/v4/anime/${idMal}${!root ? `/episodes?page=${page}` : ``}`)
+                res = await fetch(jikan ? `https://api.jikan.moe/v4/anime/${id}${!root ? `/episodes?page=${page}` : ``}` : `https://kitsu.io/api/edge/anime/${id}/episodes`)
             } catch (e) {
                 if (!res || res.status !== 404) throw e
             }
@@ -109,12 +119,12 @@ class Episodes {
                     this.printError(res)
                 }
             }
-            updateCache('episodes', `${idMal}:${page}:${root}`, { data: await json, expiry: Date.now() + getRandomInt(5, 7) * 24 * 60 * 60 * 1000 })
-            return caches.value['episodes'][`${idMal}:${page}:${root}`].data
+            updateCache('episodes', `${id}:${page}:${root}`, { data: await json, expiry: Date.now() + getRandomInt(5, 7) * 24 * 60 * 60 * 1000 })
+            return caches.value['episodes'][`${id}:${page}:${root}`].data
         })().finally(() => {
-            this.concurrentRequests.delete(`${idMal}:${page}:${root}`)
+            this.concurrentRequests.delete(`${id}:${page}:${root}`)
         })
-        this.concurrentRequests.set(`${idMal}:${page}:${root}`, requestPromise)
+        this.concurrentRequests.set(`${id}:${page}:${root}`, requestPromise)
         return requestPromise
     }
 
