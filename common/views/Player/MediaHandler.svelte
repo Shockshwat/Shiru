@@ -5,7 +5,7 @@
   import { tick } from 'svelte'
   import { anilistClient } from '@/modules/anilist.js'
   import { episodesList } from '@/modules/episodes.js'
-  import { getAniMappings } from '@/modules/anime.js'
+  import { getAniMappings, hasZeroEpisode } from '@/modules/anime.js'
   import Debug from 'debug'
 
   const debug = Debug('ui:mediahandler')
@@ -98,12 +98,14 @@
   function findPreferredPlaybackMedia (videoFiles) {
     for (const { media } of videoFiles) {
       const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
-      if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + 1 }
+      const zeroEpisode = hasZeroEpisode(cachedMedia)
+      if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     for (const { media } of videoFiles) {
       const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
-      if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + 1 }
+        const zeroEpisode = hasZeroEpisode(cachedMedia)
+      if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     let lowestPlanning
@@ -126,7 +128,8 @@
     // highest occurrence if all else fails - unlikely
     const max = highestOccurrence(videoFiles, file => file.media.media?.id).media
     if (max?.media) {
-      return { media: max.media, episode: ((anilistClient.mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + 1 || 1) }
+      const zeroEpisode = hasZeroEpisode(max?.media)
+      return { media: max.media, episode: ((anilistClient.mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + (!zeroEpisode ? 1 : 0) || (!zeroEpisode ? 1 : 0)) }
     }
   }
 

@@ -144,7 +144,7 @@ export function matchKeys(nest, phrase, keys, threshold = 0.4) {
 }
 
 export function matchPhrase(search, phrase, threshold) {
-  if (!search) return false
+  if (!search || !phrase) return false
   const normalizedSearch = search.toLowerCase().replace(/[^\w\s]/g, '')
   phrase = Array.isArray(phrase) ? phrase : [phrase]
 

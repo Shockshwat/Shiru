@@ -70,7 +70,7 @@
     if (keyCode === 27) close()
   }
   function play (episode) {
-    if (episode) return playAnime(media, episode)
+    if (episode || episode === 0) return playAnime(media, episode)
     if (media.status === 'NOT_YET_RELEASED') return
     playMedia(media)
   }

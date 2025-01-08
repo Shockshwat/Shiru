@@ -34,7 +34,7 @@
   import { episodeByAirDate } from '@/modules/extensions/index.js'
   import { liveAnimeProgress } from '@/modules/animeprogress.js'
   import { episodesList } from '@/modules/episodes.js'
-  import { getAniMappings, durationMap } from '@/modules/anime.js'
+  import { getAniMappings, hasZeroEpisode, durationMap } from '@/modules/anime.js'
   import smoothScroll from '@/modules/scroll.js'
   import EpisodeSkeletonCard from '@/views/ViewAnime/EpisodeListSkeleton.svelte'
 
@@ -77,8 +77,8 @@
   }
 
   async function load () {
-    // updates episodeList when clicking through relations / recommendations
-    const { episodes, specialCount, episodeCount: newEpisodeCount } = await getAniMappings(id)
+    const mappings = await getAniMappings(id)
+    const { episodes, specialCount, episodeCount: newEpisodeCount } = mappings
 
     /** @type {{ airingAt: number; episode: number; filler?: boolean; dubAiring?: object; }[]} */
     episodeList = Array.from({ length: (newEpisodeCount > episodeCount ? newEpisodeCount : episodeCount) }, (_, i) => ({
@@ -86,8 +86,9 @@
     }))
     let alEpisodes = episodeList
 
+    let missingEpisodes = !(media.episodes && media.episodes === newEpisodeCount && media.status === 'FINISHED')
     // fallback: pull episodes from airing schedule if anime doesn't have expected episode count
-    if (!(media.episodes && media.episodes === newEpisodeCount && media.status === 'FINISHED')) {
+    if (missingEpisodes) {
       const settled = media.airingSchedule
       if (settled?.length >= newEpisodeCount) {
         alEpisodes = settled.map((episode, i) => ({
@@ -122,6 +123,11 @@
 
     let lastValidAirDate = null
     let lastDuration = durationMap[media?.format]
+    const zeroEpisode = await hasZeroEpisode(media)
+    if (zeroEpisode) {
+      alEpisodes = alEpisodes.slice(0, -1)
+      alEpisodes.unshift({ episode: 0, title: zeroEpisode[0].title, airingAt: media.airingSchedule?.nodes?.find(node => node.episode === 1)?.airingAt || zeroEpisode[0].airingAt, filler: episodesList.getSingleEpisode(idMal, 0), dubAiring: dubbedEpisode(0, media)})
+    }
     for (const { episode, title: oldTitle, airingAt, filler, dubAiring } of alEpisodes) {
       const airingPromise = await airingAt
       const alDate = airingPromise && new Date(typeof airingPromise === 'number' ? (airingPromise || 0) * 1000 : (airingPromise || 0))
@@ -130,13 +136,13 @@
       const needsValidation = !(!specialCount || (media.episodes && media.episodes === newEpisodeCount && episodes && episodes[Number(episode)]))
       const { image, summary, rating, title: newTitle, length, airdate } = needsValidation ? episodeByAirDate(null, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
       const streamingTitle = !media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === (media?.episodes + 1)) && media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === episode && episodeRx.exec(ep.title)[2] && !episodeRx.exec(ep.title)[2].toLowerCase().trim().startsWith('episode'))
-      const title = episodeRx.exec(streamingTitle?.title)?.[2] || newTitle?.en || oldTitle?.en || (await episodesList.getSingleEpisode(idMal, episode))?.title
+      const title = episode === 0 ? oldTitle : episodeRx.exec(streamingTitle?.title)?.[2] || newTitle?.en || oldTitle?.en || (await episodesList.getSingleEpisode(idMal, episode))?.title
       lastDuration = length || duration || lastDuration
 
       // fix any weird dates when maintainers are lazy.
       const scheduledEntry = media?.airingSchedule?.nodes.find((entry) => entry.episode === episode)
       const scheduledDate = scheduledEntry ? new Date(scheduledEntry.airingAt * 1000) : null
-      let validatedAiringAt = lastValidAirDate ? (((scheduledDate >= lastValidAirDate) || ((scheduledDate?.getDate() >= lastValidAirDate.getDate()) && (scheduledDate?.getMonth() >= lastValidAirDate.getMonth()) && (scheduledDate?.getFullYear() >= lastValidAirDate.getFullYear()))) ? scheduledDate : null) : scheduledDate;
+      let validatedAiringAt = lastValidAirDate ? (((scheduledDate >= lastValidAirDate) || ((scheduledDate?.getDate() >= lastValidAirDate.getDate()) && (scheduledDate?.getMonth() >= lastValidAirDate.getMonth()) && (scheduledDate?.getFullYear() >= lastValidAirDate.getFullYear()))) ? scheduledDate : null) : scheduledDate
       if (!validatedAiringAt) {
         const fallbackAirDate = airdate ? new Date(airdate) : null
         validatedAiringAt = lastValidAirDate ? ((alDate || fallbackAirDate) >= lastValidAirDate) || (((alDate || fallbackAirDate)?.getDate() >= lastValidAirDate.getDate()) && ((alDate || fallbackAirDate)?.getMonth() >= lastValidAirDate.getMonth()) && ((alDate || fallbackAirDate)?.getFullYear() >= lastValidAirDate.getFullYear())) ? (alDate || fallbackAirDate) : null : (alDate || fallbackAirDate)
@@ -147,7 +153,18 @@
         lastValidAirDate = validatedAiringAt
       }
 
-      episodeList[episode - 1] = { episode, image: episodeList.some((ep) => ep.image === image && ep.episode !== episode) ? null : image, summary: episodeList.some((ep) => ep.summary === summary && ep.episode !== episode) ? null : summary, rating, title, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
+      let zeroSummary
+      if (episode === 0) { // might get lucky and randomly find the zero episode from anilist mappings
+        const findZeroEpisode = (title, data) => {
+          for (const route in data) if (matchPhrase(data[route]?.title?.en, title, 0.4)) return data[route]
+          return null
+        }
+        const zeroEpisode = findZeroEpisode(title, mappings?.episodes)
+        zeroSummary = zeroEpisode?.summary || zeroEpisode[0]?.summary || 'This is a zero episode which means a prequel, prologue or a teaser which may be important to the story.'
+        lastDuration = zeroEpisode?.length || zeroEpisode[0]?.length || lastDuration
+      }
+
+      episodeList[episode - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === image && ep.episode !== episode) ? null : image, summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === summary && ep.episode !== episode) ? null : summary, rating, title, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
     }
 
     currentEpisodes = episodeList?.slice(0, maxEpisodes)
@@ -213,7 +230,7 @@
     {/each}
   {:then _}
     {#if episodeList}
-      {#each currentEpisodes as { episode, image, summary, rating, title, length, airdate, filler, dubAiring}, index}
+      {#each currentEpisodes as { zeroEpisode, episode, image, summary, rating, title, length, airdate, filler, dubAiring}, index}
         {#await Promise.all([title, filler, dubAiring])}
           {#each Array.from({length: Math.min(episodeCount || 0, maxEpisodes)}) as _, index}
             <div class='w-full px-20 content-visibility-auto scale h-150' class:my-20={!mobileList || index !== 0}>
@@ -221,10 +238,10 @@
             </div>
           {/each}
         {:then [title, filler, dubAiring]}
-          {@const completed = !watched && userProgress >= episode}
-          {@const target = userProgress + 1 === episode}
+          {@const completed = !watched && userProgress >= (episode + (zeroEpisode ? 1 : 0))}
+          {@const target = userProgress + 1 === (episode + (zeroEpisode ? 1 : 0))}
           {@const hasFiller = filler?.filler || filler?.recap}
-          {@const progress = !watched && ($animeProgress?.[episode] ?? 0)}
+          {@const progress = !watched && ($animeProgress?.[episode + (zeroEpisode ? 1 : 0)] ?? 0)}
           {@const resolvedTitle = episodeList.filter((ep) => ep.episode < episode).some((ep) => matchPhrase(ep.title, title, 0.1)) ? null : title}
           <div class='w-full content-visibility-auto scale' class:my-20={!mobileList || index !== 0} class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target} class:h-150={image || summary}>
             <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative' class:border={target || hasFiller} class:bg-black={completed} class:border-secondary={hasFiller} class:bg-dark={!completed} use:click={() => play(episode)}>

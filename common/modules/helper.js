@@ -3,7 +3,7 @@ import { anilistClient, codes } from '@/modules/anilist.js'
 import { malClient } from '@/modules/myanimelist.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { profiles } from '@/modules/settings.js'
-import { getMediaMaxEp } from '@/modules/anime.js'
+import { getMediaMaxEp, hasZeroEpisode } from '@/modules/anime.js'
 import { matchKeys } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
 import Debug from 'debug'
@@ -211,8 +211,9 @@ export default class Helper {
 
       // check if media can even be watched, ex: it was resolved incorrectly
       // some anime/OVA's can have a single episode, or some movies can have multiple episodes
+      const zeroEpisode = await hasZeroEpisode(cachedMedia)
       const singleEpisode = ((!cachedMedia.episodes && (Number(filemedia.episode) === 1 || isNaN(Number(filemedia.episode)))) || (cachedMedia.format === 'MOVIE' && cachedMedia.episodes === 1)) && 1 // movie check
-      const videoEpisode = Number(filemedia.episode) || singleEpisode
+      const videoEpisode = (Number(filemedia.episode) || singleEpisode) + (zeroEpisode ? 1 : 0)
       const mediaEpisode = getMediaMaxEp(cachedMedia) || singleEpisode
 
       debug(`Episode viability: ${videoEpisode}, ${mediaEpisode}, ${singleEpisode}`)

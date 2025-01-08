@@ -72,17 +72,22 @@ class Episodes {
         } : []
     }
 
-    async requestEpisodes(idMal, episode) {
+    async getMedia(idMal) {
+        if (!idMal) return []
+        return await this.requestEpisodes(idMal, 1, true)
+    }
+
+    async requestEpisodes(idMal, episode, root) {
         const page = Math.ceil(episode / 100)
-        const cachedEntry = caches.value['episodes'][`${idMal}:${page}`]
+        const cachedEntry = caches.value['episodes'][`${idMal}:${page}:${root}`]
         if (cachedEntry && Date.now() < cachedEntry.expiry) return cachedEntry.data
-        if (this.concurrentRequests.has(`${idMal}:${page}`)) return this.concurrentRequests.get(`${idMal}:${page}`)
+        if (this.concurrentRequests.has(`${idMal}:${page}:${root}`)) return this.concurrentRequests.get(`${idMal}:${page}:${root}`)
         const requestPromise = this.limiter.wrap(async () => {
             await this.rateLimitPromise
             debug(`Fetching Episode ${episode} for ${idMal} with Page ${page}`)
             let res = {}
             try {
-                res = await fetch(`https://api.jikan.moe/v4/anime/${idMal}/episodes?page=${page}`)
+                res = await fetch(`https://api.jikan.moe/v4/anime/${idMal}${!root ? `/episodes?page=${page}` : ``}`)
             } catch (e) {
                 if (!res || res.status !== 404) throw e
             }
@@ -104,12 +109,12 @@ class Episodes {
                     this.printError(res)
                 }
             }
-            updateCache('episodes', `${idMal}:${page}`, { data: await json, expiry: Date.now() + getRandomInt(5, 7) * 24 * 60 * 60 * 1000 })
-            return caches.value['episodes'][`${idMal}:${page}`].data
+            updateCache('episodes', `${idMal}:${page}:${root}`, { data: await json, expiry: Date.now() + getRandomInt(5, 7) * 24 * 60 * 60 * 1000 })
+            return caches.value['episodes'][`${idMal}:${page}:${root}`].data
         })().finally(() => {
-            this.concurrentRequests.delete(`${idMal}:${page}`)
+            this.concurrentRequests.delete(`${idMal}:${page}:${root}`)
         })
-        this.concurrentRequests.set(`${idMal}:${page}`, requestPromise)
+        this.concurrentRequests.set(`${idMal}:${page}:${root}`, requestPromise)
         return requestPromise
     }
 

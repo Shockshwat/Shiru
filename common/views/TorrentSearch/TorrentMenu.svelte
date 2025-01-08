@@ -138,7 +138,7 @@
 
   function episodeInput ({ target }) {
     const episode = Number(target.value)
-    if (episode) search.episode = episode
+    if (episode || episode === 0) search.episode = episode
   }
 
   export let close
@@ -225,7 +225,7 @@
     <div class='col-12 col-md-6 d-flex align-items-center justify-content-around mt-20 mt-md-0'>
       <div class='w-150 d-flex align-items-center'>
         <span>Episode</span>
-        <input type='number' inputmode='numeric' pattern='[0-9]*' class='form-control bg-dark text-right ml-10' value={search.episode} on:input={episodeInput} disabled={!search.episode || movie} />
+        <input type='number' inputmode='numeric' pattern='[0-9]*' class='form-control bg-dark text-right ml-10' value={search.episode} on:input={episodeInput} disabled={(!search.episode && search.episode !== 0) || movie} />
       </div>
       <div class='w-200 d-flex align-items-center'>
         <span>Resolution</span>

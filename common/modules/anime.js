@@ -164,7 +164,7 @@ export async function getChaptersAniSkip (file, duration) {
 export function getMediaMaxEp (media, playable) {
   if (!media) return 0
   else if (playable) return media.nextAiringEpisode?.episode - 1 || nextAiring(media.airingSchedule?.nodes)?.episode - 1 || media.episodes
-  else return Math.max(media.airingSchedule?.nodes?.[media.airingSchedule?.nodes?.length - 1]?.episode || 0, media.airingSchedule?.nodes?.length || 0, (!media.streamingEpisodes || (media.status === 'FINISHED' && media.episodes) ? 0 : media.streamingEpisodes.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) : false}).length), media.episodes || 0, media.nextAiringEpisode?.episode || 0)
+  else return Math.max(media.airingSchedule?.nodes?.[media.airingSchedule?.nodes?.length - 1]?.episode || 0, media.airingSchedule?.nodes?.length || 0, (!media.streamingEpisodes || (media.status === 'FINISHED' && media.episodes) ? 0 : media.streamingEpisodes?.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) : false}).length), media.episodes || 0, media.nextAiringEpisode?.episode || 0)
 }
 
 // utility method for correcting anitomyscript woes for what's needed
@@ -198,6 +198,21 @@ export async function anitomyscript (...args) {
   }
   debug(`AnitoMyScript found titles: ${JSON.stringify(parseObjs)}`)
   return parseObjs
+}
+
+export async function hasZeroEpisode(media) { // really wish they could make fetching zero episodes less painful.
+  if (!media) return null
+  const mappings = await getAniMappings(media.id)
+  let hasZeroEpisode = media.streamingEpisodes?.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) && Number(parseFloat(match[1])) === 0 : false})
+  if (hasZeroEpisode?.length > 0) {
+    return [{...hasZeroEpisode[0], title: hasZeroEpisode[0]?.title?.replace('Episode 0 - ', '')}]
+  } else if (missingEpisodes) {
+    const special = (mappings?.episodes?.S0 || mappings?.episodes?.s0 || mappings?.episodes?.S1 || mappings?.episodes?.s1)
+    if (mappings?.specialCount > 0 && special) { // very likely it's a zero episode, streamingEpisodes were likely just empty...
+      return [{title: special.title?.en, thumbnail: special.image, length: special.length, summary: special.summary, airingAt: special.airDateUtc}]
+    }
+  }
+  return null
 }
 
 export const durationMap = { // guesstimate durations based off format type.
