@@ -95,16 +95,16 @@
   // find the best media in batch to play
   // currently in progress or unwatched
   // tv, movie, ona, ova, special
-  function findPreferredPlaybackMedia (videoFiles) {
+  async function findPreferredPlaybackMedia (videoFiles) {
     for (const { media } of videoFiles) {
       const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
-      const zeroEpisode = hasZeroEpisode(cachedMedia)
+      const zeroEpisode = await hasZeroEpisode(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     for (const { media } of videoFiles) {
       const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
-        const zeroEpisode = hasZeroEpisode(cachedMedia)
+        const zeroEpisode = await hasZeroEpisode(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
@@ -128,7 +128,7 @@
     // highest occurrence if all else fails - unlikely
     const max = highestOccurrence(videoFiles, file => file.media.media?.id).media
     if (max?.media) {
-      const zeroEpisode = hasZeroEpisode(max?.media)
+      const zeroEpisode = await hasZeroEpisode(max?.media)
       return { media: max.media, episode: ((anilistClient.mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + (!zeroEpisode ? 1 : 0) || (!zeroEpisode ? 1 : 0)) }
     }
   }
@@ -184,7 +184,7 @@
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
     if (!newPlaying || Object.keys(newPlaying).length === 0) {
-      newPlaying = findPreferredPlaybackMedia(videoFiles)
+      newPlaying = await findPreferredPlaybackMedia(videoFiles)
       debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
     }
 
