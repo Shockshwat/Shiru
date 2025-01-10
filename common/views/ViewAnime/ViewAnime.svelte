@@ -194,6 +194,7 @@
                 <img class='rounded cover-img overflow-hidden h-full' alt='cover-art' src={media.coverImage?.extraLarge || media.coverImage?.medium} />
               </div>
               <div class='pl-sm-20 ml-sm-20'>
+                <h1 class='font-weight-very-bold text-white select-all mb-0' class:font-size-24={SUPPORTS.isAndroid}>{anilistClient.title(media)}</h1>
                 <div class='d-flex flex-row font-size-18 flex-wrap mt-5'>
                   {#if media.averageScore}
                     <div class='d-flex flex-row mt-10' title='{media.averageScore / 10} by {anilistClient.reviews(media)} reviews'>
@@ -239,7 +240,7 @@
                     <AudioLabel {media} viewAnime={true}/>
                   </div>
                 </div>
-                <div class='d-flex flex-row flex-wrap'>
+                <div class='d-flex flex-row flex-wrap play'>
                   <button class='btn btn-lg btn-secondary w-250 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center mr-10 mt-20'
                     use:click={() => play()}
                     disabled={media.status === 'NOT_YET_RELEASED'}>
@@ -292,7 +293,7 @@
             {#if episodeList}
               <div class='w-full d-flex d-lg-none flex-row align-items-center pt-20 mt-10 pointer' use:click={() => { episodeOrder = !episodeOrder }}>
                 <hr class='w-full' />
-                <div class='position-absolute font-size-18 font-weight-semi-bold px-20 text-white' style="left: 50%; transform: translateX(-50%);">Episodes</div>
+                <div class='position-absolute font-size-18 font-weight-semi-bold px-20 text-white' style='left: 50%; transform: translateX(-50%);'>Episodes</div>
                 <hr class='w-full' />
                 <div class='ml-auto pl-20 font-size-12 more text-muted text-nowrap'>Reverse</div>
               </div>
@@ -362,9 +363,15 @@
     aspect-ratio: 5/1;
     min-height: 20rem;
   }
+  .play {
+    justify-content: center;
+  }
   @media (min-width: 577px) {
     .cover {
       max-width: 35% !important;
+    }
+    .play {
+      justify-content: left;
     }
   }
   .row {
