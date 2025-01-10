@@ -1,17 +1,27 @@
 import { SUPPORTS } from '@/modules/support.js'
 
 let lastTapElement = null
+let lastTapTarget = null
 let lastHoverElement = null
 
 const noop = _ => {}
 
-document.addEventListener('pointerup', () => {
-  setTimeout(() => {
-    lastTapElement?.(false)
-    lastTapElement = null
-    lastHoverElement?.(false)
-    lastHoverElement = null
-  })
+document.addEventListener('pointerup', (e) => {
+    setTimeout(() => {
+      if (lastTapTarget !== e.target) {
+        lastTapElement?.(false)
+        lastTapElement = null
+        lastHoverElement?.(false)
+        lastHoverElement = null
+      }
+    }, 10)
+})
+
+document.addEventListener('pointercancel', (e) => {
+  lastTapElement?.(false)
+  lastTapElement = null
+  lastHoverElement?.(false)
+  lastHoverElement = null
 })
 
 /** @typedef {{element: Element, x: number, y: number, inViewport: boolean}} ElementPosition  */
@@ -50,7 +60,7 @@ export function click (node, cb = noop) {
  * @param {HTMLElement} node - The node to attach the click event listener to.
  * @param {Function} [hoverUpdate=noop] - The callback function to be executed on hover.
  */
-export function hoverChange (node, hoverUpdate = noop) {
+export function hoverExit (node, hoverUpdate = noop) {
   node.tabIndex = 0
   node.role = 'button'
   node.addEventListener('pointerleave', e => {
@@ -58,21 +68,22 @@ export function hoverChange (node, hoverUpdate = noop) {
   })
 }
 
-// TODO: this needs to be re-written.... again... it should detect pointer type and have separate functionality for mouse and touch and none for dpad
 /**
  * Adds hover and click event listeners to the specified node.
  * @param {HTMLElement} node - The node to attach the event listeners to.
  */
-export function hoverClick (node, [cb = noop, hoverUpdate = noop]) {
+export function hoverClick (node, [cb = noop, hoverUpdate = noop, rcb = noop]) {
   let pointerType = 'touch'
   node.tabIndex = 0
   node.role = 'button'
   node.addEventListener('pointerenter', e => {
-    lastHoverElement?.(false)
-    lastTapElement?.(false)
-    hoverUpdate(true)
-    lastHoverElement = hoverUpdate
-    pointerType = e.pointerType
+    if (e.pointerType !== 'touch') {
+      lastHoverElement?.(false)
+      lastTapElement?.(false)
+      hoverUpdate(true)
+      lastHoverElement = hoverUpdate
+      pointerType = e.pointerType
+    }
   })
   node.addEventListener('click', e => {
     e.stopPropagation()
@@ -84,8 +95,14 @@ export function hoverClick (node, [cb = noop, hoverUpdate = noop]) {
       hoverUpdate(false)
       cb(e)
     } else {
+      hoverUpdate(true)
       lastTapElement = hoverUpdate
+      lastTapTarget = e.target
     }
+  })
+  node.addEventListener('contextmenu', e => {
+    e.preventDefault()
+    rcb(e)
   })
   node.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
@@ -101,15 +118,14 @@ export function hoverClick (node, [cb = noop, hoverUpdate = noop]) {
     }
   })
   node.addEventListener('pointerup', e => {
-    e.stopPropagation()
-    if (e.pointerType === 'mouse') setTimeout(() => hoverUpdate(false))
+    if (e.pointerType === 'mouse') {
+      e.stopPropagation()
+      setTimeout(() => hoverUpdate(false))
+    }
   })
   node.addEventListener('pointerleave', e => {
     lastHoverElement = hoverUpdate
     if (e.pointerType === 'mouse') hoverUpdate(false)
-  })
-  node.addEventListener('pointermove', e => {
-    if (e.pointerType === 'touch') hoverUpdate(false)
   })
 }
 

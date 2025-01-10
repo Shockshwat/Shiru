@@ -1,6 +1,7 @@
 <script>
   import { formatMap, getMediaMaxEp, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
+  import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
@@ -41,7 +42,6 @@
     if (media.status === 'NOT_YET_RELEASED') return
     playMedia(media)
   }
-
   let muted = true
   function toggleMute () {
     muted = !muted
@@ -85,7 +85,7 @@
     <div class='font-size-24 font-weight-bold text-truncate d-inline-block w-full text-white' title={anilistClient.title(media)}>
       {anilistClient.title(media)}
     </div>
-    <div class='d-flex flex-row pt-5'>
+    <div class='d-flex flex-row'>
       <button class='btn btn-secondary flex-grow-1 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center'
         use:click={play}
         disabled={media.status === 'NOT_YET_RELEASED'}>
@@ -101,57 +101,57 @@
         </button>
       {/if}
     </div>
-    <div class='details text-white text-capitalize pt-15 d-flex'>
-      {#if type || type === 0}
-        <span class='context-type text-nowrap d-flex align-items-center'>
-          {#if Number.isInteger(type) && type >= 0}
-            <ThumbsUp fill='currentColor'class='pr-5 pb-5 {type === 0 ? "text-muted" : "text-success"}' size='2rem' />
-          {:else if Number.isInteger(type) && type < 0}
-            <ThumbsDown fill='currentColor' class='text-danger pr-5 pb-5' size='2rem' />
+    <div class='text-truncate pb-10'>
+      <div class='details text-white text-capitalize pt-10 d-flex flex-wrap'>
+        {#if type || type === 0}
+          <span class='d-flex badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+            {#if Number.isInteger(type) && type >= 0}
+              <ThumbsUp fill='currentColor'class='pr-5 pb-5 {type === 0 ? "text-muted" : "text-success"}' size='2rem' />
+            {:else if Number.isInteger(type) && type < 0}
+              <ThumbsDown fill='currentColor' class='text-danger pr-5 pb-5' size='2rem' />
+            {/if}
+            {(Number.isInteger(type) ? Math.abs(type).toLocaleString() + (type >= 0 ? ' likes' : ' dislikes') : type)}
+          </span>
+        {/if}
+        <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+          {#if media.format}
+            {formatMap[media.format]}
           {/if}
-          {(Number.isInteger(type) ? Math.abs(type).toLocaleString() + (type >= 0 ? ' likes' : ' dislikes') : type)}
         </span>
-      {/if}
-      <span class='text-nowrap d-flex align-items-center'>
-        {#if media.format}
-          {formatMap[media.format]}
+        {#if maxEp > 1 || (maxEp !== 1 && ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress)}
+          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+            {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'} Episodes
+          </span>
+        {:else if media.duration}
+          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+            {media.duration + ' Minutes'}
+          </span>
         {/if}
-      </span>
-      {#if maxEp > 1 || (maxEp !== 1 && ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress)}
-        <span class='text-nowrap d-flex align-items-center'>
-          {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'} Episodes
-        </span>
-      {:else if media.duration}
-        <span class='text-nowrap d-flex align-items-center'>
-          {media.duration + ' Minutes'}
-        </span>
-      {/if}
-      {#if !variables?.scheduleList}
-        <span class='text-nowrap d-flex align-items-center'>
-          <AudioLabel {media} banner={true}/>
-        </span>
-      {/if}
-      {#if media.isAdult}
-      <span class='text-nowrap d-flex align-items-center'>
-          Rated 18+
-        </span>
-      {/if}
-    </div>
-    <div class='details text-white text-capitalize pb-10 d-flex'>
-      {#if media.season || media.seasonYear}
-        <span class='text-nowrap d-flex align-items-center'>
-          {[media.season?.toLowerCase(), media.seasonYear].filter(s => s).join(' ')}
-        </span>
-      {/if}
-      {#if media.averageScore}
-        <span class='text-nowrap d-flex align-items-center'>{media.averageScore + '%'} Rating</span>
-        {#if media.stats?.scoreDistribution}
-          <span class='text-nowrap d-flex align-items-center'>{anilistClient.reviews(media)} Reviews</span>
+        {#if !variables?.scheduleList}
+          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+            <AudioLabel {media} banner={true}/>
+          </span>
         {/if}
-      {/if}
+        {#if media.isAdult}
+        <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+            Rated 18+
+          </span>
+        {/if}
+        {#if media.season || media.seasonYear}
+          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+            {[media.season?.toLowerCase(), media.seasonYear].filter(s => s).join(' ')}
+          </span>
+        {/if}
+        {#if media.averageScore}
+          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>{media.averageScore + '%'} Rating</span>
+          {#if media.stats?.scoreDistribution && (!type && type !== 0)}
+            <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>{anilistClient.reviews(media)} Reviews</span>
+          {/if}
+        {/if}
+      </div>
     </div>
     {#if media.description}
-      <div class='w-full h-full text-muted description overflow-hidden'>
+      <div class='w-full h-full text-muted description overflow-hidden' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid} class:line-clamp-3={!SUPPORTS.isAndroid} class:line-clamp-2={SUPPORTS.isAndroid}>
         {media.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
       </div>
     {/if}
@@ -161,16 +161,13 @@
 <style>
   .description {
     display: -webkit-box !important;
-    -webkit-line-clamp: 4;
     -webkit-box-orient: vertical;
   }
-  .details > span:not(:last-child)::after {
-    content: '•';
-    padding: .5rem;
-    font-size: .6rem;
-    align-self: center;
-    white-space: normal;
-    color: var(--dm-muted-text-color) !important;
+  .line-clamp-2 {
+    -webkit-line-clamp: 2;
+  }
+  .line-clamp-3 {
+    -webkit-line-clamp: 3;
   }
   .banner {
     height: 45%
@@ -178,9 +175,10 @@
   .sound {
    filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1))
   }
-  /* video {
-    object-fit: cover;
-  } */
+  .details > span:not(:last-child) {
+    margin-right: .2rem;
+    margin-bottom: .1rem;
+  }
   .banner::after {
     content: '';
     position: absolute;
@@ -212,8 +210,7 @@
       visibility: visible;
     }
   }
-
-   iframe {
+  iframe {
     height: 200%;
     top: 50%;
     transform: translate(0, -50%);

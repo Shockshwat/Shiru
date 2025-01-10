@@ -27,19 +27,19 @@
     preview = state
   }
 
-  const { reactive, init } = createListener(['btn', 'scoring'])
+  const { reactive, init } = createListener(['btn', 'scoring', 'sound'])
   $: init(preview)
 </script>
 
-<div class='d-flex p-md-20 p-15 position-relative first-check {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState]}>
+<div class='d-flex p-md-20 p-15 position-relative first-check {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState, viewMedia]}>
   {#if preview}
     <PreviewCard {media} {type} variables={_variables} />
   {/if}
-  <div class='item small-card d-flex flex-column h-full pointer content-visibility-auto' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}>
+  <div class='item small-card d-flex flex-column pointer content-visibility-auto' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}>
     {#if $page === 'schedule'}
       <div class='w-full text-center pb-10'>
         {#if airingAt(media, _variables)}
-          { episode(media, _variables) }&nbsp;
+          {episode(media, _variables)}&nbsp;
           <span class='font-weight-bold text-light'>
             {airingAt(media, _variables)}
           </span>
@@ -64,14 +64,14 @@
         {(Number.isInteger(type) ? Math.abs(type).toLocaleString() + (type >= 0 ? ' likes' : ' dislikes') : type)}
       </div>
     {/if}
-    <div class='text-white font-weight-very-bold font-size-16 pt-15 title overflow-hidden'>
+    <div class='text-white font-weight-very-bold font-size-16 title overflow-hidden' class:mb-10={type || type === 0}>
       {#if media.mediaListEntry?.status}
         <div style:--statusColor={statusColorMap[media.mediaListEntry.status]} class='list-status-circle d-inline-flex overflow-hidden mr-5' title={media.mediaListEntry.status} />
       {/if}
       {anilistClient.title(media)}
     </div>
-    <div class='d-flex flex-row mt-auto pt-10 font-weight-medium justify-content-between w-full text-muted'>
-      <div class='d-flex align-items-center pr-5' style='margin-left: -1px'>
+    <div class='d-flex flex-row mt-auto font-weight-medium justify-content-between w-full text-muted'>
+      <div class='d-flex align-items-center pr-5'>
         <CalendarDays class='pr-5' size='2.6rem' />
         <span class='line-height-1'>{media.seasonYear || 'N/A'}</span>
       </div>
@@ -95,6 +95,7 @@
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    line-height: 1.2;
   }
   img {
     width: 100%;

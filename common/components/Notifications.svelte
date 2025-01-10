@@ -1,6 +1,6 @@
 <script context='module'>
   import { derived, writable } from 'simple-store-svelte'
-  import { click, hoverChange } from '@/modules/click.js'
+  import { click, hoverExit } from '@/modules/click.js'
   import { createListener, debounce, since } from '@/modules/util.js'
   import { notify, updateNotify } from '@/modules/settings.js'
   import { MailCheck, MailOpen, Play, X } from 'lucide-svelte'
@@ -115,8 +115,8 @@
 
 <div class='modal z-55' class:show={$notifyView}>
   {#if $notifyView}
-    <div class='modal-dialog' on:pointerup|self={close} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
-      <div class='modal-content mw-500 w-auto bg-transparent d-flex justify-content-center align-items-center pt-20 pb-20' class:h-full={currentNotifications.length > 0}>
+    <div class='modal-dialog overflow-x-hidden' on:pointerup|self={close} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
+      <div class='modal-content w-auto bg-transparent d-flex justify-content-center align-items-center pt-20 pb-20' class:h-full={currentNotifications.length > 0}>
         <div class='modal-content mw-500 w-auto d-flex justify-content-center flex-column' class:h-full={currentNotifications.length > 0}>
           <div class='d-flex justify-content-end align-items-start w-auto'>
             <button type='button' class='btn btn-square d-flex align-items-center justify-content-center' use:click={close}><X size='1.7rem' strokeWidth='3'/></button>
@@ -131,7 +131,7 @@
               {#if watched && !notification.read}
                 {(notification.read = true) && updateSort() && ''}
               {/if}
-              <div class='notification-item shadow-lg position-relative d-flex align-items-center ml-20 mr-20 mt-5 mb-5 p-5 scale pointer' role='button' tabindex='0' use:hoverChange={() => {notification.prompt = false; delete notification.prompt}} use:click={() => { if (!behind || notification.prompt) { notification.prompt = false; delete notification.prompt; notification.read = true; onclick(notification) } else { notification.prompt = true } } } on:contextmenu|preventDefault={() => { notification.read = true; onclick(notification, true); }} class:not-reactive={!$reactive} class:read={notification.read} class:behind={behind || delayed} class:current={!behind} class:not-watching={notWatching} class:watched={watched} class:announcement={announcement}>
+              <div class='notification-item shadow-lg position-relative d-flex align-items-center ml-20 mr-20 mt-5 mb-5 p-5 scale pointer' role='button' tabindex='0' use:hoverExit={() => {notification.prompt = false; delete notification.prompt}} use:click={() => { if (!behind || notification.prompt) { notification.prompt = false; delete notification.prompt; notification.read = true; onclick(notification) } else { notification.prompt = true } } } on:contextmenu|preventDefault={() => { notification.read = true; onclick(notification, true); }} class:not-reactive={!$reactive} class:read={notification.read} class:behind={behind || delayed} class:current={!behind} class:not-watching={notWatching} class:watched={watched} class:announcement={announcement}>
                 {#if notification.heroImg}
                   <div class='position-absolute top-0 left-0 w-full h-full'>
                     <img src={notification.heroImg} alt='bannerImage' class='hero-img w-full h-full'/>

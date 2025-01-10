@@ -38,6 +38,16 @@
       }
     })
   }
+
+  const isPreviousRSS = (i) => {
+    let index = i - 1
+    while (index >= 0) {
+      if (!manager.sections[index]?.hide) return manager.sections[index]?.isRSS ?? false
+      else if ((index - 1 >= 0) && manager.sections[index - 1]?.isRSS) return true
+      index--
+    }
+    return false
+  }
 </script>
 
 <script>
@@ -46,12 +56,12 @@
   import smoothScroll from '@/modules/scroll.js'
 </script>
 
-<div class='h-full w-full overflow-y-scroll root' use:smoothScroll> <!-- overflow-x-hidden --> <!-- might need to add this back based on mobile behavior -->
+<div class='h-full w-full overflow-y-scroll root overflow-x-hidden' use:smoothScroll>
   <Banner data={$bannerData} />
   <div class='d-flex flex-column h-full w-full mt-15'>
     {#each manager.sections as section, i (i)}
       {#if !section.hide}
-        <Section bind:opts={section} lastEpisode={manager.sections[i - 1]?.isRSS}/>
+        <Section bind:opts={section} lastEpisode={isPreviousRSS(i)}/>
       {/if}
     {/each}
   </div>

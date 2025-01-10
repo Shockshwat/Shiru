@@ -1,7 +1,7 @@
 <script>
   import { statusColorMap } from '@/modules/anime.js'
   import EpisodePreviewCard from './EpisodePreviewCard.svelte'
-  import { hoverClick, hoverChange } from '@/modules/click.js'
+  import { hoverClick, hoverExit } from '@/modules/click.js'
   import { writable } from 'svelte/store'
   import { since } from '@/modules/util.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
@@ -43,7 +43,7 @@
   $: completed = !watched && media?.mediaListEntry?.progress >= data?.episode
 </script>
 
-<div class='d-flex p-20 pb-10 position-relative episode-card {section ? `mb-100` : ``}' use:hoverChange={() => prompt.set(false)} use:hoverClick={[setClickState, setHoverState]} on:contextmenu|preventDefault={viewMedia} role='none'>
+<div class='d-flex p-20 pb-10 position-relative episode-card {section ? `mb-100` : ``}' use:hoverExit={() => prompt.set(false)} use:hoverClick={[setClickState, setHoverState, viewMedia]} role='none'>
   {#if preview}
     <EpisodePreviewCard {data} bind:prompt={$prompt} />
   {/if}
@@ -121,7 +121,7 @@
     /* fixes transform scaling on click causing z-index issues */
   }
   .mb-100 {
-    margin-bottom: 10rem !important;
+    margin-bottom: 15rem !important;
   }
   .opacity-half {
     opacity: 30%;

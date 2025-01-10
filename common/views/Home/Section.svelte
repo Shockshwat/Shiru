@@ -86,7 +86,7 @@
     scroll-behavior: smooth;
   }
   .mv-10 {
-    margin-top: -10rem !important;
+    margin-top: -15rem !important;
     z-index: 0 !important;
   }
   .gallery :global(.item.small-card) {

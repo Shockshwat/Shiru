@@ -2,6 +2,7 @@
   import { getContext, onMount } from 'svelte'
   import { getMediaMaxEp, formatMap, playMedia, genreIcons } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
+  import { settings } from '@/modules/settings.js'
   import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
   import { anilistClient } from '@/modules/anilist.js'
@@ -60,13 +61,15 @@
     const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
     return searchIDS.length > 0 ? anilistClient.searchAllIDS({ page: 1, perPage: 50, id: searchIDS }) : Promise.resolve([])
   })()
-  $: mediaId && (modal?.focus(), overlay = 'viewanime', saveMedia(), (container && container.dispatchEvent(new Event('scrolltop'))))
   $: {
     if (media) {
       if (scrollTags) scrollTags.scrollLeft = 0
       if (scrollGenres) scrollGenres.scrollLeft = 0
     }
   }
+  function scrollTop() {
+    container.dispatchEvent(new Event('scrolltop'))
+    if (!settings.value.smoothScroll) container.scrollTo({top: 0, behavior: 'smooth'})
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
@@ -188,7 +191,6 @@
                 <img class='rounded cover-img overflow-hidden h-full' alt='cover-art' src={media.coverImage?.extraLarge || media.coverImage?.medium} />
               </div>
               <div class='pl-sm-20 ml-sm-20'>
-                <h1 class='font-weight-very-bold text-white select-all mb-0'>{anilistClient.title(media)}</h1>
                 <div class='d-flex flex-row font-size-18 flex-wrap mt-5'>
                   {#if media.averageScore}
                     <div class='d-flex flex-row mt-10' title='{media.averageScore / 10} by {anilistClient.reviews(media)} reviews'>

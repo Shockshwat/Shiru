@@ -200,14 +200,22 @@ export function createListener(triggerClasses = []) {
   const reactive = writable(true)
   let handling = false
   let bounds = false
+  let pending = null
 
   function handleDown({ target }) {
     if (triggerClasses.some(className => target.closest(`.${className}`))) reactive.set(bounds)
-    else if (bounds) reactive.set(false)
+    else if (bounds) {
+      pending = null
+      reactive.set(false)
+    }
   }
 
   function handleUp() {
-    reactive.set(true)
+    const handle = Math.random()
+    pending = handle
+    setTimeout(() => {
+      if (pending && pending === handle) reactive.set(true)
+    }, 250)
   }
 
   function addListeners() {
