@@ -3,6 +3,7 @@
   import { getMediaMaxEp, formatMap, playMedia, genreIcons } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { settings } from '@/modules/settings.js'
+  import { SUPPORTS } from '@/modules/support.js'
   import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
   import { anilistClient } from '@/modules/anilist.js'
@@ -61,6 +62,7 @@
     const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
     return searchIDS.length > 0 ? anilistClient.searchAllIDS({ page: 1, perPage: 50, id: searchIDS }) : Promise.resolve([])
   })()
+  $: mediaId && (modal?.focus(), overlay = 'viewanime', saveMedia(), (container && scrollTop()))
   $: {
     if (media) {
       if (scrollTags) scrollTags.scrollLeft = 0
@@ -70,6 +72,7 @@
   function scrollTop() {
     container.dispatchEvent(new Event('scrolltop'))
     if (!settings.value.smoothScroll) container.scrollTo({top: 0, behavior: 'smooth'})
+  }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
