@@ -119,10 +119,10 @@ class RSSMediaManager {
       const dubbed = malDubs.isDubMedia(parseObject)
       if (notify && (!settings.value.rssNotifyDubs || dubbed || !malDubs.isDubMedia(media))) {
         const progress = media?.mediaListEntry?.progress
-        const behind = progress < (episode - 1)
+        const behind = progress < (Number(episode) - 1)
         const details = {
           title: anilistClient.title(media) || parseObject.anime_title,
-          message: `${media?.format === 'MOVIE' ? `The Movie` : episode ? `${media?.episodes === episode ? `The wait is over! ` : ``}Episode ${episode}` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${episode || media?.format === 'MOVIE' ? `is out${media?.format !== 'MOVIE' && media?.episodes === episode ? `, this season is now ready to binge` : ``}!` : `is now ready to binge!`}`,
+          message: `${media?.format === 'MOVIE' ? `The Movie` : episode ? `${media?.episodes === Number(episode) ? `The wait is over! ` : ``}Episode ${Number(episode)}` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${Number(episode) || media?.format === 'MOVIE' ? `is out${media?.format !== 'MOVIE' && media?.episodes === Number(episode) ? `, this season is now ready to binge` : ``}!` : `is now ready to binge!`}`,
           icon: media?.coverImage.medium,
           heroImg: media?.bannerImage
         }
@@ -146,7 +146,7 @@ class RSSMediaManager {
           detail: {
             ...details,
             id: media?.id,
-            episode: episode || (parseObject?.anime_title?.match(/S(\d{2})/) ? parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10) : episode),
+            episode: Number(episode) || (parseObject?.anime_title?.match(/S(\d{2})/) ? parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10) : Number(episode)),
             timestamp: Math.floor(new Date(date).getTime() / 1000),
             format: media?.format,
             season: !episode && parseObject.anime_title.match(/S(\d{2})/),
