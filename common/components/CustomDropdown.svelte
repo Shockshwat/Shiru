@@ -92,8 +92,8 @@
         {@const searchInput = searchTextInput ? searchTextInput.toLowerCase() : null}
         <div class='custom-dropdown-menu position-absolute mh-300 overflow-y-auto w-full bg-dark custom-menu-{id}'>
             {#each getOptions().filter((val) => !searchInput || getOptionDisplay(val)?.toLowerCase().includes(searchInput)).sort((a, b) => (value?.includes(a) ? -1 : 1) - (value?.includes(b) ? -1 : 1)).slice(0, 20) as option}
-                <div class='custom-dropdown-item p-2 text-center pointer custom-menu-{id}' class:custom-dropdown-item-selected={value?.includes(option)}>
-                  <span class='not-reactive' use:click={() => { if (value?.indexOf(option) > -1) { value = [ ...value.slice(0, value?.indexOf(option)), ...value.slice(value?.indexOf(option) + 1)] } else { value = [...value, option] } }}>{getOptionDisplay(option)}</span>
+                <div class='custom-dropdown-item p-2 text-center pointer custom-menu-{id}' class:custom-dropdown-item-selected={value?.includes(option)} use:click={() => { if (value?.indexOf(option) > -1) { value = [ ...value.slice(0, value?.indexOf(option)), ...value.slice(value?.indexOf(option) + 1)] } else { value = [...value, option] } }}>
+                    <span class='not-reactive'>{getOptionDisplay(option)}</span>
                 </div>
             {/each}
         </div>
