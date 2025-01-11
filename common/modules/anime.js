@@ -200,9 +200,9 @@ export async function anitomyscript (...args) {
   return parseObjs
 }
 
-export async function hasZeroEpisode(media) { // really wish they could make fetching zero episodes less painful.
+export async function hasZeroEpisode(media, existingMappings) { // really wish they could make fetching zero episodes less painful.
   if (!media) return null
-  const mappings = await getAniMappings(media.id)
+  const mappings = existingMappings || (await getAniMappings(media.id)) || {}
   let hasZeroEpisode = media.streamingEpisodes?.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) && Number(parseFloat(match[1])) === 0 : false})
   if (hasZeroEpisode?.length > 0) {
     return [{...hasZeroEpisode[0], title: hasZeroEpisode[0]?.title?.replace('Episode 0 - ', '')}]
@@ -559,7 +559,7 @@ const episodeMetadataMap = {}
 
 export async function getEpisodeMetadataForMedia (media) {
   if (episodeMetadataMap[media?.id]) return episodeMetadataMap[media?.id]
-  const { episodes } = await getAniMappings(media?.id)
+  const { episodes } = await getAniMappings(media?.id) || {}
   episodeMetadataMap[media?.id] = episodes
   return episodes
 }

@@ -77,7 +77,7 @@
   }
 
   async function load () {
-    const mappings = await getAniMappings(id)
+    const mappings = await getAniMappings(id) || {}
     const { episodes, specialCount, episodeCount: newEpisodeCount } = mappings
 
     /** @type {{ airingAt: number; episode: number; filler?: boolean; dubAiring?: object; }[]} */
@@ -122,7 +122,7 @@
 
     let lastValidAirDate = null
     let lastDuration = durationMap[media?.format]
-    const zeroEpisode = await hasZeroEpisode(media)
+    const zeroEpisode = await hasZeroEpisode(media, mappings)
     if (zeroEpisode) {
       alEpisodes = alEpisodes.slice(0, -1)
       alEpisodes.unshift({ episode: 0, title: zeroEpisode[0].title, airingAt: media.airingSchedule?.nodes?.find(node => node.episode === 1)?.airingAt || zeroEpisode[0].airingAt, filler: episodesList.getSingleEpisode(idMal, 0), dubAiring: dubbedEpisode(0, media)})

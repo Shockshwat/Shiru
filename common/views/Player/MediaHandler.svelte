@@ -58,7 +58,7 @@
       let streamingEpisode = streamingTitle
       if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {
         // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
-        const { episodes, specialCount, episodeCount } = await getAniMappings(media?.id)
+        const { episodes, specialCount, episodeCount } = await getAniMappings(media?.id) || {}
         const needsValidation = !(!specialCount || (media?.episodes === episodeCount && episodes && episodes[Number(episode)]))
         streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${Number(episode)} - ` + episodes[Number(episode)]?.title?.en)) ? {title: (`Episode ${Number(episode)} - ` + episodes[Number(episode)]?.title?.en)} : (needsValidation && media?.status === 'FINISHED') ? {title: (`Episode ${Number(episode)} - ` + (episodes[Number(episode)]?.title?.en || `Episode ${Number(episode)}`))} : streamingTitle
         if (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode')) {

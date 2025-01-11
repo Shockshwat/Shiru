@@ -8,8 +8,7 @@
 
   const vars = { scheduleList: true, format: 'TV' }
 
-  async function fetchAllScheduleEntries (_variables) {
-    const { season, year, status, ...variables } = _variables
+  async function fetchAllScheduleEntries (variables) {
     const results = { data: { Page: { media: [], pageInfo: { hasNextPage: false } } } }
     const airingLists = await (variables.hideSubs ? animeSchedule.dubAiringLists.value : animeSchedule.subAiringLists.value)
     const ids = { idMal: airingLists.map(entry => variables.hideSubs ? entry.media?.media?.idMal : entry.idMal).filter(idMal => idMal !== undefined) }
