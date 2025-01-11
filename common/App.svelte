@@ -6,7 +6,7 @@
   import { rss } from './views/TorrentSearch/TorrentModal.svelte'
 
   export const page = writable('home')
-  export const overlay = writable('none')
+  export const overlay = writable([])
   export const view = writable(null)
   export async function handleAnime (anime) {
     IPC.emit('window-show')
@@ -72,11 +72,11 @@
   <Navbar bind:page={$page} />
   <div class='overflow-hidden content-wrapper h-full'>
     <Toaster visibleToasts={2} position='top-right' theme='dark' richColors duration={10000} closeButton />
-    <Profiles />
-    <Notifications />
-    <MinimizeTray />
+    <Profiles bind:overlay={$overlay} />
+    <Notifications bind:overlay={$overlay} />
     <ViewAnime bind:overlay={$overlay} />
     <TorrentModal bind:overlay={$overlay} />
+    <MinimizeTray bind:overlay={$overlay} />
     <Router bind:page={$page} bind:overlay={$overlay} />
   </div>
 </div>

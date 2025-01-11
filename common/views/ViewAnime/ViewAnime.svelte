@@ -26,7 +26,7 @@
   function close () {
     $view = null
     mediaList = []
-    overlay = 'none'
+    overlay = overlay.filter(item => item !== 'viewanime')
   }
   function back () {
     if (mediaList.length > 1) {
@@ -62,7 +62,8 @@
     const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
     return searchIDS.length > 0 ? anilistClient.searchAllIDS({ page: 1, perPage: 50, id: searchIDS }) : Promise.resolve([])
   })()
-  $: mediaId && (modal?.focus(), overlay = 'viewanime', saveMedia(), (container && scrollTop()))
+  $: mediaId && (modal?.focus(), overlay = [...overlay, 'viewanime'], saveMedia(), (container && scrollTop()))
+  $: !mediaId && close()
   $: {
     if (media) {
       if (scrollTags) scrollTags.scrollLeft = 0
@@ -110,11 +111,7 @@
     IPC.emit('open', url)
   }
   let episodeOrder = true
-  window.addEventListener('overlay-check', (event) => {
-    if (!event?.detail?.nowPlaying && media) {
-      close()
-    }
-  })
+  window.addEventListener('overlay-check', (event) => { if (!event?.detail?.nowPlaying && media) close() })
 
   function handlePlay(id, episode, torrentOnly) {
     const mediaCache = anilistClient.mediaCache.value[id]
@@ -155,10 +152,10 @@
   let episodeList = []
   let episodeLoad
   $: if (episodeLoad) {
-      episodeLoad.then(episodes => {
-        episodeList = episodes
-      })
-    }
+    episodeLoad.then(episodes => {
+      episodeList = episodes
+    })
+  }
 
   let leftColumn, rightColumn
   function episodeHeight() {

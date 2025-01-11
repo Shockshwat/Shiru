@@ -1145,7 +1145,7 @@
   }
 </script>
 
-<!-- <svelte:window bind:innerWidth bind:innerHeight /> --> <!-- class:hideLayers={overlay === 'torrent'} ==> hack to prevent player from visibly appearing behind torrent modal -->
+<!-- <svelte:window bind:innerWidth bind:innerHeight /> --> <!-- class:hideLayers={overlay.includes('torrent') || overlay.includes('notifications') || overlay.includes('profiles') || overlay.includes('minimizetray')} ==> hack to prevent player from visibly appearing behind torrent modal -->
 <div
   class='player w-full h-full d-flex flex-column overflow-hidden position-relative'
   class:pointer={miniplayer}
@@ -1154,7 +1154,7 @@
   class:immersed={immersed}
   class:buffering={src && buffering}
   class:fitWidth
-  class:hideLayers={overlay === 'torrent'}
+  class:hideLayers={overlay.includes('torrent') || overlay.includes('notifications') || overlay.includes('profiles') || overlay.includes('minimizetray')}
   bind:this={container}
   role='none'
   on:pointermove={resetImmerse}
@@ -1270,7 +1270,7 @@
   </div>
   <div class='middle d-flex align-items-center justify-content-center flex-grow-1 position-relative'>
     <!-- eslint-disable-next-line svelte/valid-compile -->
-    <div class='w-full h-full position-absolute toggle-fullscreen' on:dblclick={toggleFullscreen} on:click|self={() => { if (page === 'player' && ['none', 'player'].includes(overlay)) playPause(); page = 'player'; window.dispatchEvent(new Event('overlay-check')) }} />
+    <div class='w-full h-full position-absolute toggle-fullscreen' on:dblclick={toggleFullscreen} on:click|self={() => { if (page === 'player' && ((overlay.length === 0) || overlay.includes('player'))) playPause(); page = 'player'; window.dispatchEvent(new Event('overlay-check')) }} />
     <!-- eslint-disable-next-line svelte/valid-compile -->
     <div class='w-full h-full position-absolute toggle-immerse d-none' on:dblclick={toggleFullscreen} on:click|self={toggleImmerse} />
     <div class='w-full h-full position-absolute mobile-focus-target d-none' use:click={() => { page = 'player'; window.dispatchEvent(new Event('overlay-check')) }} />

@@ -24,17 +24,21 @@
   })
 </script>
 <script>
+  export let overlay
+
   let modal
   let mediaCache = writable({})
   const { reactive, init } = createListener(['btn'])
   function close () {
     $notifyView = false
+    overlay = overlay.filter(item => item !== 'notifications')
     updateSort()
   }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
-  $: $notifyView && modal?.focus()
+  $: $notifyView && (modal?.focus(), overlay = [...overlay, 'notifications'])
+  $: !$notifyView && close()
   $: init($notifyView)
   $: {
     if (!$notifyView) updateSort()

@@ -8,45 +8,36 @@
   export const actionPrompt = writable(false)
 </script>
 <script>
+  export let overlay
+
   let modal
   let rememberChoice
-  $: $actionPrompt && modal?.focus()
-
   function close () {
     $actionPrompt = false
     rememberChoice = false
+    overlay = overlay.filter(item => item !== 'minimizetray')
   }
-
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
+  $: $actionPrompt && (modal?.focus(), overlay = [...overlay, 'minimizetray'])
+  $: !$actionPrompt && close()
 
   function minimizeTray() {
     if (rememberChoice) $settings.closeAction = 'Minimize'
     close()
     IPC.emit('window-hide')
   }
-
   function closeWindow() {
     if (rememberChoice) $settings.closeAction = 'Close'
     IPC.emit('close')
   }
-
   IPC.on('window-close', () => {
-    if ($settings.closeAction === 'Prompt') {
-      $actionPrompt = !$actionPrompt
-    } else if ($settings.closeAction === 'Minimize') {
-      minimizeTray()
-    } else {
-      closeWindow()
-    }
+    if ($settings.closeAction === 'Prompt') $actionPrompt = !$actionPrompt
+    else if ($settings.closeAction === 'Minimize') minimizeTray()
+    else closeWindow()
   })
-
-  window.addEventListener('overlay-check', () => {
-    if ($actionPrompt) {
-      close()
-    }
-  })
+  window.addEventListener('overlay-check', () => { if ($actionPrompt) close() })
 </script>
 
 <div class='modal z-55' class:show={$actionPrompt}>

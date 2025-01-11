@@ -21,7 +21,7 @@
   export let overlay
 
   function close () {
-    overlay = 'none'
+    overlay = overlay.filter(item => item !== 'torrent')
     $rss = null
   }
   function checkClose ({ keyCode }) {
@@ -34,7 +34,7 @@
 
   $: {
     if (search) {
-      overlay = 'torrent'
+      overlay = [...overlay, 'torrent']
       modal?.focus()
     }
   }

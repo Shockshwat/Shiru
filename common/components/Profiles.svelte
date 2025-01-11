@@ -64,21 +64,21 @@
   }
 </script>
 <script>
+  export let overlay
+
   let modal
   function close () {
     $profileView = false
     $profileAdd = false
+    overlay = overlay.filter(item => item !== 'profiles')
   }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
-  $: $profileView && modal?.focus()
+  $: $profileView && (modal?.focus(), overlay = [...overlay, 'profiles'])
+  $: !$profileView && close()
 
-  window.addEventListener('overlay-check', () => {
-    if ($profileView) {
-      close()
-    }
-  })
+  window.addEventListener('overlay-check', () => { if ($profileView) close() })
 </script>
 
 <div class='modal z-55' class:show={$profileView}>
