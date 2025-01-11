@@ -351,7 +351,7 @@
   }
   .back {
     top: 5rem !important;
-    left: 9rem !important;
+    left: 2.5rem !important;
     right: unset !important;
   }
   .banner {
@@ -375,6 +375,9 @@
     padding-top: 12rem !important
   }
   @media (min-width: 769px) {
+    .back {
+      left: 9rem !important;
+    }
     .row  {
       padding: 0 10rem;
     }
