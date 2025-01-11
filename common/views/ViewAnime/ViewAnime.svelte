@@ -19,7 +19,7 @@
   import SmallCard from '@/components/cards/SmallCard.svelte'
   import SkeletonCard from '@/components/cards/SkeletonCard.svelte'
   import Helper from '@/modules/helper.js'
-  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash } from 'lucide-svelte'
+  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash, ArrowDownZA, ArrowUpZA } from 'lucide-svelte'
 
   export let overlay
   const view = getContext('view')
@@ -174,8 +174,8 @@
 </script>
 
 <div class='modal modal-full z-50' class:show={media} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
-    <div class='h-full modal-content bg-very-dark p-0 overflow-y-auto position-relative' bind:this={container} use:smoothScroll={{ prevent: 'episode-list' }}>
-      {#if media}
+  <div class='h-full modal-content bg-very-dark p-0 overflow-y-auto position-relative' bind:this={container} use:smoothScroll={{ prevent: 'episode-list' }}>
+    {#if media}
       {#if mediaList.length > 1}
         <button class='close back pointer z-30 bg-dark top-20 left-0 position-fixed' use:click={back}>
           <ArrowLeft size='1.8rem' />
@@ -239,8 +239,8 @@
                 </div>
                 <div class='d-flex flex-row flex-wrap play'>
                   <button class='btn btn-lg btn-secondary w-250 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center mr-10 mt-20'
-                    use:click={() => play()}
-                    disabled={media.status === 'NOT_YET_RELEASED'}>
+                          use:click={() => play()}
+                          disabled={media.status === 'NOT_YET_RELEASED'}>
                     <Play class='mr-10' fill='currentColor' size='1.6rem' />
                     {playButtonText}
                   </button>
@@ -335,12 +335,15 @@
             {/await}
           </div>
         </div>
-        <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20 overflow-x-hidden' bind:this={rightColumn}>
+        <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20' bind:this={rightColumn}>
+          <button class='close order pointer z-30 bg-dark position-absolute' use:click={()=> {episodeOrder = !episodeOrder}}>
+            <svelte:component this={episodeOrder ? ArrowDownZA : ArrowUpZA} size='2rem' />
+          </button>
           <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} bind:userProgress bind:watched episodeCount={getMediaMaxEp(media)} {play} />
         </div>
       </div>
-      {/if}
-    </div>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -353,6 +356,10 @@
     top: 5rem !important;
     left: 2.5rem !important;
     right: unset !important;
+  }
+  .order {
+    top: 7rem !important;
+    left: -5rem !important;
   }
   .banner {
     opacity: 0.5;
