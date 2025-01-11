@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from 'svelte'
-  import { getMediaMaxEp, formatMap, playMedia, genreIcons } from '@/modules/anime.js'
+  import { getMediaMaxEp, formatMap, playMedia, genreIcons, getKitsuMappings } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
@@ -182,7 +182,9 @@
         </button>
       {/if}
       <button class='close pointer z-30 bg-dark top-20 right-0 position-fixed' type='button' use:click={() => close()}> &times; </button>
-      <img class='w-full cover-img banner position-absolute' alt='banner' src={media.bannerImage || ' '} />
+      {#await (media.bannerImage && media) || getKitsuMappings(media.id) then banner}
+        <img class='w-full cover-img banner position-absolute' alt='banner' src={banner?.bannerImage || banner?.included?.[0]?.attributes?.coverImage?.original || banner?.included?.[0]?.attributes?.coverImage?.large || banner?.included?.[0]?.attributes?.coverImage?.small || banner?.included?.[0]?.attributes?.coverImage?.tiny || ' '} />
+      {/await}
       <div class='row px-20'>
         <div class='col-lg-7 col-12 pb-10'>
           <div bind:this={leftColumn}>

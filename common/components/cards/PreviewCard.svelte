@@ -1,6 +1,7 @@
 <script>
   import { formatMap, getMediaMaxEp, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
+  import { episodesList } from '@/modules/episodes.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
@@ -17,9 +18,7 @@
 
   let hide = true
 
-  /**
-   * @param {import('@/modules/al.d.ts').Media} media
-   */
+  /** @param {import('@/modules/al.d.ts').Media} media */
   function getPlayButtonText (media) {
     if (media.mediaListEntry) {
       const { status, progress } = media.mediaListEntry
@@ -34,70 +33,59 @@
     return 'Watch Now'
   }
   const playButtonText = getPlayButtonText(media)
-  function toggleFavourite () {
+  function toggleFavourite() {
     anilistClient.favourite({ id: media.id })
     media.isFavourite = !media.isFavourite
   }
-  function play () {
+  function play() {
     if (media.status === 'NOT_YET_RELEASED') return
     playMedia(media)
   }
   let muted = true
-  function toggleMute () {
+  function toggleMute() {
     muted = !muted
   }
 </script>
 
 <div class='position-absolute w-350 h-400 absolute-container top-0 bottom-0 m-auto bg-dark-light z-30 rounded overflow-hidden pointer'>
   <div class='banner position-relative bg-black overflow-hidden'>
-    <img src={media.bannerImage || (media.trailer?.id ? `https://i.ytimg.com/vi/${media.trailer?.id}/hqdefault.jpg` : media.coverImage?.extraLarge || ' ')} alt='banner' class='img-cover w-full h-full' />
-    {#if media.trailer?.id}
-      <div class='position-absolute z-10 top-0 right-0 p-15 sound' use:click={toggleMute}>
-        {#if muted}
-          <VolumeX size='2.2rem' fill='currentColor' />
-        {:else}
-          <Volume2 size='2.2rem' fill='currentColor' />
-        {/if}
-      </div>
-
-      <!-- indivious is nice because its faster, but not reliable -->
-      <!-- <video src={`https://inv.tux.pizza/latest_version?id=${media.trailer.id}&itag=18`}
-        class='w-full h-full position-absolute left-0'
-        class:d-none={hide}
-        playsinline
-        preload='none'
-        loop
-        use:volume
-        bind:muted
-        on:loadeddata={() => { hide = false }}
-        autoplay /> -->
-      <iframe
-        class='w-full border-0 position-absolute left-0'
-        class:d-none={hide}
-        title={media.title.userPreferred}
-        allow='autoplay'
-        on:load={() => { hide = false }}
-        src={`https://www.youtube-nocookie.com/embed/${media.trailer?.id}?autoplay=1&controls=0&mute=${muted ? 1 : 0}&disablekb=1&loop=1&vq=medium&playlist=${media.trailer?.id}&cc_lang_pref=ja`}
-      />
-    {/if}
+    <img src={media.bannerImage || (media.trailer?.id ? `https://i.ytimg.com/vi/${media.trailer?.id}/hqdefault.jpg` : media.coverImage?.extraLarge || ' ')} alt='banner' class='img-cover w-full h-full'/>
+    {#await (media.trailer?.id && media) || episodesList.getMedia(media.idMal) then trailer}
+      {#if trailer?.trailer?.id || trailer?.data?.trailer?.youtube_id }
+        <div class='position-absolute z-10 top-0 right-0 m-15 rounded sound' use:click={toggleMute}>
+          {#if muted}
+            <VolumeX size='2.2rem' fill='currentColor'/>
+          {:else}
+            <Volume2 size='2.2rem' fill='currentColor'/>
+          {/if}
+        </div>
+        <iframe
+          class='w-full border-0 position-absolute left-0'
+          class:d-none={hide}
+          title={media.title.userPreferred}
+          allow='autoplay'
+          on:load={() => { hide = false }}
+          src={`https://www.youtube.com/embed/${trailer?.trailer?.id || trailer?.data?.trailer?.youtube_id}?autoplay=1&controls=0&mute=${muted ? 1 : 0}&disablekb=1&loop=1&vq=medium&playlist=${trailer?.trailer?.id || trailer?.data?.trailer?.youtube_id}&cc_lang_pref=ja`}
+        />
+      {/if}
+    {/await}
   </div>
   <div class='w-full px-20'>
     <div class='font-size-24 font-weight-bold text-truncate d-inline-block w-full text-white' title={anilistClient.title(media)}>
       {anilistClient.title(media)}
     </div>
     <div class='d-flex flex-row'>
-      <button class='btn btn-secondary flex-grow-1 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center'
-        use:click={play}
-        disabled={media.status === 'NOT_YET_RELEASED'}>
-        <Play class='pr-10 z-10' fill='currentColor' size='2.2rem' />
+      <button class='btn btn-secondary flex-grow-1 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center' use:click={play} disabled={media.status === 'NOT_YET_RELEASED'}>
+        <Play class='pr-10 z-10' fill='currentColor' size='2.2rem'/>
         {playButtonText}
       </button>
       {#if Helper.isAuthorized()}
         <Scoring {media} previewAnime={true}/>
       {/if}
       {#if Helper.isAniAuth()}
-        <button class='btn btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0' use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
-          <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem' />
+        <button class='btn btn-square ml-10 d-flex align-items-center justify-content-center shadow-none border-0'
+                use:click={toggleFavourite} disabled={!Helper.isAniAuth()}>
+          <Heart fill={media.isFavourite ? 'currentColor' : 'transparent'} size='1.7rem'/>
         </button>
       {/if}
     </div>
@@ -106,9 +94,9 @@
         {#if type || type === 0}
           <span class='d-flex badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
             {#if Number.isInteger(type) && type >= 0}
-              <ThumbsUp fill='currentColor'class='pr-5 pb-5 {type === 0 ? "text-muted" : "text-success"}' size='2rem' />
+              <ThumbsUp fill='currentColor' class='pr-5 pb-5 {type === 0 ? "text-muted" : "text-success"}' size='2rem'/>
             {:else if Number.isInteger(type) && type < 0}
-              <ThumbsDown fill='currentColor' class='text-danger pr-5 pb-5' size='2rem' />
+              <ThumbsDown fill='currentColor' class='text-danger pr-5 pb-5' size='2rem'/>
             {/if}
             {(Number.isInteger(type) ? Math.abs(type).toLocaleString() + (type >= 0 ? ' likes' : ' dislikes') : type)}
           </span>
@@ -120,7 +108,8 @@
         </span>
         {#if maxEp > 1 || (maxEp !== 1 && ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress)}
           <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
-            {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'} Episodes
+            {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'}
+            Episodes
           </span>
         {:else if media.duration}
           <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
@@ -143,15 +132,19 @@
           </span>
         {/if}
         {#if media.averageScore}
-          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>{media.averageScore + '%'} Rating</span>
+          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid}
+                class:font-size-12={SUPPORTS.isAndroid}>{media.averageScore + '%'} Rating</span>
           {#if media.stats?.scoreDistribution && (!type && type !== 0)}
-            <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>{anilistClient.reviews(media)} Reviews</span>
+            <span class='badge' class:font-size-14={!SUPPORTS.isAndroid}
+                  class:font-size-12={SUPPORTS.isAndroid}>{anilistClient.reviews(media)} Reviews</span>
           {/if}
         {/if}
       </div>
     </div>
     {#if media.description}
-      <div class='w-full h-full text-muted description overflow-hidden' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid} class:line-clamp-3={!SUPPORTS.isAndroid} class:line-clamp-2={SUPPORTS.isAndroid}>
+      <div class='w-full h-full text-muted description overflow-hidden' class:font-size-14={!SUPPORTS.isAndroid}
+           class:font-size-12={SUPPORTS.isAndroid} class:line-clamp-3={!SUPPORTS.isAndroid}
+           class:line-clamp-2={SUPPORTS.isAndroid}>
         {media.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
       </div>
     {/if}
@@ -173,7 +166,7 @@
     height: 45%
   }
   .sound {
-   filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1))
+    filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1))
   }
   .details > span:not(:last-child) {
     margin-right: .2rem;
@@ -182,9 +175,11 @@
   .banner::after {
     content: '';
     position: absolute;
-    left: 0 ; bottom: 0;
+    left: 0;
+    bottom: 0;
     margin-bottom: -1px;
-    width: 100%; height: 100% ;
+    width: 100%;
+    height: 100%;
     background: var(--preview-card-gradient);
   }
   @keyframes load-in {
@@ -193,7 +188,6 @@
       opacity: 0;
       transform: scale(0.95);
     }
-
     to {
       bottom: 0;
       opacity: 1;

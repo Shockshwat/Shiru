@@ -5,7 +5,7 @@
   import { tick } from 'svelte'
   import { anilistClient } from '@/modules/anilist.js'
   import { episodesList } from '@/modules/episodes.js'
-  import { getAniMappings, hasZeroEpisode } from '@/modules/anime.js'
+  import { getAniMappings, getKitsuMappings, hasZeroEpisode } from '@/modules/anime.js'
   import Debug from 'debug'
 
   const debug = Debug('ui:mediahandler')
@@ -59,8 +59,13 @@
       if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {
         // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
         const { episodes, specialCount, episodeCount } = await getAniMappings(media?.id) || {}
+        let mappingsTitle = episode && episodes && episodes[Number(episode)]?.title?.en
+        if (episode && (!mappingsTitle || mappingsTitle.length === 0)) {
+          const kitsuMappings = (await getKitsuMappings(media?.id))?.data?.find(ep => ep?.attributes?.number === Number(episode))?.attributes
+          mappingsTitle = kitsuMappings?.titles?.en_us || kitsuMappings?.titles?.en_jp || (episodes && episodes[Number(episode)]?.title?.jp)
+        }
         const needsValidation = !(!specialCount || (media?.episodes === episodeCount && episodes && episodes[Number(episode)]))
-        streamingEpisode = (!needsValidation && episodes && episodes[Number(episode)]?.title?.en && episodeRx.exec(`Episode ${Number(episode)} - ` + episodes[Number(episode)]?.title?.en)) ? {title: (`Episode ${Number(episode)} - ` + episodes[Number(episode)]?.title?.en)} : (needsValidation && media?.status === 'FINISHED') ? {title: (`Episode ${Number(episode)} - ` + (episodes[Number(episode)]?.title?.en || `Episode ${Number(episode)}`))} : streamingTitle
+        streamingEpisode = (!needsValidation && mappingsTitle && episodeRx.exec(`Episode ${Number(episode)} - ` + mappingsTitle)) ? {title: (`Episode ${Number(episode)} - ` + mappingsTitle)} : (needsValidation && media?.status === 'FINISHED') ? {title: (`Episode ${Number(episode)} - ` + (mappingsTitle || `Episode ${Number(episode)}`))} : streamingTitle
         if (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode')) {
           const episodeTitle = await episodesList.getSingleEpisode(media?.idMal, Number(episode)) // animappings sometimes doesn't have all the data, so we can use an alternative api to fetch episode information.,
           if (episodeTitle && episodeTitle?.title) streamingEpisode = {title: (`Episode ${Number(episode)} - ` + episodeTitle.title)}
