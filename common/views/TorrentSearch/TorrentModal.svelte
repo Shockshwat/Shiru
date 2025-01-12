@@ -21,7 +21,8 @@
   export let overlay
 
   function close () {
-    overlay = overlay.filter(item => item !== 'torrent')
+    if (overlay.includes('torrent')) overlay = overlay.filter(item => item !== 'torrent')
+    console.error('11111111 ' + JSON.stringify(overlay))
     $rss = null
   }
   function checkClose ({ keyCode }) {
@@ -34,7 +35,7 @@
 
   $: {
     if (search) {
-      overlay = [...overlay, 'torrent']
+      if (!overlay.includes('torrent')) overlay = [...overlay, 'torrent']
       modal?.focus()
     }
   }

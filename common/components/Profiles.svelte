@@ -70,14 +70,16 @@
   function close () {
     $profileView = false
     $profileAdd = false
-    overlay = overlay.filter(item => item !== 'profiles')
+    if (overlay.includes('profiles')) overlay = overlay.filter(item => item !== 'profiles')
   }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
-  $: $profileView && (modal?.focus(), overlay = [...overlay, 'profiles'])
+  $: $profileView && (modal?.focus(), setOverlay())
   $: !$profileView && close()
-
+  function setOverlay() {
+    if (!overlay.includes('profiles')) overlay = [...overlay, 'profiles']
+  }
   window.addEventListener('overlay-check', () => { if ($profileView) close() })
 </script>
 

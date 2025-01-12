@@ -26,7 +26,9 @@
   function close () {
     $view = null
     mediaList = []
-    overlay = overlay.filter(item => item !== 'viewanime')
+    setTimeout(() => {
+      if (overlay.includes('viewanime')) overlay = overlay.filter(item => item !== 'viewanime')
+    })
   }
   function back () {
     if (mediaList.length > 1) {
@@ -62,13 +64,16 @@
     const searchIDS = [...(media.relations?.edges?.filter(({ node }) => node.type === 'ANIME').map(({ node }) => node.id) || []), ...((await recommendations)?.data?.Media?.recommendations?.edges?.map(({ node }) => node.mediaRecommendation?.id) || [])]
     return searchIDS.length > 0 ? anilistClient.searchAllIDS({ page: 1, perPage: 50, id: searchIDS }) : Promise.resolve([])
   })()
-  $: mediaId && (modal?.focus(), overlay = [...overlay, 'viewanime'], saveMedia(), (container && scrollTop()))
+  $: mediaId && (modal?.focus(), setOverlay(), saveMedia(), (container && scrollTop()))
   $: !mediaId && close()
   $: {
     if (media) {
       if (scrollTags) scrollTags.scrollLeft = 0
       if (scrollGenres) scrollGenres.scrollLeft = 0
     }
+  }
+  function setOverlay() {
+    if (!overlay.includes('viewanime')) overlay = [...overlay, 'viewanime']
   }
   function scrollTop() {
     container.dispatchEvent(new Event('scrolltop'))

@@ -15,14 +15,16 @@
   function close () {
     $actionPrompt = false
     rememberChoice = false
-    overlay = overlay.filter(item => item !== 'minimizetray')
+    if (overlay.includes('minimizetray')) overlay = overlay.filter(item => item !== 'minimizetray')
   }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
-  $: $actionPrompt && (modal?.focus(), overlay = [...overlay, 'minimizetray'])
+  $: $actionPrompt && (modal?.focus(), setOverlay())
   $: !$actionPrompt && close()
-
+  function setOverlay() {
+    if (!overlay.includes('minimizetray')) overlay = [...overlay, 'minimizetray']
+  }
   function minimizeTray() {
     if (rememberChoice) $settings.closeAction = 'Minimize'
     close()

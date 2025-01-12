@@ -6,7 +6,7 @@ import { settings, notify, updateNotify } from '@/modules/settings.js'
 import { getEpisodeMetadataForMedia } from '@/modules/anime.js'
 import { hasNextPage } from '@/modules/sections.js'
 import Helper from '@/modules/helper.js'
-import IPC from '@/modules/ipc'
+import IPC from '@/modules/ipc.js'
 import Debug from 'debug'
 
 const debug = Debug('ui:animeschedule')
@@ -314,18 +314,18 @@ class AnimeSchedule {
                                     launch: `shiru://anime/${media?.id}`
                                 }
                             })
+                            window.dispatchEvent(new CustomEvent('notification-app', {
+                                detail: {
+                                    ...details,
+                                    id: media?.id,
+                                    episode: media?.episode?.aired,
+                                    timestamp: addedAt,
+                                    format: media?.format,
+                                    dub: type === 'Dub',
+                                    click_action: 'PLAY'
+                                }
+                            }))
                         }
-                        window.dispatchEvent(new CustomEvent('notification-app', {
-                            detail: {
-                                ...details,
-                                id: media?.id,
-                                episode: media?.episode?.aired,
-                                timestamp: addedAt,
-                                format: media?.format,
-                                dub: type === 'Dub',
-                                click_action: 'PLAY'
-                            }
-                        }))
                     }
                 }
             }

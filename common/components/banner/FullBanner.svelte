@@ -2,6 +2,7 @@
   import { formatMap, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { malDubs } from '@/modules/animedubs.js'
+  import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
   import Helper from "@/modules/helper.js"
@@ -49,7 +50,7 @@
 <div class='gradient-bottom h-full position-absolute top-0 w-full' />
 <div class='gradient-left h-full position-absolute top-0 w-800' />
 <div class='pl-20 pb-20 justify-content-end d-flex flex-column h-full banner mw-full'>
-  <div class='text-white font-weight-bold font-size-40 title w-800 mw-full overflow-hidden'>
+  <div class='text-white font-weight-bold font-size-40 title w-800 mw-full overflow-hidden' class:font-size-40={!SUPPORTS.isAndroid} class:font-size-24={SUPPORTS.isAndroid}>
     {anilistClient.title(current)}
   </div>
   <div class='details text-white text-capitalize pt-15 pb-10 d-flex w-600 mw-full'>

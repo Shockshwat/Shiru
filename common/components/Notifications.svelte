@@ -5,6 +5,7 @@
   import { notify, updateNotify } from '@/modules/settings.js'
   import { MailCheck, MailOpen, Play, X } from 'lucide-svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import { SUPPORTS } from '@/modules/support.js'
   import smoothScroll from '@/modules/scroll.js'
 
   export const notifyView = writable(false)
@@ -31,18 +32,21 @@
   const { reactive, init } = createListener(['btn'])
   function close () {
     $notifyView = false
-    overlay = overlay.filter(item => item !== 'notifications')
+    if (overlay.includes('notifications')) overlay = overlay.filter(item => item !== 'notifications')
     updateSort()
   }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
-  $: $notifyView && (modal?.focus(), overlay = [...overlay, 'notifications'])
+  $: $notifyView && (modal?.focus(), setOverlay())
   $: !$notifyView && close()
   $: init($notifyView)
   $: {
     if (!$notifyView) updateSort()
     else currentNotifications = $notifications.slice(0, notificationCount)
+  }
+  function setOverlay() {
+    if (!overlay.includes('notifications')) overlay = [...overlay, 'notifications']
   }
 
   anilistClient.mediaCache.subscribe((value) => {
@@ -127,7 +131,7 @@
           </div>
           <div class='notification-list mt-10 overflow-y-auto h-auto' class:mh-350={currentNotifications.length > 0} use:smoothScroll on:scroll={handleScroll}>
             {#each currentNotifications as notification, index}
-              {@const delayed = notification.delayed }
+              {@const delayed = notification.delayed}
               {@const announcement = notification.click_action === 'VIEW' && !delayed}
               {@const notWatching = !announcement && !delayed && notification.episode && ((!$mediaCache[notification?.id]?.mediaListEntry?.progress) || ($mediaCache[notification?.id]?.mediaListEntry?.progress === 0 && ($mediaCache[notification?.id]?.mediaListEntry?.status !== 'CURRENT' || $mediaCache[notification?.id]?.mediaListEntry?.status !== 'REPEATING' && $mediaCache[notification?.id]?.mediaListEntry?.status !== 'COMPLETED')))}
               {@const behind = !announcement && !delayed && !notWatching && notification.episode && (mediaCache[notification?.id]?.mediaListEntry?.status !== 'COMPLETED' && ($mediaCache[notification?.id]?.mediaListEntry?.progress < ((!notification.season ? notification.episode : $mediaCache[notification?.id].episodes) - 1)))}
@@ -139,14 +143,14 @@
                 {#if notification.heroImg}
                   <div class='position-absolute top-0 left-0 w-full h-full'>
                     <img src={notification.heroImg} alt='bannerImage' class='hero-img w-full h-full'/>
-                    <div class='position-absolute top-0 left-0 w-full h-full' style='border-radius: .5rem; background: var(--notification-card-gradient)' />
+                    <div class='position-absolute top-0 left-0 w-full h-full rounded-5' style='background: var(--notification-card-gradient)' />
                   </div>
                 {/if}
-                <div class='notification-icon-container d-flex justify-content-center align-items-center overflow-hidden mr-10 z-10'>
-                  <img src={notification.icon} alt='icon' class='notification-icon w-auto' />
+                <div class='rounded-5 d-flex justify-content-center align-items-center overflow-hidden mr-10 z-10' class:notification-icon-container-rg={!SUPPORTS.isAndroid} class:notification-icon-container-lg={SUPPORTS.isAndroid}>
+                  <img src={notification.icon} alt='icon' class='notification-icon rounded-5 w-auto' />
                 </div>
                 <div class='notification-content z-10 w-full'>
-                  <p class='notification-title overflow-hidden font-size-18 font-weight-bold mt-0 mb-0 mr-40'>{notification.title}</p>
+                  <p class='notification-title overflow-hidden font-size-18 font-weight-bold mt-0 mb-0 mr-40' class:line-clamp-2={!SUPPORTS.isAndroid} class:font-size-18={!SUPPORTS.isAndroid} class:line-clamp-1={SUPPORTS.isAndroid} class:font-size-14={SUPPORTS.isAndroid}>{notification.title}</p>
                   <button type='button' class='position-absolute right-0 top-0 mr-5 mt-5 btn btn-square d-flex align-items-center justify-content-center' class:not-allowed={watched} class:not-reactive={watched} use:click={() => { if (!watched) notification.prompt = false; delete notification.prompt; notification.read = !notification.read } }>
                     {#if notification.read}
                       <MailOpen size='1.7rem' strokeWidth='3'/>
@@ -154,7 +158,7 @@
                       <MailCheck size='1.7rem' strokeWidth='3'/>
                     {/if}
                   </button>
-                  <p class='font-size-12 mb-0 mr-5'>{notification.message}</p>
+                  <p class='font-size-12 mb-0' class:mr-20={!SUPPORTS.isAndroid} class:mr-30={SUPPORTS.isAndroid} class:mt-0={SUPPORTS.isAndroid}>{notification.message}</p>
                   <div class='d-flex justify-content-between align-items-center'>
                     <p class='font-size-10 text-muted mt-0 mb-0'>{since(new Date(notification.timestamp * 1000))}</p>
                     <div>
@@ -216,6 +220,9 @@
   }
   .h-33 {
     height: 3.3rem !important;
+  }
+  .mr-30 {
+    margin-right: 3rem;
   }
   .mr-40 {
     margin-right: 4rem;
@@ -291,10 +298,24 @@
 
   .notification-title {
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    line-height: 1.2;
     text-overflow: ellipsis;
     word-wrap: break-word;
+  }
+
+  .line-clamp-1 {
+    -webkit-line-clamp: 1;
+  }
+  .line-clamp-2 {
+    -webkit-line-clamp: 2;
+  }
+
+  .tisdsdtle {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.2;
   }
 
   .hero-img {
@@ -303,12 +324,17 @@
   .notification-icon {
     height: 100%;
     object-fit: cover;
-    border-radius: .5rem;
     object-position: center;
   }
-  .notification-icon-container {
+  .notification-icon-container-rg {
     width: 6rem;
     height: 8rem;
+  }
+  .notification-icon-container-lg {
+    width: 8rem;
+    height: 10rem;
+  }
+  .rounded-5 {
     border-radius: .5rem;
   }
 

@@ -119,11 +119,13 @@
   // }
 
   // document.fullscreenElement isn't reactive
+  let orientationLockable = true // might as well stop trying to lock the orientation when the device doesn't support it.
   document.addEventListener('fullscreenchange', () => {
     isFullscreen = !!document.fullscreenElement
-    if (document.fullscreenElement) {
-      screen.orientation.lock('landscape')
-    } else {
+    if (document.fullscreenElement && orientationLockable) {
+      screen.orientation.lock('landscape').then(success => debug(success), failure => { if (!failure?.toString()?.includes('NotSupportedError')) { debug(failure) } else { orientationLockable = false } }
+      )
+    } else if (orientationLockable) {
       screen.orientation.unlock()
     }
   })
