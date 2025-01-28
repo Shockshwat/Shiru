@@ -178,8 +178,8 @@ class AnimeSchedule {
                             }
                         }))
                     }
+                    cache.setEntry(caches.NOTIFICATIONS, notifyKey, (current) => [...current, media?.id])
                 }
-                updateNotify(notifyKey, (current) => [...current, media?.id])
             }
         }
     }
@@ -240,6 +240,7 @@ class AnimeSchedule {
     async _getMediaForRSS(page, perPage, type) {
         debug(`Getting media for schedule feed (${type}) page ${page} perPage ${perPage}`)
         if (!this[`${type.toLowerCase()}AiredLists`].value) await this.feedChanged(type)
+        const currentTime = Math.floor(Date.now() / 1000)
         let res = await this[`${type.toLowerCase()}AiredLists`].value
         const section = settings.value.homeSections.find(s => s[0].includes(type))
         if (section && section[2].length > 0) res = res.filter(episode => section[2].includes(episode.format))
@@ -331,7 +332,7 @@ class AnimeSchedule {
                 }
             }
             debug(`Found ${newReleases?.length} new ${type} releases, notifying...`)
-            updateNotify(`last${type}`, Math.floor(Date.now() / 1000))
+            if ((newReleases?.length > 0) || (lastNotified <= 1)) cache.setEntry(caches.NOTIFICATIONS, `last${type}`, currentTime)
         }
 
         this[`${type.toLowerCase()}AiredListsCache`].value[`${page}-${perPage}`] = {
