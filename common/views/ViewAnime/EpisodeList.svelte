@@ -8,8 +8,8 @@
     const entry = (await animeSchedule.dubAiringLists.value)?.find(entry => entry.media?.media?.id === media.id)
     const episodeEntry = (await animeSchedule.dubAiredLists.value)?.find(entry => entry?.id === media.id && entry?.episode?.aired === episode)
     if (entry && !episodeEntry) {
-      const airingSchedule = entry?.media?.media?.airingSchedule?.nodes[episode - 1] || entry?.airingSchedule?.media?.media?.nodes[0]
-      const delayed = !!(entry.episodeDate && (((new Date(entry.delayedUntil) >= new Date(entry.episodeDate)) && (new Date(entry.delayedUntil) > new Date())) || entry.delayedIndefinitely))
+      const airingSchedule = entry?.media?.media?.airingSchedule?.nodes[episode - 1] || entry?.media?.media?.airingSchedule?.nodes.find((entry) => entry.episode === episode) || entry?.airingSchedule?.media?.media?.nodes[0]
+      const delayed = !!(entry.episodeDate && (((new Date(entry.delayedUntil) >= new Date(entry.episodeDate)) && (new Date(entry.delayedFrom) > new Date(entry.episodeDate)) && (new Date(entry.delayedUntil) > new Date())) || entry.delayedIndefinitely))
       if (entry.episodeDate && (entry.episodeNumber <= episode)) {
         return { text: `${entry.delayedIndefinitely && !entry.status?.toUpperCase()?.includes('FINISHED') ? 'Suspended' : entry.delayedIndefinitely ? 'Not Planned' : since(past(new Date(delayed ? entry.delayedUntil : entry.episodeDate), entry.episodeNumber >= episode ? 0 : episode - entry.episodeNumber, true)) + (delayed ? ` (${entry.delayedText || 'Delayed'})` : '')}`, delayed: delayed }
       } else if (airingSchedule && airingSchedule.episode <= episode) {
