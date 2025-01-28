@@ -1,5 +1,6 @@
 <script>
-  import { cacheID, settings } from '@/modules/settings.js'
+  import { settings } from '@/modules/settings.js'
+  import { cache, caches } from '@/modules/cache.js'
   import { getAnimeProgress, setAnimeProgress } from '@/modules/animeprogress.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { anilistClient } from '@/modules/anilist.js'
@@ -76,10 +77,10 @@
   const canCast = false
   let isFullscreen = false
   let ended = false
-  let volume = Number(localStorage.getItem(`volume_${cacheID}`)) || 1
+  let volume = Number(cache.getEntry(caches.GENERAL, 'volume')) || 1
   let playbackRate = 1
   let externalPlayerReady = false
-  $: localStorage.setItem(`volume_${cacheID}`, (volume || 0).toString())
+  $: cache.setEntry(caches.GENERAL, 'volume', String(volume || 0))
   $: safeduration = (isFinite(duration) ? duration : currentTime) || 0
   $: {
     if (hidden) {

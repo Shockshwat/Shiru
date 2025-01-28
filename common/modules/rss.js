@@ -1,5 +1,6 @@
 import { DOMPARSER } from '@/modules/util.js'
-import { settings, notify, updateNotify } from '@/modules/settings.js'
+import { settings } from '@/modules/settings.js'
+import { cache, caches } from '@/modules/cache.js'
 import { toast } from 'svelte-sonner'
 import { add } from '@/modules/torrent.js'
 import { getEpisodeMetadataForMedia } from '@/modules/anime.js'
@@ -97,8 +98,8 @@ class RSSMediaManager {
     const result = this.structureResolveResults(items)
 
     const encodedUrl = btoa(url)
-    await this.findNewReleasesAndNotify(result, notify.value['lastRSS']?.[encodedUrl]?.date)
-    updateNotify('lastRSS', (current) => ({...current, [encodedUrl]: { date: changed.pullDate }}))
+    await this.findNewReleasesAndNotify(result, cache.getEntry(caches.NOTIFICATIONS, 'lastRSS')?.[encodedUrl]?.date)
+    cache.setEntry(caches.NOTIFICATIONS, 'lastRSS', (current) => ({...current, [encodedUrl]: { date: changed.pullDate }}))
 
     this.resultMap[url] = {
       date: changed.pubDate,

@@ -304,25 +304,74 @@ export const defaults = {
   playerSkip: false
 }
 
-export const cacheDefaults = {
+/**
+ * @typedef {Object} GeneralDefaults
+ * @property {string} theme
+ * @property {number} volume
+ * @property {Array<any>} sync
+ * @property {typeof defaults} settings
+ * @property {any} [lastFinished]
+ * @property {any} [loadedTorrent]
+ */
+export const generalDefaults = {
+  theme: '',
+  volume: 1,
+  sync: [],
+  settings: defaults,
+  lastFinished: undefined,
+  loadedTorrent: undefined
+}
+
+/**
+ * @typedef {Object} HistoryDefaults
+ * @property {any} [lastMagnet]
+ * @property {any} [animeEpisodeProgress]
+ */
+export const historyDefaults = {
+  lastMagnet: undefined,
+  animeEpisodeProgress: []
+}
+
+/**
+ * @typedef {Object} QueryDefaults
+ * @property {Record<string, any>} recommendations
+ * @property {Record<string, any>} notifications
+ * @property {Record<string, any>} following
+ * @property {Record<string, any>} episodes
+ * @property {Record<string, any>} search
+ * @property {Record<string, any>} compound
+ * @property {Record<string, any>} searchIDS
+ */
+export const queryDefaults = {
   recommendations: {},
+  notifications: {},
   following: {},
-  userLists: {},
   episodes: {},
   search: {},
   compound: {},
-  searchIDS: {},
-  mappings: {},
-  medias: {}
+  searchIDS: {}
 }
 
+/**
+ * @typedef {Object} NotifyDefaults
+ * @property {Record<string, any>} lastRSS
+ * @property {number} lastAni
+ * @property {number} lastDub
+ * @property {number} lastSub
+ * @property {number} lastHentai
+ * @property {any[]} delayedDubs
+ * @property {any[]} announcedDubs
+ * @property {any[]} announcedSubs
+ * @property {any[]} announcedHentais
+ * @property {any[]} notifications
+ */
 export const notifyDefaults = {
   lastRSS: {},
   lastAni: 0,
   lastDub: 0,
   lastSub: 0,
   lastHentai: 0,
-  dubsDelayed: [],
+  delayedDubs: [],
   announcedDubs: [],
   announcedSubs: [],
   announcedHentais: [],

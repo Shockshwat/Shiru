@@ -1,22 +1,21 @@
 import { writable, derived } from 'simple-store-svelte'
-import { cacheID } from '@/modules/settings.js';
+import { cache, caches } from '@/modules/cache.js';
 
-// Maximum number of entries to keep in LocalStorage
-const maxEntries = 1000
+// Maximum number of entries to keep in the cache
+const maxEntries = 10000
 
-// LocalStorage is structured as an array of objects with the following properties:
+// The cache is structured as an array of objects with the following properties:
 // mediaId, episode, currentTime, safeduration, createdAt, updatedAt
-function loadFromLocalStorage () {
-  const data = localStorage.getItem(`animeEpisodeProgress_${cacheID}`)
-  return data ? JSON.parse(data) : []
+function read () {
+  return cache.getEntry(caches.HISTORY, 'animeEpisodeProgress') || []
 }
 
-function saveToLocalStorage (data) {
-  localStorage.setItem(`animeEpisodeProgress_${cacheID}`, JSON.stringify(data))
+function write (data) {
+  cache.setEntry(caches.HISTORY, 'animeEpisodeProgress', data)
   animeProgressStore.set(data)
 }
 
-const animeProgressStore = writable(loadFromLocalStorage())
+const animeProgressStore = writable(read())
 
 // Return an object with the progress of each episode in percent (0-100), keyed by episode number
 export function liveAnimeProgress (mediaId) {
@@ -44,14 +43,14 @@ export function liveAnimeEpisodeProgress (mediaId, episode) {
 
 // Return an individual episode's record { mediaId, episode, currentTime, safeduration, createdAt, updatedAt }
 export function getAnimeProgress (mediaId, episode) {
-  const data = loadFromLocalStorage()
+  const data = read()
   return data.find(item => item.mediaId === mediaId && item.episode === episode)
 }
 
 // Set an individual episode's progress
 export function setAnimeProgress ({ mediaId, episode, currentTime, safeduration }) {
   if (!mediaId || !episode || !currentTime || !safeduration) return
-  const data = loadFromLocalStorage()
+  const data = read()
   // Update the existing entry or create a new one
   const existing = data.find(item => item.mediaId === mediaId && item.episode === episode)
   if (existing) {
@@ -66,5 +65,5 @@ export function setAnimeProgress ({ mediaId, episode, currentTime, safeduration 
     const oldest = data.reduce((a, b) => a.updatedAt < b.updatedAt ? a : b)
     data.splice(data.indexOf(oldest), 1)
   }
-  saveToLocalStorage(data)
+  write(data)
 }

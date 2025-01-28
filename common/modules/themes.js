@@ -1,14 +1,14 @@
 import { append, element } from 'svelte/internal'
 import { writable } from 'simple-store-svelte'
-import { cacheID } from '@/modules/settings.js'
+import { cache, caches } from '@/modules/cache.js'
 
 const style = element('style')
 style.id = 'customThemes'
 append(document.head, style)
 
-export const variables = writable(localStorage.getItem(`theme_${cacheID}`) || '')
+export const variables = writable(cache.getEntry(caches.GENERAL, 'theme') || '')
 
 variables.subscribe(value => {
-  localStorage.setItem(`theme_${cacheID}`, value)
+  cache.setEntry(caches.GENERAL, 'theme', value)
   style.textContent = `:root{${value.replace(/{|}/g, '')}}`
 })

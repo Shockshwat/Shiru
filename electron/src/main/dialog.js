@@ -1,6 +1,6 @@
 import { basename, extname } from 'node:path'
 import { ipcMain, dialog } from 'electron'
-import store from './store.js'
+import { store } from './util.js'
 
 export default class Dialog {
   /**

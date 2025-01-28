@@ -4,6 +4,7 @@
   import { videoRx } from '@/modules/util.js'
   import { tick } from 'svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import { cache } from '@/modules/cache.js'
   import { episodesList } from '@/modules/episodes.js'
   import { getAniMappings, getKitsuMappings, hasZeroEpisode } from '@/modules/anime.js'
   import Debug from 'debug'
@@ -102,20 +103,20 @@
   // tv, movie, ona, ova, special
   async function findPreferredPlaybackMedia (videoFiles) {
     for (const { media } of videoFiles) {
-      const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+      const cachedMedia = cache.mediaCache.value[media.media?.id] || media?.media
       const zeroEpisode = await hasZeroEpisode(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     for (const { media } of videoFiles) {
-      const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+      const cachedMedia = cache.mediaCache.value[media.media?.id] || media?.media
         const zeroEpisode = await hasZeroEpisode(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     let lowestPlanning
     for (const { media } of videoFiles) {
-      const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+      const cachedMedia = cache.mediaCache.value[media.media?.id] || media?.media
       if (cachedMedia?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || (((Number(lowestPlanning.episode) >= Number(media?.episode)) || (media?.episode && !lowestPlanning.episode)) && Number(lowestPlanning.season) >= Number(media?.season)))) lowestPlanning = { media: cachedMedia, episode: media?.episode, season: media?.season }
     }
     if (lowestPlanning) return lowestPlanning
@@ -124,7 +125,7 @@
     let lowestUnwatched
     for (const format of ['TV', 'MOVIE', 'ONA', 'OVA', 'SPECIAL']) {
       for (const { media } of videoFiles) {
-        const cachedMedia = anilistClient.mediaCache.value[media.media?.id] || media?.media
+        const cachedMedia = cache.mediaCache.value[media.media?.id] || media?.media
         if (cachedMedia?.format === format && !cachedMedia.mediaListEntry && (!lowestUnwatched || (((Number(lowestUnwatched.episode) >= Number(media?.episode)) || (media?.episode && !lowestUnwatched.episode)) && Number(lowestUnwatched.season) >= Number(media?.season)))) lowestUnwatched = { media: cachedMedia, episode: media?.episode, season: media?.season }
       }
     }
@@ -134,7 +135,7 @@
     const max = highestOccurrence(videoFiles, file => file.media.media?.id).media
     if (max?.media) {
       const zeroEpisode = await hasZeroEpisode(max?.media)
-      return { media: max.media, episode: ((anilistClient.mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + (!zeroEpisode ? 1 : 0) || (!zeroEpisode ? 1 : 0)) }
+      return { media: max.media, episode: ((cache.mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + (!zeroEpisode ? 1 : 0) || (!zeroEpisode ? 1 : 0)) }
     }
   }
 

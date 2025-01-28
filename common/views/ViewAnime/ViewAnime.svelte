@@ -3,6 +3,7 @@
   import { getMediaMaxEp, formatMap, playMedia, genreIcons, getKitsuMappings } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { settings } from '@/modules/settings.js'
+  import { cache } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
@@ -54,7 +55,7 @@
   let mediaList = []
   let mediaCache
   let mediaId
-  anilistClient.mediaCache.subscribe(value => mediaCache = value)
+  cache.mediaCache.subscribe(value => mediaCache = value)
   $: media = mediaCache[$view?.id] || $view
   $: mediaId = media?.id
   $: watched = media?.mediaListEntry?.status === 'COMPLETED'
@@ -119,7 +120,7 @@
   window.addEventListener('overlay-check', (event) => { if (!event?.detail?.nowPlaying && media) close() })
 
   function handlePlay(id, episode, torrentOnly) {
-    const mediaCache = anilistClient.mediaCache.value[id]
+    const mediaCache = cache.mediaCache.value[id]
     const cachedEpisode = episode || mediaCache?.mediaListEntry?.progress
     const desiredEpisode = (episode ? episode : cachedEpisode && cachedEpisode !== 0 ? cachedEpisode + 1 : cachedEpisode)
     if (torrentOnly) {
@@ -315,8 +316,8 @@
                   <SkeletonCard />
                 {:then res }
                   {#if res}
-                    {#if anilistClient.mediaCache.value[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
-                      <SmallCard media={anilistClient.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
+                    {#if cache.mediaCache.value[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                      <SmallCard media={cache.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
                     {/if}
                   {/if}
                 {/await}
@@ -331,8 +332,8 @@
                       <SkeletonCard />
                     {:then res}
                       {#if res}
-                        {#if anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
-                          <SmallCard media={anilistClient.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
+                        {#if cache.mediaCache.value[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                          <SmallCard media={cache.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
                         {/if}
                       {/if}
                     {/await}

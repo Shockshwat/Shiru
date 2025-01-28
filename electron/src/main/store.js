@@ -1,16 +1,15 @@
-import { app } from 'electron'
-import { join } from 'node:path'
-import { writeFileSync, readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { mkdirSync, writeFileSync, readFileSync, unlinkSync, existsSync } from 'node:fs'
 
 class Store {
   /**
-   * @param {string} configName
-   * @param {{ angle: string; player: string; torrentPath: string; }} defaults
+   * @param {string} path
+   * @param {string} fileName
+   * @param {{}} defaults
    */
-  constructor (configName, defaults) {
-    this.path = join(app.getPath('userData'), configName + '.json')
-
-    this.data = parseDataFile(this.path, defaults)
+  constructor (path, fileName, defaults) {
+    this.path = join(path, fileName)
+    this.data = parseDataFile(this.path, defaults || {})
   }
 
   /**
@@ -28,6 +27,21 @@ class Store {
     this.data[key] = val
     writeFileSync(this.path, JSON.stringify(this.data))
   }
+
+  /**
+   * Resets the store to its default values.
+   */
+  reset() {
+    this.data = {}
+    writeFileSync(this.path, JSON.stringify(this.data))
+  }
+
+  /**
+   * Deletes the JSON file completely.
+   */
+  delete() {
+    if (existsSync(this.path)) unlinkSync(this.path)
+  }
 }
 
 /**
@@ -36,10 +50,11 @@ class Store {
  */
 function parseDataFile (filePath, defaults) {
   try {
-    return { ...defaults, ...JSON.parse(readFileSync(filePath).toString()) }
+    if (!existsSync(dirname(filePath))) mkdirSync(dirname(filePath), { recursive: true })
+    return { ...defaults || {}, ...JSON.parse(readFileSync(filePath).toString()) }
   } catch (error) {
-    return defaults
+    return defaults || {}
   }
 }
 
-export default new Store('settings', { angle: 'default', player: '', torrentPath: '' })
+export default Store

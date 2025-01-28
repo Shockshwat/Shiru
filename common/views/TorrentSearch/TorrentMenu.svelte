@@ -59,7 +59,7 @@
 
 <script>
   import { nowPlaying as currentMedia } from '../Player/MediaHandler.svelte'
-  import { cacheID } from '@/modules/settings.js'
+  import { cache, caches } from '@/modules/cache.js'
   import TorrentCard from './TorrentCard.svelte'
   import { add } from '@/modules/torrent.js'
   import TorrentSkeletonCard from './TorrentSkeletonCard.svelte'
@@ -111,14 +111,8 @@
     toast.error(`No torrent found for ${anilistClient.title(search.media)} Episode ${search.episode}!`, { description: err.message })
   })
 
-  let lastMagnet
-  $: {
-    const lastMagnetMedia = JSON.parse(localStorage.getItem(`lastMagnet_${cacheID}`))?.[search?.media?.id]
-    lastMagnet = lastMagnetMedia?.[`${search?.episode}`] || lastMagnetMedia?.batch
-  }
-
+  const lastMagnet = cache.getEntry(caches.HISTORY, 'lastMagnet')?.[`${search?.media?.id}`]?.[`${search?.episode}`] || cache.getEntry(caches.HISTORY, 'lastMagnet')?.[`${search?.media?.id}`]?.batch
   $: firstLoad = !firstLoad && lookup.catch(close)
-
   let searchText = ''
 
   /** @param {import('@thaunknown/ani-resourced/sources/types.d.ts').Result} result */
@@ -130,8 +124,8 @@
         description: 'This release is poorly seeded and likely will have playback issues such as buffering!'
       })
     }
-    const existingMagnets = JSON.parse(localStorage.getItem(`lastMagnet_${cacheID}`)) || {}
-    localStorage.setItem(`lastMagnet_${cacheID}`, JSON.stringify({ ...existingMagnets, [search?.media?.id]: !result.parseObject?.episode_number ? { [`batch`]: result } : { ...(existingMagnets[search?.media?.id] || {}), [`${search.episode}`]: result } }))
+    const existingMagnets = cache.getEntry(caches.HISTORY, 'lastMagnet') || {}
+    cache.setEntry(caches.HISTORY, 'lastMagnet', { ...existingMagnets, [search?.media?.id]: !result.parseObject?.episode_number ? { [`batch`]: result } : { ...(existingMagnets[search?.media?.id] || {}), [`${search.episode}`]: result } })
     add(result.link)
     close()
   }

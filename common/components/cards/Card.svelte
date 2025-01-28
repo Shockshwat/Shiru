@@ -6,7 +6,7 @@
   import EpisodeCard from './EpisodeCard.svelte'
   import FullSkeletonCard from './FullSkeletonCard.svelte'
   import { settings } from '@/modules/settings.js'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { cache } from '@/modules/cache.js'
 
   export let card
 
@@ -30,7 +30,7 @@
     <FullSkeletonCard />
   {:then media}
     {#if media}
-      <FullCard media={anilistClient.mediaCache.value[media.id]} {variables} />
+      <FullCard media={cache.mediaCache.value[media.id]} {variables} />
     {/if}
   {/await}
 
@@ -40,7 +40,7 @@
     <SkeletonCard />
   {:then media}
     {#if media}
-      <SmallCard media={anilistClient.mediaCache.value[media.id]} {variables} />
+      <SmallCard media={cache.mediaCache.value[media.id]} {variables} />
     {/if}
   {/await}
 

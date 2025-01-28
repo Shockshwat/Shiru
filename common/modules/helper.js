@@ -1,8 +1,9 @@
 import { alToken, malToken, settings, sync, isAuthorized } from '@/modules/settings.js'
-import { anilistClient, codes } from '@/modules/anilist.js'
+import { codes, anilistClient } from '@/modules/anilist.js'
 import { malClient } from '@/modules/myanimelist.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { profiles } from '@/modules/settings.js'
+import { cache, mapStatus } from '@/modules/cache.js'
 import { getMediaMaxEp, hasZeroEpisode } from '@/modules/anime.js'
 import { matchKeys } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
@@ -37,34 +38,7 @@ export default class Helper {
   }
 
   static statusMap(status) {
-    switch(status) {
-      // MyAnimeList to AniList
-      case 'watching':
-        return 'CURRENT'
-      case 'rewatching':
-        return 'REPEATING' // rewatching is determined by is_rewatching boolean (no individual list)
-      case 'plan_to_watch':
-        return 'PLANNING'
-      case 'completed':
-        return 'COMPLETED'
-      case 'dropped':
-        return 'DROPPED'
-      case 'on_hold':
-        return 'PAUSED'
-        // AniList to MyAnimeList
-      case 'CURRENT':
-        return 'watching'
-      case 'PLANNING':
-        return 'plan_to_watch'
-      case 'COMPLETED':
-        return 'completed'
-      case 'DROPPED':
-        return 'dropped'
-      case 'PAUSED':
-        return 'on_hold'
-      case 'REPEATING':
-        return 'watching' // repeating is determined by is_rewatching boolean (no individual list)
-    }
+    return mapStatus(status)
   }
 
   static airingMap(status) {
@@ -115,15 +89,11 @@ export default class Helper {
   }
 
   static getUser() {
-    return this.getClient().userID?.viewer?.data?.Viewer
+    return (alToken || malToken)?.viewer?.data?.Viewer
   }
 
   static getUserAvatar() {
-    if (anilistClient.userID?.viewer?.data?.Viewer) {
-      return anilistClient.userID.viewer.data.Viewer.avatar.large || anilistClient.userID.viewer.data.Viewer.avatar.medium
-    } else if (malClient.userID?.viewer?.data?.Viewer) {
-      return malClient.userID.viewer.data.Viewer.picture
-    }
+    return this.getUser()?.avatar?.large || this.getUser()?.avatar?.medium || this.getUser()?.picture
   }
 
   static isUserSort(variables) {
@@ -163,46 +133,11 @@ export default class Helper {
     }
   }
 
-  /*
-   * This exists to fill in any queried AniList media with the user list media data from alternate authorizations.
-   */
-  static async fillEntry(media) {
-    if (this.isMalAuth() && !malToken.reauth) {
-      debug(`Filling MyAnimeList entry data for ${media?.id} (AniList)`)
-      const userLists = await malClient.userLists.value
-      const malEntry = userLists.data?.MediaList?.find(({ node }) => node.id === media.idMal)
-      if (malEntry) {
-        const start_date = malEntry.node.my_list_status.start_date ? new Date(malEntry.node.my_list_status.start_date) : undefined
-        const finish_date = malEntry.node.my_list_status.finish_date ? new Date(malEntry.node.my_list_status.finish_date) : undefined
-        const startedAt = start_date ? {
-          year: start_date.getFullYear(),
-          month: start_date.getMonth() + 1,
-          day: start_date.getDate()
-        } : undefined
-        const completedAt = finish_date ? {
-          year: finish_date.getFullYear(),
-          month: finish_date.getMonth() + 1,
-          day: finish_date.getDate()
-        } : undefined
-        media.mediaListEntry = {
-          id: media.id,
-          progress: malEntry.node.my_list_status.num_episodes_watched,
-          repeat: malEntry.node.my_list_status.number_times_rewatched,
-          status: this.statusMap(malEntry.node.my_list_status?.is_rewatching ? 'rewatching' : malEntry.node.my_list_status?.status),
-          customLists: [],
-          score: malEntry.node.my_list_status.score,
-          startedAt,
-          completedAt
-        }
-      }
-    }
-  }
-
   static async updateEntry(filemedia) {
     // check if values exist
     if (filemedia.media && this.isAuthorized()) {
       const { media, failed } = filemedia
-      const cachedMedia = anilistClient.mediaCache.value[media?.id] || media
+      const cachedMedia = cache.mediaCache.value[media?.id] || media
       debug(`Checking entry for ${cachedMedia?.title?.userPreferred}`)
 
       debug(`Media viability: ${cachedMedia?.status}, Is from failed resolve: ${failed}`)

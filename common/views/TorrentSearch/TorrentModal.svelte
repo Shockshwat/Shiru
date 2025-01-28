@@ -22,7 +22,6 @@
 
   function close () {
     if (overlay.includes('torrent')) overlay = overlay.filter(item => item !== 'torrent')
-    console.error('11111111 ' + JSON.stringify(overlay))
     $rss = null
   }
   function checkClose ({ keyCode }) {

@@ -2,15 +2,17 @@ import lavenshtein from 'js-levenshtein'
 import { writable } from 'simple-store-svelte'
 import Bottleneck from 'bottleneck'
 
-import { alToken, settings, caches, notify, updateCache, updateNotify } from '@/modules/settings.js'
+import { alToken, settings } from '@/modules/settings.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { toast } from 'svelte-sonner'
 import { getRandomInt, sleep } from '@/modules/util.js'
-import Helper from '@/modules/helper.js'
+import { cache, caches } from '@/modules/cache.js'
+import { malClient } from '@/modules/myanimelist.js'
 import IPC from '@/modules/ipc.js'
 import Debug from 'debug'
 
 const debug = Debug('ui:anilist')
+const query = Debug('ui:alquery')
 
 export const codes = {
   400: 'Bad Request',
@@ -39,7 +41,7 @@ export const codes = {
   511: 'Network Authentication Required'
 }
 
-function printError (error) {
+function printError(error) {
   debug(`Error: ${error.status || 429} - ${error.message || codes[error.status || 429]}`)
   if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
     toast.error('Search Failed', {
@@ -57,7 +59,7 @@ export const currentYear = date.getFullYear()
  * @param {import('./al.d.ts').Media & {lavenshtein?: number}} media
  * @param {string} name
  */
-function getDistanceFromTitle (media, name) {
+function getDistanceFromTitle(media, name) {
   if (media) {
     const titles = Object.values(media.title).filter(v => v).map(title => lavenshtein(title.toLowerCase(), name.toLowerCase()))
     const synonyms = media.synonyms.filter(v => v).map(title => lavenshtein(title.toLowerCase(), name.toLowerCase()) + 2)
@@ -187,10 +189,7 @@ class AnilistClient {
 
   userID = alToken
 
-  /** @type {import('simple-store-svelte').Writable<Record<number, import('./al.d.ts').Media>>} */
-  mediaCache = writable(caches.value['medias'])
-
-  constructor () {
+  constructor() {
     debug('Initializing Anilist Client for ID ' + this.userID?.viewer?.data?.Viewer?.id)
     this.limiter.on('failed', async (error) => {
       printError(error)
@@ -228,9 +227,13 @@ class AnilistClient {
       }, 1000 * 60 * 5)
     }
   }
+
+  numberOfQueries = 0
   /** @type {(options: RequestInit) => Promise<any>} */
   handleRequest = this.limiter.wrap(async opts => {
     await this.rateLimitPromise
+    query(`[${this.numberOfQueries}] requesting`, JSON.stringify(opts))
+    this.numberOfQueries++
     let res = {}
     try {
       res = await fetch('https://graphql.anilist.co', opts)
@@ -292,19 +295,35 @@ class AnilistClient {
     return this.handleRequest(options)
   }
 
-  async alSearch (method) {
-    const res = await this.searchName(method)
-    const media = res.data.Page.media.map(media => getDistanceFromTitle(media, method.name))
-    if (!media.length) return null
-    return media.reduce((prev, curr) => prev.lavenshtein <= curr.lavenshtein ? prev : curr)
+  /** @returns {Promise<import('./al.d.ts').Query<{ Viewer: import('./al.d.ts').Viewer }>>} */
+  viewer (variables = {}) {
+    debug('Getting viewer')
+    const query = /* js */` 
+    query {
+      Viewer {
+        avatar {
+          medium,
+          large
+        },
+        name,
+        id,
+        mediaListOptions {
+          animeList {
+            customLists
+          }
+        }
+      }
+    }`
+
+    return this.alRequest(query, variables)
   }
 
-  async findNewNotifications () {
+  async findNewNotifications() {
     if (settings.value.aniNotify !== 'none') {
       debug('Checking for new AniList notifications')
       const res = await this.getNotifications()
       const notifications = res?.data?.Page?.notifications
-      const lastNotified = notify.value['lastAni']
+      const lastNotified = cache.getEntry(caches.NOTIFICATIONS, 'lastAni')
       const newNotifications = (lastNotified > 0) && notifications ? notifications.filter(({createdAt}) => createdAt > lastNotified) : []
       debug(`Found ${newNotifications?.length} new notifications`)
       for (const { media, episode, type, createdAt } of newNotifications) {
@@ -341,19 +360,174 @@ class AnilistClient {
         }
       }
     }
-    updateNotify('lastAni', Date.now() / 1000)
+    if ((newNotifications?.length > 0) || (lastNotified <= 1)) cache.setEntry(caches.NOTIFICATIONS, 'lastAni', Date.now() / 1000)
+  }
+
+  /** @returns {Promise<import('./al.d.ts').PagedQuery<{ notifications: { id: number, type: string, createdAt: number, episode: number, media: import('./al.d.ts').Media}[] }>>} */
+  getNotifications(variables = {}) {
+    debug('Getting notifications')
+    const cachedEntry = cache.cachedEntry(caches.NOTIFICATIONS, JSON.stringify(variables), ignoreExpiry)
+    if (cachedEntry) return cachedEntry
+    const query = /* js */`
+    query($page: Int, $perPage: Int) {
+      Page(page: $page, perPage: $perPage) {
+        notifications(resetNotificationCount: false, type_in: [AIRING, RELATED_MEDIA_ADDITION]) {
+          ...on&nbsp;AiringNotification {
+            id,
+            type,
+            episode,
+            createdAt,
+            media {
+              id,
+              idMal,
+              type,
+              format,
+              title {
+                userPreferred
+              },
+              coverImage {
+                medium
+              }
+            }
+          },
+          ...on&nbsp;RelatedMediaAdditionNotification {
+            id,
+            type,
+            createdAt,
+            media {
+              id,
+              type,
+              format,
+              title {
+                userPreferred
+              },
+              coverImage {
+                medium
+              }
+            }
+          }
+        }
+      }
+    }`
+    return cache.cacheEntry(caches.NOTIFICATIONS, JSON.stringify(variables), variables, this.alRequest(query, variables), Date.now() + 4 * 60 * 1000) // expire after 4 minutes as this will be re-cached by our 5-minute interval.
+  }
+
+  /** @returns {Promise<import('./al.d.ts').Query<{ MediaListCollection: import('./al.d.ts').MediaListCollection }>>} */
+  async getUserLists(variables = {}, ignoreExpiry) {
+    debug('Getting user lists')
+    variables.id = !variables.userID ? this.userID?.viewer?.data?.Viewer.id : variables.userID
+    variables.sort = variables.sort?.replace('USER_SCORE_DESC', 'SCORE_DESC') || 'UPDATED_TIME_DESC' // doesn't exist, AniList uses SCORE_DESC for both MediaSort and MediaListSort.
+    const cachedEntry = cache.cachedEntry(caches.USER_LISTS, JSON.stringify(variables), ignoreExpiry)
+    if (cachedEntry) return cachedEntry
+    const query = /* js */` 
+      query($id: Int, $sort: [MediaListSort]) {
+        MediaListCollection(userId: $id, type: ANIME, sort: $sort, forceSingleCompletedList: true) {
+          lists {
+            status,
+            entries {
+              media {
+                ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
+              }
+            }
+          }
+        }
+      }`
+    let res
+    for (let attempt = 1; attempt <= 3; attempt++) { // VERY large user lists can sometimes result in a timeout, typically trying again succeeds.
+      res = await this.alRequest(query, variables)
+      if (res?.data?.MediaListCollection) break
+      if (attempt < 3) { // stupid hack... probably could be improved...
+        debug(`Error fetching user lists, attempt ${attempt} failed. Retrying in 5 seconds...`)
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      } else {
+        debug('Failed fetching user lists. Maximum of 3 attempts reached, giving up.')
+      }
+    }
+    return cache.cacheEntry(caches.USER_LISTS, JSON.stringify(variables), variables, res, Date.now() + 14 * 60 * 1000) // expire after 14 minutes as this will be re-cached by our 15-minute interval.
+  }
+
+  alEntry (lists, variables) {
+    return this.entry(variables)
+  }
+
+  async entry(variables) {
+    debug(`Updating entry for ${variables.id}`)
+    const query = /* js */`
+      mutation($lists: [String], $id: Int, $status: MediaListStatus, $episode: Int, $repeat: Int, $score: Int, $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
+        SaveMediaListEntry(mediaId: $id, status: $status, progress: $episode, repeat: $repeat, scoreRaw: $score, customLists: $lists, startedAt: $startedAt, completedAt: $completedAt) {
+          id,
+          status,
+          progress,
+          score,
+          repeat,
+          startedAt {
+            year,
+            month,
+            day
+          },
+          completedAt {
+            year,
+            month,
+            day
+          }
+        }
+      }`
+    const res = await this.alRequest(query, variables)
+    if (!variables.token) await this.updateListEntry(variables.id, res?.data?.SaveMediaListEntry)
+    return res
+  }
+
+  async delete(variables) {
+    debug(`Deleting entry for ${variables.id}`)
+    const query = /* js */`
+      mutation($id: Int) {
+        DeleteMediaListEntry(id: $id) {
+          deleted
+        }
+      }`
+    const res = await this.alRequest(query, variables)
+    if (!variables.token) await this.deleteListEntry(variables.idAni)
+    return res
+  }
+
+  async updateListEntry(mediaId, listEntry) {
+    const lists = (await this.userLists.value).data.MediaListCollection.lists?.map(list => { return { ...list, entries: list.entries.filter(entry => entry.media.id !== mediaId) } })
+    let targetList = lists.find(list => list.status === listEntry?.status)
+    if (!targetList) {
+      targetList = { status: listEntry?.status, entries: [] }
+      lists.push(targetList)
+    }
+    await cache.updateMedia([{ ...cache.mediaCache.value[mediaId], mediaListEntry: listEntry }])
+    targetList.entries.unshift({ media: cache.mediaCache.value[mediaId] })
+    this.userLists.value = Promise.resolve({
+      data: {
+        MediaListCollection: {
+          lists: lists
+        }
+      }
+    })
+  }
+
+  async deleteListEntry(mediaId) {
+    await cache.updateMedia([{ ...cache.mediaCache.value[mediaId], mediaListEntry: null }])
+    this.userLists.value = Promise.resolve({
+      data: {
+        MediaListCollection: {
+          lists: (await this.userLists.value)?.data?.MediaListCollection?.lists?.map(list => {
+            return {...list, entries: list.entries.filter(entry => entry.media.id !== mediaId)}
+          })
+        }
+      }
+    })
   }
 
   /**
    * @param {{key: string, title: string, year?: string, isAdult: boolean}[]} flattenedTitles
    **/
-  async alSearchCompound (flattenedTitles) {
+  async alSearchCompound(flattenedTitles) {
     debug(`Searching for ${flattenedTitles?.length} titles via compound search`)
-    const cachedEntry = caches.value['compound'][JSON.stringify(flattenedTitles)]
-    if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached compound search ${JSON.stringify(flattenedTitles)}`)
-      return cachedEntry.data
-    }
+    const cachedEntry = cache.cachedEntry(caches.COMPOUND, JSON.stringify(flattenedTitles))
+    if (cachedEntry) return cachedEntry
 
     if (!flattenedTitles.length) return []
     // isAdult doesn't need an extra variable, as the title is the same regardless of type, so we re-use the same variable for adult and non-adult requests
@@ -396,11 +570,7 @@ class AnilistClient {
      * @returns {Promise<[string, import('./al.d.ts').Media][]>}
      * */
     const res = await this.alRequest(query, requestVariables)
-    const data = caches.value['compound'][JSON.stringify(flattenedTitles)]?.data
-    if (!res?.data) {
-      if (!(data && Object.keys(await data).length > 0)) updateCache('compound', JSON.stringify(flattenedTitles), { data: res, expiry: Date.now() + getRandomInt(10, 15) * 60 * 60 * 1000 })
-      return caches.value['compound'][JSON.stringify(flattenedTitles)]?.data
-    }
+    if (!res?.data) return cache.cachedEntry(caches.COMPOUND, JSON.stringify(flattenedTitles), true) // if the query failed just return the potential cache... better to have something than nothing.
 
     /** @type {Record<string, number>} */
     const searchResults = {}
@@ -414,375 +584,16 @@ class AnilistClient {
     const ids = Object.values(searchResults)
     const search = await this.searchIDS({ id: ids, perPage: 50, sort: 'OMIT' })
     const mappedResults = Object.entries(searchResults)?.map(([filename, id]) => [filename, search?.data?.Page?.media?.find(media => media.id === id)])
-    if (mappedResults) updateCache('compound', JSON.stringify(flattenedTitles), { data: mappedResults, expiry: Date.now() + getRandomInt(60, 90) * 60 * 1000 })
-
-    return caches.value['compound'][JSON.stringify(flattenedTitles)]?.data
+    return mappedResults ? cache.cacheEntry(caches.COMPOUND, JSON.stringify(flattenedTitles), { mappings: true, ...(malClient.userID ? { fillLists: malClient.userLists.value } : {}) }, mappedResults, Date.now() + getRandomInt(60, 90) * 60 * 1000) : cache.cachedEntry(caches.COMPOUND, JSON.stringify(flattenedTitles), true)
   }
 
-  async alEntry (lists, variables) {
-    return await this.entry(variables)
-  }
-
-  async searchName (variables = {}) {
-    debug(`Searching name for ${variables?.name}`)
-    const query = /* js */` 
-    query($page: Int, $perPage: Int, $sort: [MediaSort], $name: String, $status: [MediaStatus], $year: Int, $isAdult: Boolean) {
-      Page(page: $page, perPage: $perPage) {
-        pageInfo {
-          hasNextPage
-        },
-        media(type: ANIME, search: $name, sort: $sort, status_in: $status, isAdult: $isAdult, format_not: MUSIC, seasonYear: $year) {
-          ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
-        }
-      }
-    }`
-
-    variables.isAdult = variables.isAdult ?? false
-
-    /** @type {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
-    const res = await this.alRequest(query, variables)
-    await this.updateMediaCache(res?.data?.Page?.media)
-
-    return res
-  }
-
-  async searchIDSingle (variables) {
-    debug(`Searching for ID: ${variables?.id}`)
-    const query = /* js */` 
-    query($id: Int) { 
-      Media(id: $id, type: ANIME) {
-        ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
-      }
-    }`
-
-    /** @type {import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>} */
-    const res = await this.alRequest(query, {...variables, sort: 'OMIT'})
-
-    await this.updateMediaCache([res?.data?.Media])
-
-    return res
-  }
-
-  /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
-  async searchIDS (variables) {
-    if (variables?.id?.length === 0) return
-    variables.sort = variables.sort || 'OMIT'
-    if (settings.value.adult === 'none') variables.isAdult = false
-    if (settings.value.adult !== 'hentai') variables.genre_not = [ ...(variables.genre_not ? variables.genre_not : []), 'Hentai' ]
-
-    debug(`Searching for IDs ${JSON.stringify(variables)}`)
-    const cachedEntry = caches.value['searchIDS'][JSON.stringify(variables)]
-    if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached IDs ${JSON.stringify(variables)}`)
-      return cachedEntry.data
-    }
-
-    const query = /* js */` 
-    query($id: [Int], $idMal: [Int], $id_not: [Int], $page: Int, $perPage: Int, $status: [MediaStatus], $onList: Boolean, $sort: [MediaSort], $search: String, $season: MediaSeason, $year: Int, $genre: [String], $genre_not: [String], $tag: [String], $format: [MediaFormat], $isAdult: Boolean) { 
-      Page(page: $page, perPage: $perPage) {
-        pageInfo {
-          hasNextPage
-        },
-        media(id_in: $id, idMal_in: $idMal, id_not_in: $id_not, type: ANIME, status_in: $status, onList: $onList, search: $search, sort: $sort, season: $season, seasonYear: $year, genre_in: $genre, genre_not_in: $genre_not, tag_in: $tag, format_in: $format, isAdult: $isAdult) {
-          ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
-        }
-      }
-    }`
-
-    /** @type {Promise<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>} */
-    const res = await this.alRequest(query, variables)
-
-    // prevent updating the cache if the request fails (usually only occurs when the api is down).
-    if (res?.data?.Page?.media) {
-      await this.updateMediaCache(res.data.Page.media)
-      updateCache('searchIDS', JSON.stringify(variables), { data: res, expiry: Date.now() + getRandomInt(24, 30) * 60 * 60 * 1000 })
-    }
-    const data = caches.value['searchIDS'][JSON.stringify(variables)]?.data
-    return data && Object.keys(await data).length > 0 ? data : res
-  }
-
-  /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
-  async searchAllIDS (variables) {
-    variables.sort = variables.sort || 'OMIT'
-    debug(`Searching for (ALL) IDs ${JSON.stringify(variables)}`)
-    const cachedEntry = caches.value['searchIDS'][JSON.stringify(variables)]
-    if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached (ALL) IDs ${JSON.stringify(variables)}`)
-      return cachedEntry.data
-    }
-
-    let fetchedIDS = []
-    let currentPage = 1
-
-    // cycle until all paged ids are resolved.
-    let failedRes
-    while (true) {
-      const res = await this.searchIDS({ ...variables, page: currentPage, perPage: 50, ...( variables?.id && variables?.id?.length !== 0 ? { id: [...new Set(variables.id)] } : { idMal: [...new Set(variables.idMal)] }) })
-      if (!res?.data && res?.errors) { failedRes = res }
-      if (res?.data?.Page.media) fetchedIDS = fetchedIDS.concat(res?.data?.Page.media)
-      if (!res?.data?.Page.pageInfo.hasNextPage) break
-      currentPage++
-    }
-
-    if (!failedRes) {
-      updateCache('searchIDS', JSON.stringify(variables), {
-        data: {
-          data: {
-            Page: {
-              pageInfo: {
-                hasNextPage: false
-              },
-              media: fetchedIDS
-            }
-          }
-        }, expiry: Date.now() + getRandomInt(34, 46) * 60 * 1000
-      })
-    }
-
-    const data = caches.value['searchIDS'][JSON.stringify(variables)]?.data
-    return failedRes ? (data ? Promise.resolve(data) : failedRes) : Promise.resolve(data)
-  }
-
-  /** @returns {Promise<import('./al.d.ts').PagedQuery<{ notifications: { id: number, type: string, createdAt: number, episode: number, media: import('./al.d.ts').Media}[] }>>} */
-  getNotifications (variables = {}) {
-    debug('Getting notifications')
-    const query = /* js */`
-    query($page: Int, $perPage: Int) {
-      Page(page: $page, perPage: $perPage) {
-        notifications(resetNotificationCount: false, type_in: [AIRING, RELATED_MEDIA_ADDITION]) {
-          ...on&nbsp;AiringNotification {
-            id,
-            type,
-            episode,
-            createdAt,
-            media {
-              id,
-              idMal,
-              type,
-              format,
-              title {
-                userPreferred
-              },
-              coverImage {
-                medium
-              }
-            }
-          },
-          ...on&nbsp;RelatedMediaAdditionNotification {
-            id,
-            type,
-            createdAt,
-            media {
-              id,
-              type,
-              format,
-              title {
-                userPreferred
-              },
-              coverImage {
-                medium
-              }
-            }
-          }
-        }
-      }
-    }`
-
-    return this.alRequest(query, variables)
-  }
-
-  /** @returns {Promise<import('./al.d.ts').Query<{ Viewer: import('./al.d.ts').Viewer }>>} */
-  viewer (variables = {}) {
-    debug('Getting viewer')
-    const query = /* js */` 
-    query {
-      Viewer {
-        avatar {
-          medium,
-          large
-        },
-        name,
-        id,
-        mediaListOptions {
-          animeList {
-            customLists
-          }
-        }
-      }
-    }`
-
-    return this.alRequest(query, variables)
-  }
-
-  /** @returns {Promise<import('./al.d.ts').Query<{ MediaListCollection: import('./al.d.ts').MediaListCollection }>>} */
-  async getUserLists (variables = {}, ignoreExpiry) {
-    debug('Getting user lists')
-    variables.id = !variables.userID ? this.userID?.viewer?.data?.Viewer.id : variables.userID
-    variables.sort = variables.sort?.replace('USER_SCORE_DESC', 'SCORE_DESC') || 'UPDATED_TIME_DESC' // doesn't exist, AniList uses SCORE_DESC for both MediaSort and MediaListSort.
-    const cachedEntry = this.cachedEntry('userLists', JSON.stringify(variables), ignoreExpiry)
-    if (cachedEntry) return cachedEntry
-    const query = /* js */` 
-      query($id: Int, $sort: [MediaListSort]) {
-        MediaListCollection(userId: $id, type: ANIME, sort: $sort, forceSingleCompletedList: true) {
-          lists {
-            status,
-            entries {
-              media {
-                ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
-              }
-            }
-          }
-        }
-      }`
-
-    let res
-    for (let attempt = 1; attempt <= 3; attempt++) { // large user lists can sometimes result in a timeout, typically trying again succeeds.
-      res = await this.alRequest(query, variables)
-      if (res?.data?.MediaListCollection) break
-      if (attempt < 3) {
-        debug(`Error fetching user lists, attempt ${attempt} failed. Retrying in 5 seconds...`)
-        await new Promise(resolve => setTimeout(resolve, 5000))
-      } else {
-        debug('Failed fetching user lists. Maximum of 3 attempts reached, giving up.')
-      }
-    }
-
-    if (!variables.token) await this.updateMediaCache(res?.data?.MediaListCollection?.lists?.flatMap(list => list.entries.map(entry => entry.media)))
-    return await this.cacheEntry('userLists', JSON.stringify(variables), res, Date.now() + 14 * 60 * 1000) // expire after 14 minutes as this will be recached by our 15 minute interval.
-  }
-
-  async updateListEntry(mediaId, listEntry) {
-    const lists = (await this.userLists.value).data.MediaListCollection.lists?.map(list => { return { ...list, entries: list.entries.filter(entry => entry.media.id !== mediaId) } })
-    let targetList = lists.find(list => list.status === listEntry?.status)
-    if (!targetList) {
-      targetList = { status: listEntry?.status, entries: [] }
-      lists.push(targetList)
-    }
-    await this.updateMediaCache([{ ...this.mediaCache.value[mediaId], mediaListEntry: listEntry }])
-    targetList.entries.unshift({ media: this.mediaCache.value[mediaId] })
-    this.userLists.value = Promise.resolve({
-      data: {
-        MediaListCollection: {
-          lists: lists
-        }
-      }
-    })
-  }
-
-  async deleteListEntry(mediaId) {
-    await this.updateMediaCache([{ ...this.mediaCache.value[mediaId], mediaListEntry: null }])
-    this.userLists.value = Promise.resolve({
-      data: {
-        MediaListCollection: {
-          lists: (await this.userLists.value)?.data?.MediaListCollection?.lists?.map(list => {
-            return {...list, entries: list.entries.filter(entry => entry.media.id !== mediaId)}
-          })
-        }
-      }
-    })
-  }
-
-  /** @returns {Promise<import('./al.d.ts').Query<{ MediaList: { status: string, progress: number, repeat: number }}>>} */
-  async searchIDStatus (variables = {}) {
-    variables.id = this.userID?.viewer?.data?.Viewer.id
-    variables.sort = variables.sort || 'OMIT'
-    debug(`Searching for ID status: ${variables.id}`)
-    const query = /* js */` 
-      query($id: Int, $mediaId: Int) {
-        MediaList(userId: $id, mediaId: $mediaId) {
-          status,
-          progress,
-          repeat
-        }
-      }`
-
-    return await this.alRequest(query, variables)
-  }
-
-  async searchAiringSchedule (variables = {}) {
-    debug('Searching for airing schedule')
-    variables.to = (variables.from + 7 * 24 * 60 * 60)
-    const query = /* js */` 
-    query($page: Int, $perPage: Int, $from: Int, $to: Int) {
-      Page(page: $page, perPage: $perPage) {
-        pageInfo {
-          hasNextPage
-        },
-        airingSchedules(airingAt_greater: $from, airingAt_lesser: $to) {
-          episode,
-          timeUntilAiring,
-          airingAt,
-          media {
-            ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
-          }
-        }
-      }
-    }`
-
-    /** @type {import('./al.d.ts').PagedQuery<{ airingSchedules: { timeUntilAiring: number, airingAt: number, episode: number, media: import('./al.d.ts').Media}[]}>} */
-    const res = await this.alRequest(query, variables)
-
-    await this.updateMediaCache(res?.data?.Page?.airingSchedules?.map(({media}) => media))
-
-    return res
-  }
-
-  /** @returns {Promise<import('./al.d.ts').PagedQuery<{ airingSchedules: { airingAt: number, episode: number }[]}>>} */
-  async episodes (variables = {}) {
-    debug(`Getting episodes for ${variables.id}`)
-
-    const cachedEntry = this.cachedEntry('episodes', variables.id)
-    if (cachedEntry) return cachedEntry
-
-    const query = /* js */` 
-      query($id: Int) {
-        Page(page: 1, perPage: 1000) {
-          airingSchedules(mediaId: $id) {
-            airingAt,
-            episode
-          }
-        }
-      }`
-    return await this.cacheEntry('episodes', variables.id, this.alRequest(query, variables), Date.now() + getRandomInt(75, 100) * 60 * 1000)
-  }
-
-  pendingCaches = new Map()
-  cachedEntry(cache, key, ignoreExpiry) {
-    if (this.pendingCaches.has(`${cache}:${key}`)) {
-      debug(`Found pending query ${cache} for ${key}`)
-      return this.pendingCaches.get(`${cache}:${key}`)
-    } else {
-      const cachedEntry = caches.value[cache][key]
-      if (cachedEntry && cachedEntry.data && ((Date.now() < cachedEntry.expiry) || ignoreExpiry)) {
-        debug(`Found cached ${cache} for ${key}`)
-        return cachedEntry.data
-      }
-      return null
-    }
-  }
-
-  async cacheEntry(cache, key, data, expiry) {
-    this.pendingCaches.set(`${cache}:${key}`, data)
-    setTimeout(() => {
-      this.pendingCaches.delete(`${cache}:${key}`)
-    }, 500)
-    const res = await data
-    if (!res?.data || (res.errors && res.errors.length > 0)) return this.cachedEntry(cache, key, true) || res // best to return something rather than nothing...
-    updateCache(cache, key, { data: res, expiry })
-    return caches.value[cache][key].data
-  }
-
-  async search (variables = {}) {
+  search(variables = {}) {
     if (settings.value.adult === 'none') variables.isAdult = false
     if (settings.value.adult !== 'hentai') variables.genre_not = [ ...(variables.genre_not ? variables.genre_not : []), 'Hentai' ]
 
     debug(`Searching ${JSON.stringify(variables)}`)
-    const cachedEntry = caches.value['search'][JSON.stringify(variables)]
-    if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached search ${JSON.stringify(variables)}`)
-      return cachedEntry.data
-    }
-
+    const cachedEntry = cache.cachedEntry(caches.SEARCH, JSON.stringify(variables))
+    if (cachedEntry) return cachedEntry
     const query = /* js */` 
     query($page: Int, $perPage: Int, $sort: [MediaSort], $search: String, $onList: Boolean, $status: [MediaStatus], $status_not: [MediaStatus], $season: MediaSeason, $year: Int, $genre: [String], $genre_not: [String], $tag: [String], $format: [MediaFormat], $id_not: [Int], $idMal_not: [Int], $idMal: [Int], $isAdult: Boolean) {
       Page(page: $page, perPage: $perPage) {
@@ -794,43 +605,102 @@ class AnilistClient {
         }
       }
     }`
+    return cache.cacheEntry(caches.SEARCH, JSON.stringify(variables), { ...variables, ...(malClient.userID ? { fillLists: malClient.userLists.value } : {}) }, this.alRequest(query, variables), Date.now() + getRandomInt(75, 100) * 60 * 1000)
+  }
 
-    /** @type {Promise<import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>>} */
-    const res = await this.alRequest(query, variables)
+  searchIDSingle(variables) {
+    variables.sort = variables.sort || 'OMIT'
+    debug(`Searching for ID: ${variables?.id}`)
+    const cachedEntry = cache.cachedEntry(caches.SEARCH_IDS, JSON.stringify(variables))
+    if (cachedEntry) return cachedEntry
+    const query = /* js */` 
+    query($id: Int) { 
+      Media(id: $id, type: ANIME) {
+        ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
+      }
+    }`
+    return cache.cacheEntry(caches.SEARCH_IDS, JSON.stringify(variables), { ...variables, ...(malClient.userID ? { fillLists: malClient.userLists.value } : {}) }, this.alRequest(query, variables), Date.now() + getRandomInt(80, 100) * 60 * 1000)
+  }
 
-    // prevent updating the cache if the request fails (usually only occurs when the api is down).
-    if (res?.data?.Page?.media) {
-      await this.updateMediaCache(res.data.Page.media)
-      updateCache('search', JSON.stringify(variables), { data: res, expiry: Date.now() + getRandomInt(16, 28) * 60 * 1000 })
+  /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
+  searchIDS(variables) {
+    if (variables?.id?.length === 0) return
+    variables.sort = variables.sort || 'OMIT'
+    if (settings.value.adult === 'none') variables.isAdult = false
+    if (settings.value.adult !== 'hentai') variables.genre_not = [ ...(variables.genre_not ? variables.genre_not : []), 'Hentai' ]
+
+    debug(`Searching for IDs ${JSON.stringify(variables)}`)
+    const cachedEntry = cache.cachedEntry(caches.SEARCH_IDS, JSON.stringify(variables))
+    if (cachedEntry) return cachedEntry
+    const query = /* js */` 
+    query($id: [Int], $idMal: [Int], $id_not: [Int], $page: Int, $perPage: Int, $status: [MediaStatus], $onList: Boolean, $sort: [MediaSort], $search: String, $season: MediaSeason, $year: Int, $genre: [String], $genre_not: [String], $tag: [String], $format: [MediaFormat], $isAdult: Boolean) { 
+      Page(page: $page, perPage: $perPage) {
+        pageInfo {
+          hasNextPage
+        },
+        media(id_in: $id, idMal_in: $idMal, id_not_in: $id_not, type: ANIME, status_in: $status, onList: $onList, search: $search, sort: $sort, season: $season, seasonYear: $year, genre_in: $genre, genre_not_in: $genre_not, tag_in: $tag, format_in: $format, isAdult: $isAdult) {
+          ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
+        }
+      }
+    }`
+    return cache.cacheEntry(caches.SEARCH_IDS, JSON.stringify(variables), { ...variables, ...(malClient.userID ? { fillLists: malClient.userLists.value } : {}) }, this.alRequest(query, variables), Date.now() + getRandomInt(24, 30) * 60 * 1000)
+  }
+
+  /** returns {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
+  async searchAllIDS(variables) {
+    variables.sort = variables.sort || 'OMIT'
+    debug(`Searching for (ALL) IDs ${JSON.stringify(variables)}`)
+    const cachedEntry = cache.cachedEntry(caches.SEARCH_IDS, JSON.stringify(variables))
+    if (cachedEntry) return cachedEntry
+    let fetchedIDS = []
+    let currentPage = 1
+    let failedRes
+    while (true) { // cycle until all paged ids are resolved.
+      const res = await this.searchIDS({ ...variables, page: currentPage, perPage: 50, ...( variables?.id && variables?.id?.length !== 0 ? { id: [...new Set(variables.id)] } : { idMal: [...new Set(variables.idMal)] }) })
+      if (!res?.data && res?.errors) { failedRes = res }
+      if (res?.data?.Page.media) fetchedIDS = fetchedIDS.concat(res?.data?.Page.media)
+      if (!res?.data?.Page.pageInfo.hasNextPage) break
+      currentPage++
     }
+    return cache.cacheEntry(caches.SEARCH_IDS, JSON.stringify(variables), { ...variables, ...(malClient.userID ? { fillLists: malClient.userLists.value } : {}) }, ({ ...(failedRes || failedRes?.errors ? {errors: failedRes?.errors ? failedRes.errors : failedRes} : {}), data: { Page: {  pageInfo: { hasNextPage: false }, media: fetchedIDS } } }), Date.now() + getRandomInt(34, 46) * 60 * 1000)
+  }
 
-    const data = caches.value['search'][JSON.stringify(variables)]?.data
-    return data && Object.keys(await data).length > 0 ? data : res
+  /** @returns {Promise<import('./al.d.ts').PagedQuery<{ airingSchedules: { airingAt: number, episode: number }[]}>>} */
+  episodes(variables = {}) {
+    debug(`Getting episodes for ${variables.id}`)
+    const cachedEntry = cache.cachedEntry(caches.EPISODES, variables.id)
+    if (cachedEntry) return cachedEntry
+    const query = /* js */`
+      query($id: Int) {
+        Page(page: 1, perPage: 1000) {
+          airingSchedules(mediaId: $id) {
+            airingAt,
+            episode
+          }
+        }
+      }`
+    return cache.cacheEntry(caches.EPISODES, variables.id, variables, this.alRequest(query, variables), Date.now() + getRandomInt(75, 100) * 60 * 1000)
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{ AiringSchedule: { airingAt: number }}>>} */
-  episodeDate (variables) {
+  episodeDate(variables) {
     debug(`Searching for episode date: ${variables.id}, ${variables.ep}`)
-    // need to implement cache
+    const cachedEntry = cache.cachedEntry(caches.EPISODES, JSON.stringify(variables))
+    if (cachedEntry) return cachedEntry
     const query = /* js */`
       query($id: Int, $ep: Int) {
         AiringSchedule(mediaId: $id, episode: $ep) {
           airingAt
         }
       }`
-
-    return this.alRequest(query, variables)
+    return cache.cacheEntry(caches.EPISODES, JSON.stringify(variables), variables, this.alRequest(query, variables), Date.now() + getRandomInt(90, 100) * 60 * 1000)
   }
 
   /** @returns {Promise<import('./al.d.ts').PagedQuery<{ mediaList: import('./al.d.ts').Following[]}>>} */
-  async following (variables) {
+  following(variables) {
     debug('Getting following')
-    const cachedEntry = caches.value['following'][JSON.stringify(variables)]
-    if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached followers ${JSON.stringify(variables)}`)
-      return cachedEntry.data
-    }
-
+    const cachedEntry = cache.cachedEntry(caches.FOLLOWING, JSON.stringify(variables))
+    if (cachedEntry) return cachedEntry
     const query = /* js */`
       query($id: Int) {
         Page {
@@ -847,35 +717,20 @@ class AnilistClient {
           }
         }
       }`
-
-    /** @type {Promise<import('./al.d.ts').PagedQuery<{ mediaList: import('./al.d.ts').Following[]}>>} */
-    const res = await this.alRequest(query, variables)
-    updateCache('following', JSON.stringify(variables), { data: res, expiry: Date.now() + getRandomInt(200, 300) * 60 * 1000 })
-    return caches.value['following'][JSON.stringify(variables)].data
+    return cache.cacheEntry(caches.FOLLOWING, JSON.stringify(variables), variables, this.alRequest(query, variables), Date.now() + getRandomInt(200, 300) * 60 * 1000)
   }
 
   /** @returns {Promise<import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>>} */
-  async recommendations (variables) {
+  async recommendations(variables) {
     debug(`Getting recommendations for ${variables.id}`)
-
-    if (settings.value.queryComplexity === 'Complex' && this.mediaCache.value[variables.id]) {
+    if (settings.value.queryComplexity === 'Complex' && cache.mediaCache.value[variables.id]) {
       debug(`Complex queries are enabled, returning cached recommendations from media ${variables.id}`)
-      return {
-        data: {
-          Media: {
-            ...this.mediaCache.value[variables.id]
-          }
-        }
-      }
+      return { data: { Media: { ...cache.mediaCache.value[variables.id] } } }
     }
+    const cachedEntry = cache.cachedEntry(caches.RECOMMENDATIONS, variables.id)
+    if (cachedEntry) return cachedEntry
 
-    const cachedEntry = caches.value['recommendations'][variables.id]
-    if (cachedEntry && Date.now() < cachedEntry.expiry) {
-      debug(`Found cached recommendations for ${variables.id}`)
-      return cachedEntry.data
-    }
-
-    const query = /* js */` 
+    const query = /* js */`
       query($id: Int) {
         Media(id: $id, type: ANIME) {
           id,
@@ -883,87 +738,25 @@ class AnilistClient {
           ${queryComplexObjects}
         }
       }`
-
-    updateCache('recommendations', variables.id, { data: await this.alRequest(query, variables), expiry: Date.now() + getRandomInt(1500, 2000) * 60 * 1000 })
-    return caches.value['recommendations'][variables.id].data
+    return cache.cacheEntry(caches.RECOMMENDATIONS, variables.id, variables, this.alRequest(query, variables), Date.now() + getRandomInt(1500, 2000) * 60 * 1000)
   }
 
-  async entry (variables) {
-    debug(`Updating entry for ${variables.id}`)
-    const query = /* js */`
-      mutation($lists: [String], $id: Int, $status: MediaListStatus, $episode: Int, $repeat: Int, $score: Int, $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
-        SaveMediaListEntry(mediaId: $id, status: $status, progress: $episode, repeat: $repeat, scoreRaw: $score, customLists: $lists, startedAt: $startedAt, completedAt: $completedAt) {
-          id,
-          status,
-          progress,
-          score,
-          repeat,
-          startedAt {
-            year,
-            month,
-            day
-          },
-          completedAt {
-            year,
-            month,
-            day
-          }
-        }
-      }`
-
-    const res = await this.alRequest(query, variables)
-    if (!variables.token) await this.updateListEntry(variables.id, res?.data?.SaveMediaListEntry)
-    return res
-  }
-
-  async delete (variables) {
-    debug(`Deleting entry for ${variables.id}`)
-    const query = /* js */`
-      mutation($id: Int) {
-        DeleteMediaListEntry(id: $id) {
-          deleted
-        }
-      }`
-    const res = await this.alRequest(query, variables)
-    if (!variables.token) await this.deleteListEntry(variables.idAni)
-    return res
-  }
-
-  favourite (variables) {
+  favourite(variables) {
     debug(`Toggling favourite for ${variables.id}`)
     const query = /* js */`
       mutation($id: Int) {
         ToggleFavourite(animeId: $id) { anime { nodes { id } } } 
       }`
-
-    return this.alRequest(query, variables)
-  }
-
-  customList (variables = {}) {
-    debug('Updating custom list')
-    const query = /* js */`
-      mutation($lists: [String]) {
-        UpdateUser(animeListOptions: { customLists: $lists }) {
-          id
-        }
-      }`
-
     return this.alRequest(query, variables)
   }
 
   /** @param {import('./al.d.ts').Media} media */
   title(media) {
-    const cachedMedia = this.mediaCache.value[media?.id] || media
+    const cachedMedia = cache.mediaCache.value[media?.id || media] || media
     const preferredTitle = cachedMedia?.title.userPreferred
-    if (alToken) {
-      return preferredTitle
-    }
-
-    if (settings.value.titleLang === 'romaji') {
-      return cachedMedia?.title.romaji || preferredTitle
-    } else {
-      return cachedMedia?.title.english || preferredTitle
-    }
+    if (alToken) return preferredTitle
+    if (settings.value.titleLang === 'romaji') return cachedMedia?.title.romaji || preferredTitle
+    else return cachedMedia?.title.english || preferredTitle
   }
 
   /** @param {import('./al.d.ts').Media} media */
@@ -972,25 +765,95 @@ class AnilistClient {
     return media.averageScore && totalReviewers ? totalReviewers.toLocaleString() : '?'
   }
 
-  /** @param {import('./al.d.ts').Media[]} medias */
-  async updateMediaCache(medias) {
-    if (!medias) return
-    if (!alToken) await Promise.all(medias.map(media => Helper.fillEntry(media))) // attach any alternative authorization userList information
+  // Graveyard of no longer used/needed methods, good for reference.
+  //
+  // async searchName(variables = {}) {
+  //   debug(`Searching name for ${variables?.name}`)
+  //   const query = /* js */`
+  //   query($page: Int, $perPage: Int, $sort: [MediaSort], $name: String, $status: [MediaStatus], $year: Int, $isAdult: Boolean) {
+  //     Page(page: $page, perPage: $perPage) {
+  //       pageInfo {
+  //         hasNextPage
+  //       },
+  //       media(type: ANIME, search: $name, sort: $sort, status_in: $status, isAdult: $isAdult, format_not: MUSIC, seasonYear: $year) {
+  //         ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
+  //       }
+  //     }
+  //   }`
+  //
+  //   variables.isAdult = variables.isAdult ?? false
+  //
+  //   /** @type {import('./al.d.ts').PagedQuery<{media: import('./al.d.ts').Media[]}>} */
+  //   const res = await this.alRequest(query, variables)
+  //   await cache.updateMedia(res?.data?.Page?.media)
+  //
+  //   return res
+  // }
 
-    const updatedMedias = {}
-    for (const media of medias) {
-      if (media) {
-        updatedMedias[media.id] = media
-      }
-    }
+  // async alSearch(method) {
+  //   const res = await this.searchName(method)
+  //   const media = res.data.Page.media.map(media => getDistanceFromTitle(media, method.name))
+  //   if (!media.length) return null
+  //   return media.reduce((prev, curr) => prev.lavenshtein <= curr.lavenshtein ? prev : curr)
+  // }
 
-    caches.update((cache) => {
-      if (!cache['medias']) cache['medias'] = {}
-      cache['medias'] = { ...cache['medias'], ...updatedMedias }
-      return cache
-    })
-    this.mediaCache.set(caches.value['medias'])
-  }
+  // async searchAiringSchedule(variables = {}) {
+  //   debug('Searching for airing schedule')
+  //   variables.to = (variables.from + 7 * 24 * 60 * 60)
+  //   const query = /* js */`
+  //   query($page: Int, $perPage: Int, $from: Int, $to: Int) {
+  //     Page(page: $page, perPage: $perPage) {
+  //       pageInfo {
+  //         hasNextPage
+  //       },
+  //       airingSchedules(airingAt_greater: $from, airingAt_lesser: $to) {
+  //         episode,
+  //         timeUntilAiring,
+  //         airingAt,
+  //         media {
+  //           ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
+  //         }
+  //       }
+  //     }
+  //   }`
+  //
+  //   /** @type {import('./al.d.ts').PagedQuery<{ airingSchedules: { timeUntilAiring: number, airingAt: number, episode: number, media: import('./al.d.ts').Media}[]}>} */
+  //   const res = await this.alRequest(query, variables)
+  //
+  //   await cache.updateMedia(res?.data?.Page?.airingSchedules?.map(({media}) => media))
+  //
+  //   return res
+  // }
+
+
+  // customList(variables = {}) {
+  //   debug('Updating custom list')
+  //   const query = /* js */`
+  //     mutation($lists: [String]) {
+  //       UpdateUser(animeListOptions: { customLists: $lists }) {
+  //         id
+  //       }
+  //     }`
+  //
+  //   return this.alRequest(query, variables)
+  // }
+
+  // /** @returns {Promise<import('./al.d.ts').Query<{ MediaList: { status: string, progress: number, repeat: number }}>>} */
+  // async searchIDStatus(variables = {}) {
+  //   variables.id = this.userID?.viewer?.data?.Viewer.id
+  //   variables.sort = variables.sort || 'OMIT'
+  //   debug(`Searching for ID status: ${variables.id}`)
+  //   const query = /* js */`
+  //     query($id: Int, $mediaId: Int) {
+  //       MediaList(userId: $id, mediaId: $mediaId) {
+  //         status,
+  //         progress,
+  //         repeat
+  //       }
+  //     }`
+  //
+  //   return await this.alRequest(query, variables)
+  // }
 }
 
 export const anilistClient = new AnilistClient()

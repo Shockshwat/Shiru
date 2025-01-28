@@ -2,7 +2,8 @@ import { toast } from 'svelte-sonner'
 import { writable } from 'simple-store-svelte'
 import { anilistClient, codes } from '@/modules/anilist.js'
 import { malDubs } from '@/modules/animedubs.js'
-import { settings, notify, updateNotify } from '@/modules/settings.js'
+import { settings } from '@/modules/settings.js'
+import { cache, caches } from '@/modules/cache.js'
 import { getEpisodeMetadataForMedia } from '@/modules/anime.js'
 import { hasNextPage } from '@/modules/sections.js'
 import Helper from '@/modules/helper.js'
@@ -65,13 +66,13 @@ class AnimeSchedule {
 
     async findNewDelayedEpisodes() { // currently only dubs are handled as they typically get delayed...
         debug(`Checking for delayed dub episodes...`)
-        const delayedEpisodes = (await this.dubAiringLists.value).filter(entry => new Date(entry.delayedFrom) <= new Date() && new Date(entry.delayedUntil) > new Date()).filter(entry => !notify.value['dubsDelayed'].includes(`${entry?.media?.media?.id}:${entry.episodeNumber}:${entry.delayedUntil}`))
+        const delayedEpisodes = (await this.dubAiringLists.value).filter(entry => new Date(entry.delayedFrom) <= new Date() && new Date(entry.delayedUntil) > new Date()).filter(entry => !cache.getEntry(caches.NOTIFICATIONS, 'delayedDubs').includes(`${entry?.media?.media?.id}:${entry.episodeNumber}:${entry.delayedUntil}`))
         debug(`Found ${delayedEpisodes.length} delayed episodes${delayedEpisodes.length > 0 ? '.. notifying!' : ''}`)
         if (delayedEpisodes.length === 0) return
         await anilistClient.searchAllIDS({id: delayedEpisodes.map(entry => entry?.media?.media.id)})
         for (const entry of delayedEpisodes) {
             const media = entry?.media?.media
-            const cachedMedia = anilistClient.mediaCache.value[media?.id]
+            const cachedMedia = cache.mediaCache.value[media?.id]
             const notify = (!cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes(cachedMedia?.mediaListEntry?.status))
             if (notify && media.format !== 'MUSIC') {
                 const details = {
@@ -111,7 +112,7 @@ class AnimeSchedule {
                     }
                 }))
             }
-            updateNotify('dubsDelayed', (current) => [...current, `${media?.id}:${entry.episodeNumber}:${entry.delayedUntil}`])
+            cache.setEntry(caches.NOTIFICATIONS, 'delayedDubs', (current) => [...current, `${media?.id}:${entry.episodeNumber}:${entry.delayedUntil}`])
         }
     }
 
@@ -123,12 +124,12 @@ class AnimeSchedule {
             const airingListKey = `${type === 'Hentai' ? 'sub' : type.toLowerCase()}AiringLists`
 
             debug(`Checking for new ${type} Schedule notifications`)
-            const newNotifications = (await this[airingListKey].value).filter(entry => (entry?.unaired && ((type !== 'Hentai' && !(entry?.media?.media?.genres || entry?.genres)?.includes('Hentai')) || (type === 'Hentai' && (entry?.media?.media?.genres || entry?.genres)?.includes('Hentai'))) && !notify.value[notifyKey].includes(entry?.media?.media?.id || entry?.id))).map(entry => entry?.media?.media || entry)
+            const newNotifications = (await this[airingListKey].value).filter(entry => (entry?.unaired && ((type !== 'Hentai' && !(entry?.media?.media?.genres || entry?.genres)?.includes('Hentai')) || (type === 'Hentai' && (entry?.media?.media?.genres || entry?.genres)?.includes('Hentai'))) && !cache.getEntry(caches.NOTIFICATIONS, notifyKey).includes(entry?.media?.media?.id || entry?.id))).map(entry => entry?.media?.media || entry)
             debug(`Found ${newNotifications?.length} new ${type} notifications`)
             if (newNotifications?.length === 0) return
             await anilistClient.searchAllIDS({id: newNotifications.map(media => media.id)})
             for (const media of newNotifications) {
-                const cachedMedia = anilistClient.mediaCache.value[media?.id]
+                const cachedMedia = cache.mediaCache.value[media?.id]
                 if (settings.value[key] !== 'none' && media?.id) {
                     const res = await Helper.getClient().userLists.value
                     const isFollowing = () => {
@@ -252,7 +253,7 @@ class AnimeSchedule {
         if (cachedAiredLists && JSON.stringify(cachedAiredLists.airedLists) === JSON.stringify(res)) return cachedAiredLists.results
         debug(`Episode Feed (${type}) has changed, updating`)
 
-        const missedIDS = res.filter(media => notify.value[`last${type}`] > 0 && ((Math.floor(new Date(media.episode.airedAt).getTime() / 1000) >= notify.value[`last${type}`]) || (Math.floor(new Date(media.episode.addedAt).getTime() / 1000) >= notify.value[`last${type}`]))).filter(media => !ids.includes(media.id)).sort((a, b) => new Date(b.episode.addedAt) - new Date(a.episode.addedAt)).slice(0, 300).map(media => media.id)
+        const missedIDS = res.filter(media => cache.getEntry(caches.NOTIFICATIONS, `last${type}`) > 0 && ((Math.floor(new Date(media.episode.airedAt).getTime() / 1000) >= cache.getEntry(caches.NOTIFICATIONS, `last${type}`)) || (Math.floor(new Date(media.episode.addedAt).getTime() / 1000) >= cache.getEntry(caches.NOTIFICATIONS, `last${type}`)))).filter(media => !ids.includes(media.id)).sort((a, b) => new Date(b.episode.addedAt) - new Date(a.episode.addedAt)).slice(0, 300).map(media => media.id)
         const medias = await anilistClient.searchAllIDS({ id: Array.from(new Set([...ids, ...missedIDS])) })
         if (!medias?.data && medias?.errors) throw medias.errors[0]
 
@@ -292,7 +293,7 @@ class AnimeSchedule {
         const results = this.structureResolveResults(items, type)
         if (type === 'Dub' || type === 'Sub' || type === 'Hentai') {
             if (type === 'Hentai' && settings.value.adult !== 'hentai') return
-            const lastNotified = notify.value[`last${type}`]
+            const lastNotified = cache.getEntry(caches.NOTIFICATIONS, `last${type}`)
             const newReleases = combinedItems?.data?.Page?.media?.filter(media => (Math.floor(new Date(media.episode.airedAt).getTime() / 1000) >= lastNotified) || (Math.floor(new Date(media.episode.addedAt).getTime() / 1000) >= lastNotified))
             if (newReleases && settings.value.releasesNotify?.length > 0 && lastNotified > 0) {
                 for (const media of newReleases) {

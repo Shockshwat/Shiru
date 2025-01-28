@@ -1,6 +1,7 @@
 import { toast } from 'svelte-sonner'
 import { codes } from '@/modules/anilist.js'
-import { caches, settings, updateCache } from '@/modules/settings.js'
+import { settings } from '@/modules/settings.js'
+import { cache, caches } from '@/modules/cache.js'
 import { getKitsuMappings } from '@/modules/anime.js'
 import { getRandomInt, sleep } from '@/modules/util.js'
 import Bottleneck from 'bottleneck'
@@ -89,8 +90,8 @@ class Episodes {
 
     async requestEpisodes(jikan, id, episode, root) {
         const page = Math.ceil(episode / 100)
-        const cachedEntry = caches.value['episodes'][`${id}:${page}:${root}`]
-        if (cachedEntry && Date.now() < cachedEntry.expiry) return cachedEntry.data
+        const cachedEntry = cache.cachedEntry(caches.EPISODES, `${id}:${page}:${root}`)
+        if (cachedEntry) return cachedEntry
         if (this.concurrentRequests.has(`${id}:${page}:${root}`)) return this.concurrentRequests.get(`${id}:${page}:${root}`)
         const requestPromise = this.limiter.wrap(async () => {
             await this.rateLimitPromise
@@ -119,8 +120,7 @@ class Episodes {
                     this.printError(res)
                 }
             }
-            updateCache('episodes', `${id}:${page}:${root}`, { data: await json, expiry: Date.now() + getRandomInt(5, 7) * 24 * 60 * 60 * 1000 })
-            return caches.value['episodes'][`${id}:${page}:${root}`].data
+            return cache.cacheEntry(caches.EPISODES, `${id}:${page}:${root}`, {}, json, Date.now() + getRandomInt(1, 3) * 24 * 60 * 60 * 1000)
         })().finally(() => {
             this.concurrentRequests.delete(`${id}:${page}:${root}`)
         })

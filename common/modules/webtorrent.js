@@ -5,7 +5,8 @@ import querystring from 'querystring'
 import HTTPTracker from 'bittorrent-tracker/lib/client/http-tracker.js' //../../node_modules/bittorrent-tracker/lib/client/http-tracker.js
 import { hex2bin, arr2hex, text2arr } from 'uint8-util'
 import Parser from './parser.js'
-import { defaults, fontRx, sleep, subRx, videoRx } from './util.js'
+import { cache, caches } from './cache.js'
+import { fontRx, sleep, subRx, videoRx } from './util.js'
 import { SUPPORTS } from '@/modules/support.js'
 
 // HACK: this is https only, but electron doesn't run in https, weird.
@@ -40,7 +41,6 @@ const ANNOUNCE = [
 export default class TorrentClient extends WebTorrent {
   static excludedErrorMessages = ['WebSocket', 'User-Initiated Abort, reason=', 'Connection failed.']
 
-  cacheID = 'default'
   player = ''
   /** @type {ReturnType<spawn>} */
   playerProcess = null
@@ -50,20 +50,7 @@ export default class TorrentClient extends WebTorrent {
   hault
 
   constructor (ipc, storageQuota, serverMode, torrentPath, controller) {
-    /** @type {{viewer: import('./al').Query<{Viewer: import('./al').Viewer}>, token: string} | null} */
-    let alToken
-    /** @type {{viewer: import('./mal').Query<{Viewer: import('./mal').Viewer}>, token: string, refresh: string, refresh_in: number, reauth: boolean} | null} */
-    let malToken
-    let cacheID = 'default'
-    let storedSettings = {}
-    try {
-      alToken = JSON.parse(localStorage.getItem('ALviewer')) || null
-      malToken = JSON.parse(localStorage.getItem('MALviewer')) || null
-      cacheID = alToken ? alToken.viewer.data.Viewer.id : malToken ? malToken.viewer.data.Viewer.id : 'default'
-      storedSettings = JSON.parse(localStorage.getItem(`settings_${cacheID}`)) || {}
-    } catch (error) {}
-
-    const settings = { ...defaults, ...storedSettings }
+    const settings = cache.getEntry(caches.GENERAL, 'settings')
     debug(`Initializing TorrentClient with settings: ${JSON.stringify(settings)}`)
     super({
       dht: !settings.torrentDHT,
@@ -74,7 +61,6 @@ export default class TorrentClient extends WebTorrent {
       dhtPort: settings.dhtPort || 0,
       natUpnp: SUPPORTS.permamentNAT ? 'permanent' : true
     })
-    this.cacheID = cacheID
     this.settings = settings
     this.ipc = ipc
     this.torrentPath = torrentPath
@@ -134,7 +120,7 @@ export default class TorrentClient extends WebTorrent {
     this.on('error', this.dispatchError.bind(this))
   }
 
-  loadLastTorrent (t) {
+  async loadLastTorrent (t) {
     debug('Loading last torrent: ' + t)
     if (!t) return
     let torrent
@@ -173,7 +159,7 @@ export default class TorrentClient extends WebTorrent {
         if (torrent.numPeers === 0) this.dispatchError('No peers found for torrent, try using a different torrent.')
       }
     }, 10000).unref?.()
-    localStorage.setItem(`torrent_${this.cacheID}`, JSON.stringify([...torrent.torrentFile])) // this won't work on mobile, but really it only speeds stuff up by ~1-2 seconds since magnet data doesn't need to be resolved
+    await cache.write(caches.GENERAL, 'loadedTorrent', JSON.stringify([...torrent.torrentFile]))
   }
 
   async findFontFiles (targetFile) {
@@ -303,7 +289,7 @@ export default class TorrentClient extends WebTorrent {
       if (existing.ready) this.torrentReady(existing)
       return
     }
-    localStorage.setItem(`lastFinished_${this.cacheID}`, 'false')
+    await cache.write(caches.GENERAL, 'lastFinished', false)
     if (this.torrents.length) {
       await this.remove(this.torrents[0], { destroyStore: !this.settings.torrentPersist })
     }
@@ -327,7 +313,7 @@ export default class TorrentClient extends WebTorrent {
     }, 10000).unref?.()
 
     torrent.once('done', () => {
-      if (this.settings.torrentPathNew) localStorage.setItem(`lastFinished_${this.cacheID}`, 'true')
+      if (this.settings.torrentPathNew) cache.write(caches.GENERAL, 'lastFinished', true)
     })
   }
 

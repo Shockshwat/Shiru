@@ -5,12 +5,11 @@ import { toast } from 'svelte-sonner'
 import SectionsManager from './sections.js'
 import { page } from '@/App.svelte'
 import clipboard from './clipboard.js'
-
 import { search, key } from '@/views/Search.svelte'
-
 import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
 import { animeSchedule } from '@/modules/animeschedule.js'
-import { caches, settings, updateCache } from '@/modules/settings.js'
+import { settings } from '@/modules/settings.js'
+import { cache, caches } from '@/modules/cache.js'
 import Helper from '@/modules/helper.js'
 
 import { Drama, BookHeart, MountainSnow, Laugh, TriangleAlert, Droplets, FlaskConical, Ghost, Skull, HeartPulse, Volleyball, Car, Brain, Footprints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
@@ -601,86 +600,84 @@ export function nextAiring(nodes, variables) {
   return nodes?.filter(node => new Date(variables?.hideSubs ? node.airingAt : (node.airingAt * 1000)) > currentTime)?.sort((a, b) => a.airingAt - b.airingAt)?.shift()
 }
 
+
+const concurrentRequests = new Map()
 export async function getKitsuMappings(anilistID) {
   if (!anilistID) return
   debug(`Searching for kitsu mappings for anilist media: ${anilistID}`)
-  const cachedEntry = caches.value['mappings']['kitsu' + anilistID]
-  if (cachedEntry && Date.now() < cachedEntry.expiry) {
-    debug(`Found cached kitsu mappings for anilist media: ${anilistID}`)
-    return cachedEntry.data
-  }
-
-  let res = {}
-  try {
-    res = await fetch(`https://kitsu.io/api/edge/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${anilistID}&include=item`)
-  } catch (e) {
-    if (!res || res.status !== 404) throw e
-  }
-  if (!res.ok && (res.status === 429 || res.status === 500)) {
-    throw res
-  }
-  let json = null
-  try {
-    json = await res.json()
-  } catch (error) {
-    if (res.ok) printError(error)
-  }
-  if (!res.ok) {
-    if (json) {
-      for (const error of json?.errors || []) {
-        printError(error)
-      }
-    } else {
-      printError(res)
+  const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `kitsu-${anilistID}`)
+  if (cachedEntry) return cachedEntry
+  if (concurrentRequests.has(`kitsu-${anilistID}`)) return concurrentRequests.get(`kitsu-${anilistID}`)
+  const requestPromise = (async () => {
+    let res = {}
+    try {
+      res = await fetch(`https://kitsu.io/api/edge/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${anilistID}&include=item`)
+    } catch (e) {
+      if (!res || res.status !== 404) throw e
     }
-  }
-  // prevent updating the cache if the request fails (usually only occurs when the api is down).
-  if (json && !json?.errors?.length > 0) {
-    updateCache('mappings', 'kitsu' + anilistID, { data: json, expiry: Date.now() + getRandomInt(1440, 2160) * 60 * 1000 })
-  }
-  const data = caches.value['mappings']['kitsu' + anilistID]?.data
-  return data && Object.keys(await data).length > 0 ? data : json
+    if (!res.ok && (res.status === 429 || res.status === 500)) {
+      throw res
+    }
+    let json = null
+    try {
+      json = await res.json()
+    } catch (error) {
+      if (res.ok) printError(error)
+    }
+    if (!res.ok) {
+      if (json) {
+        for (const error of json?.errors || []) {
+          printError(error)
+        }
+      } else {
+        printError(res)
+      }
+    }
+    return cache.cacheEntry(caches.MAPPINGS, `kitsu-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
+  })().finally(() => {
+    concurrentRequests.delete(`kitsu-${anilistID}`)
+  })
+  concurrentRequests.set(`kitsu-${anilistID}`, requestPromise)
+  return requestPromise
 }
 
 export async function getAniMappings(anilistID) {
   if (!anilistID) return
   debug(`Searching for ani mappings for anilist media: ${anilistID}`)
-  const cachedEntry = caches.value['mappings']['ani' + anilistID]
-  if (cachedEntry && Date.now() < cachedEntry.expiry) {
-    debug(`Found cached ani mappings for anilist media: ${anilistID}`)
-    return cachedEntry.data
-  }
-
-  let res = {}
-  try {
-    res = await fetch(`https://api.ani.zip/mappings?anilist_id=${anilistID}`)
-  } catch (e) {
-    if (!res || res.status !== 404) throw e
-  }
-  if (!res.ok && (res.status === 429 || res.status === 500)) {
-    throw res
-  }
-  let json = null
-  try {
-    json = await res.json()
-  } catch (error) {
-    if (res.ok) printError(error)
-  }
-  if (!res.ok) {
-    if (json) {
-      for (const error of json?.errors || []) {
-        printError(error)
-      }
-    } else {
-      printError(res)
+  const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `ani-${anilistID}`)
+  if (cachedEntry) return cachedEntry
+  if (concurrentRequests.has(`ani-${anilistID}`)) return concurrentRequests.get(`ani-${anilistID}`)
+  const requestPromise = (async () => {
+    let res = {}
+    try {
+      res = await fetch(`https://api.ani.zip/mappings?anilist_id=${anilistID}`)
+    } catch (e) {
+      if (!res || res.status !== 404) throw e
     }
-  }
-  // prevent updating the cache if the request fails (usually only occurs when the api is down).
-  if (json && !json?.errors?.length > 0) {
-    updateCache('mappings', 'ani' + anilistID, { data: json, expiry: Date.now() + getRandomInt(1440, 2160) * 60 * 1000 })
-  }
-  const data = caches.value['mappings']['ani' + anilistID]?.data
-  return data && Object.keys(await data).length > 0 ? data : json
+    if (!res.ok && (res.status === 429 || res.status === 500)) {
+      throw res
+    }
+    let json = null
+    try {
+      json = await res.json()
+    } catch (error) {
+      if (res.ok) printError(error)
+    }
+    if (!res.ok) {
+      if (json) {
+        for (const error of json?.errors || []) {
+          printError(error)
+        }
+      } else {
+        printError(res)
+      }
+    }
+    return cache.cacheEntry(caches.MAPPINGS, `ani-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
+  })().finally(() => {
+    concurrentRequests.delete(`ani-${anilistID}`)
+  })
+  concurrentRequests.set(`ani-${anilistID}`, requestPromise)
+  return requestPromise
 }
 
 function printError(error) {

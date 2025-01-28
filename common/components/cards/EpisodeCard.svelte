@@ -8,6 +8,7 @@
   import { getContext } from 'svelte'
   import { liveAnimeEpisodeProgress } from '@/modules/animeprogress.js'
   import { anilistClient } from '@/modules/anilist.js'
+  import { cache } from '@/modules/cache.js'
   import { Play } from 'lucide-svelte'
   export let data
   export let section = false
@@ -16,7 +17,7 @@
   let prompt = writable(false)
 
   let mediaCache
-  anilistClient.mediaCache.subscribe(value => mediaCache = value)
+  cache.mediaCache.subscribe(value => mediaCache = value)
 
   /** @type {import('@/modules/al.d.ts').Media | null} */
   $: media = data.media && mediaCache[data.media.id]

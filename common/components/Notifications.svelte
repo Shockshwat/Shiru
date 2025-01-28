@@ -2,23 +2,22 @@
   import { derived, writable } from 'simple-store-svelte'
   import { click, hoverExit } from '@/modules/click.js'
   import { createListener, debounce, since } from '@/modules/util.js'
-  import { notify, updateNotify } from '@/modules/settings.js'
   import { MailCheck, MailOpen, Play, X } from 'lucide-svelte'
-  import { anilistClient } from '@/modules/anilist.js'
+  import { cache, caches } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import smoothScroll from '@/modules/scroll.js'
 
   export const notifyView = writable(false)
-  export const notifications = writable(notify.value.notifications || [])
+  export const notifications = writable(cache.getEntry(caches.NOTIFICATIONS, 'notifications') || [])
   export const hasUnreadNotifications = derived(notifications, _notifications => _notifications?.filter(notification => notification.read !== true)?.length > 0)
 
   let debounceNotify = false
   const debounceBatch = debounce(() => {
     if (debounceNotify) {
-      updateNotify('notifications', notifications.value)
+      cache.setEntry(caches.NOTIFICATIONS, 'notifications', notifications.value)
       debounceNotify = false
     }
-  }, 4500)
+  }, 1500)
   notifications.subscribe(() => {
     debounceNotify = true
     debounceBatch()
@@ -49,7 +48,7 @@
     if (!overlay.includes('notifications')) overlay = [...overlay, 'notifications']
   }
 
-  anilistClient.mediaCache.subscribe((value) => {
+  cache.mediaCache.subscribe((value) => {
     mediaCache.set(value)
   })
 

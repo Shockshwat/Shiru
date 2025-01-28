@@ -5,15 +5,14 @@ import { toXmlString } from 'powertoast'
 import Jimp from 'jimp'
 import fs from 'fs'
 
-import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, nativeImage, app, dialog, ipcMain, powerMonitor, shell } from 'electron'
+import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, app, dialog, ipcMain, powerMonitor, shell } from 'electron'
 import electronShutdownHandler from '@paymoapp/electron-shutdown-handler'
 
-import { development } from './util.js'
+import { store, development } from './util.js'
 import Discord from './discord.js'
 import Protocol from './protocol.js'
 import Updater from './updater.js'
 import Dialog from './dialog.js'
-import store from './store.js'
 import Debug from './debugger.js'
 
 export default class App {

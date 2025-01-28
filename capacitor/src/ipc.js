@@ -1,6 +1,6 @@
 import { App } from '@capacitor/app'
 import { NodeJS } from 'capacitor-nodejs'
-import { cacheID } from '@/modules/settings.js'
+import { cache, caches } from '@/modules/cache.js'
 import EventEmitter from 'events'
 
 const ready = NodeJS.whenReady()
@@ -19,7 +19,7 @@ main.on('portRequest', async () => {
     }
   }
   await ready
-  NodeJS.send({ eventName: 'port-init', args: [localStorage.getItem(`settings_${cacheID}`)] })
+  NodeJS.send({ eventName: 'port-init', args: cache.getEntry(caches.GENERAL, 'settings') })
   main.emit('port')
 })
 

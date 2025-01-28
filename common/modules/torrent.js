@@ -1,11 +1,12 @@
 import { files, nowPlaying as media } from '../views/Player/MediaHandler.svelte'
 import { page } from '@/App.svelte'
+import { settings } from '@/modules/settings.js'
+import { cache, caches } from '@/modules/cache.js'
 import { toast } from 'svelte-sonner'
 import clipboard from './clipboard.js'
 import IPC from '@/modules/ipc.js'
 import 'browser-event-target-emitter'
 import Debug from 'debug'
-import { cacheID, settings } from '@/modules/settings.js'
 
 const debug = Debug('ui:torrent')
 
@@ -47,14 +48,14 @@ class TorrentWorker extends EventTarget {
 
   async send (type, data, transfer) {
     await this.ready
-    debug(`Sending message ${type}`, data)
+    debug(`Sending message ${type}`, JSON.stringify(data))
     this.port.postMessage({ type, data }, transfer)
   }
 }
 
 export const client = new TorrentWorker()
 
-client.send('load', localStorage.getItem(`torrent_${cacheID}`))
+client.send('load', await cache.read(caches.GENERAL, 'loadedTorrent'))
 
 client.on('files', ({ detail }) => {
   files.set(detail)
@@ -83,9 +84,9 @@ export async function add (torrentID, hide) {
   if (torrentID) {
     debug('Adding torrent', { torrentID })
     if (torrentID.startsWith?.('magnet:')) {
-      localStorage.setItem(`torrent_${cacheID}`, JSON.stringify(torrentID))
+      await cache.write(caches.GENERAL, 'loadedTorrent', JSON.stringify(torrentID))
     } else {
-      localStorage.setItem(`torrent_${cacheID}`, torrentID)
+      await cache.write(caches.GENERAL, 'loadedTorrent', torrentID)
     }
     files.set([])
     if (!hide) {

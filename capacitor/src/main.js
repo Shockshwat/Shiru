@@ -1,7 +1,10 @@
-import TorrentClient from 'common/modules/webtorrent.js'
+import { cache, caches, setCache } from 'common/modules/cache.js'
 import { channel } from 'bridge'
 import { env } from 'node:process'
 import { statfs } from 'fs/promises'
+
+await setCache(false)
+const { default: TorrentClient } = await import('common/modules/webtorrent.js')
 
 async function storageQuota (directory) {
   const { bsize, bavail } = await statfs(directory)
@@ -19,7 +22,7 @@ if (typeof localStorage === 'undefined') {
 let client
 
 channel.on('port-init', data => {
-  localStorage.setItem(`settings_${TorrentClient.cacheID}`, data)
+  cache.setEntry(caches.GENERAL, 'settings', data)
   const port = {
     onmessage: _ => {},
     postMessage: data => {
@@ -29,7 +32,7 @@ channel.on('port-init', data => {
   let storedSettings = {}
 
   try {
-    storedSettings = JSON.parse(localStorage.getItem(`settings_${TorrentClient.cacheID}`)) || {}
+    storedSettings = cache.getEntry(caches.GENERAL, 'settings') || {}
   } catch (error) {}
 
   channel.on('ipc', a => port.onmessage(a))
@@ -40,10 +43,11 @@ channel.on('port-init', data => {
       ports: [port]
     })
   }
-  channel.on('webtorrent-reload', () => {
+  channel.on('webtorrent-reload', async () => {
     if (client) {
+      await setCache(false)
       client.destroy()
-      storedSettings = JSON.parse(localStorage.getItem(`settings_${TorrentClient.cacheID}`)) || {}
+      storedSettings = cache.getEntry(caches.GENERAL, 'settings') || {}
       client = new TorrentClient(channel, storageQuota, 'node', storedSettings.torrentPathNew || env.TMPDIR)
     }
   })
