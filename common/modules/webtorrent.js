@@ -135,7 +135,7 @@ export default class TorrentClient extends WebTorrent {
     } catch (e) {
       torrent = t
     }
-    if (torrent) this.addTorrent(torrent, JSON.parse(localStorage.getItem(`lastFinished_${this.cacheID}`)))
+    if (torrent) this.addTorrent(torrent, (this.settings.torrentVerify ? false : !!(await cache.read(caches.GENERAL, 'lastFinished'))))
   }
 
   async torrentReady (torrent) {
