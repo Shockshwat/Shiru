@@ -25,7 +25,7 @@ exports.destroy = (() => {
  * Colors.
  */
 
-exports.colors = [6, 2, 3, 4, 5, 1]
+exports.colors = [196, 208, 220, 46, 51, 27, 201, 93, 214, 231, 129, 160, 118, 39, 207, 45, 227, 171, 81, 229]
 
 const { formatters = {} } = module.exports
 
@@ -189,12 +189,10 @@ function setup (env) {
   */
   function selectColor (namespace) {
     let hash = 0
-
     for (let i = 0; i < namespace.length; i++) {
       hash = ((hash << 5) - hash) + namespace.charCodeAt(i)
       hash |= 0 // Convert to 32bit integer
     }
-
     return createDebug.colors[Math.abs(hash) % createDebug.colors.length]
   }
   createDebug.selectColor = selectColor
