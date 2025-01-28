@@ -59,7 +59,6 @@
       await cache.write(caches.GENERAL, 'settings', settings)
       location.reload()
     } catch (error) {
-      console.error('errr ', error)
       toast.error('Failed to import settings', {
         description: 'Failed to import settings from clipboard, make sure the copied data is valid JSON.',
         duration: 5000

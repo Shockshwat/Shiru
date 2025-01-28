@@ -45,6 +45,7 @@
     "cordova-plugin-pip": "^0.0.2",
     "cordova-plugin-screen-orientation": "^3.0.4",
     "es6-promise-plugin": "^4.2.2",
+    "fake-indexeddb": "^6.0.0",
     "fsctl": "^2.0.0"
   }
 }

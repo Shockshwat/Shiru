@@ -1,4 +1,6 @@
+import { indexedDB as fakeIndexedDB } from "fake-indexeddb"
 import { cache, caches, setCache } from 'common/modules/cache.js'
+import TorrentClient from 'common/modules/webtorrent.js'
 import { channel } from 'bridge'
 import { env } from 'node:process'
 import { statfs } from 'fs/promises'
@@ -16,9 +18,11 @@ if (typeof localStorage === 'undefined') {
   }
 }
 
-await setCache(false)
-const { default: TorrentClient } = await import('common/modules/webtorrent.js')
+if (typeof indexedDB === 'undefined') {
+  globalThis.indexedDB = fakeIndexedDB
+}
 
+await setCache(false)
 let client
 
 channel.on('port-init', data => {
@@ -30,7 +34,6 @@ channel.on('port-init', data => {
     }
   }
   let storedSettings = {}
-
   try {
     storedSettings = cache.getEntry(caches.GENERAL, 'settings') || {}
   } catch (error) {}
@@ -38,7 +41,6 @@ channel.on('port-init', data => {
   channel.on('ipc', a => port.onmessage(a))
   if (!client) {
     client = new TorrentClient(channel, storageQuota, 'node', storedSettings.torrentPathNew || env.TMPDIR)
-
     channel.emit('port', {
       ports: [port]
     })

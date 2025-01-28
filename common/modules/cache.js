@@ -4,6 +4,8 @@ import Debug from 'debug'
 
 const debug = Debug('ui:cache')
 
+const version = 1
+
 /**
  * A collection of cache configurations used in the application.
  * Each entry represents a cache with its unique key and optional database configuration.
@@ -119,7 +121,7 @@ function fillEntry(media, userLists) {
  */
 function open(dbName) {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(String(dbName), 1)
+        const request = indexedDB.open(String(dbName), version)
         request.onerror = (event) => reject(event.target.error)
         request.onsuccess = (event) => resolve(event.target.result)
         request.onupgradeneeded = (event) => {
