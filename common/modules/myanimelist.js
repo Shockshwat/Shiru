@@ -237,11 +237,7 @@ class MALClient {
       })
     }
 
-    return {
-      data: {
-        MediaList: allMediaList
-      }
-    }
+    return { data: { MediaList: allMediaList } }
   }
 
   /** @returns {Promise<import('./mal').Query<{ Viewer: import('./mal').Viewer }>>} */
@@ -252,15 +248,12 @@ class MALClient {
       path: 'users/@me',
       eToken: token
     }
-    const viewer = await this.malRequest(query)
+    const res = await this.malRequest(query)
+    const viewer = { data: { Viewer: res } }
     if (viewer?.data?.Viewer && !viewer?.data?.Viewer?.picture) {
       viewer.data.Viewer.picture = 'https://cdn.myanimelist.net/images/kaomoji_mal_white.png' // set default image if user doesn't have an image, viewer doesn't return the default image if none is set for whatever reason...
     }
-    return {
-      data: {
-        Viewer: viewer
-      }
-    }
+    return viewer
   }
 
   async entry (variables) {
