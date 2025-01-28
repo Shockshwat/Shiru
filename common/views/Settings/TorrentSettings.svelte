@@ -165,6 +165,12 @@
     <label for='torrent-streamed-download'>{settings.torrentStreamedDownload ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+<SettingCard title='Verify Files' description="Always verify files when a torrent is loaded, ensuring any previously cached files exist and are ready to stream. Enabling this will increase load times on slow Download/Upload speeds and poorly seeded torrents.">
+  <div class='custom-switch'>
+    <input type='checkbox' id='torrent-verify-files' bind:checked={settings.torrentVerify} />
+    <label for='torrent-verify-files'>{settings.torrentVerify ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 <SettingCard title='Transfer Speed Limit' description='Download/Upload speed limit for torrents, higher values increase CPU usage, and values higher than your storage write speeds will quickly fill up RAM.'>
   <div class='input-group w-100 mw-full'>
     <input type='number' inputmode='numeric' pattern={'[0-9]*.?[0-9]*'} bind:value={settings.torrentSpeed} min='0' max='50' step='0.1' class='form-control text-right bg-dark' />

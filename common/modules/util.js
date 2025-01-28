@@ -272,6 +272,7 @@ export const defaults = {
   torrentPeX: false,
   torrentPort: 0,
   torrentStreamedDownload: true,
+  torrentVerify: false,
   dhtPort: 0,
   missingFont: true,
   maxConns: 50,
