@@ -1,4 +1,4 @@
-import { SUPPORTS } from '@/modules/support.js'
+import { SUPPORTS } from './support.js'
 import levenshtein from 'js-levenshtein'
 import { writable } from 'svelte/store'
 import Fuse from 'fuse.js'

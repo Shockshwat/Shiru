@@ -19,7 +19,8 @@ main.on('portRequest', async () => {
     }
   }
   await ready
-  NodeJS.send({ eventName: 'port-init', args: cache.getEntry(caches.GENERAL, 'settings') })
+  await cache.isReady
+  NodeJS.send({ eventName: 'port-init', args: [cache.getEntry(caches.GENERAL, 'settings')] })
   main.emit('port')
 })
 

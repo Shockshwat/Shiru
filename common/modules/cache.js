@@ -1,4 +1,4 @@
-import { debounce, generalDefaults, historyDefaults, queryDefaults, notifyDefaults } from '@/modules/util.js'
+import { debounce, generalDefaults, historyDefaults, queryDefaults, notifyDefaults } from './util.js'
 import { writable } from 'simple-store-svelte'
 import Debug from 'debug'
 

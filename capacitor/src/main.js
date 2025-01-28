@@ -3,9 +3,6 @@ import { channel } from 'bridge'
 import { env } from 'node:process'
 import { statfs } from 'fs/promises'
 
-await setCache(false)
-const { default: TorrentClient } = await import('common/modules/webtorrent.js')
-
 async function storageQuota (directory) {
   const { bsize, bavail } = await statfs(directory)
   return bsize * bavail
@@ -18,6 +15,9 @@ if (typeof localStorage === 'undefined') {
     getItem: (k) => data[k] || null
   }
 }
+
+await setCache(false)
+const { default: TorrentClient } = await import('common/modules/webtorrent.js')
 
 let client
 
