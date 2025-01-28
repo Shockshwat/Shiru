@@ -73,7 +73,8 @@
       </select>
     </div>
     <div class='position-relative flex-shrink-1 w-150 bg-dark mw-full'>
-      <select class='form-control bg-dark fix-border' bind:value={homeSections[index][1]} disabled={homeSections[index][1] === 'N/A'}>
+      {(homeSections[index][1]?.includes('N/A') && homeSections[index][1] !== 'N/A') ? (homeSections[index][1] = 'N/A') : ''} <!-- hack because shit be weird sometimes -->
+      <select class='form-control bg-dark fix-border' bind:value={homeSections[index][1]} disabled={homeSections[index][1]}>
         <option value='N/A' selected hidden>N/A</option>
         <option value='TRENDING_DESC'>Trending</option>
         <option value='POPULARITY_DESC'>Popularity</option>
