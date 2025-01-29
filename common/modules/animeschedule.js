@@ -73,7 +73,7 @@ class AnimeSchedule {
         for (const entry of delayedEpisodes) {
             const media = entry?.media?.media
             const cachedMedia = cache.mediaCache.value[media?.id]
-            const notify = (!cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes(cachedMedia?.mediaListEntry?.status))
+            const notify = (cache.getEntry(caches.NOTIFICATIONS, `lastDub`) > 0) && ((!cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes(cachedMedia?.mediaListEntry?.status)))
             if (notify && media.format !== 'MUSIC') {
                 const details = {
                     title: anilistClient.title(media),
@@ -141,7 +141,7 @@ class AnimeSchedule {
                         if (!mediaList) return false
                         return (cachedMedia?.relations?.edges?.map(edge => edge.node.id) || []).some(id => (Helper.isAniAuth() ? mediaList.map(({ media }) => media.id) : mediaList.map(({ node }) => node.id)).includes(id))
                     }
-                    const notify = settings.value[key] === 'all' || isFollowing()
+                    const notify = (cache.getEntry(caches.NOTIFICATIONS, `last${type}`) > 0) && (settings.value[key] === 'all' || isFollowing())
                     if (notify && media.format !== 'MUSIC') {
                         const details = {
                             title: anilistClient.title(media),
