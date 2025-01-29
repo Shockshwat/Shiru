@@ -6,7 +6,6 @@
   import EpisodeCard from './EpisodeCard.svelte'
   import FullSkeletonCard from './FullSkeletonCard.svelte'
   import { settings } from '@/modules/settings.js'
-  import { cache } from '@/modules/cache.js'
 
   export let card
 
@@ -28,9 +27,9 @@
 
   {#await card.data}
     <FullSkeletonCard />
-  {:then media}
-    {#if media}
-      <FullCard media={cache.mediaCache.value[media.id]} {variables} />
+  {:then data}
+    {#if data}
+      <FullCard {data} {variables} />
     {/if}
   {/await}
 
@@ -38,9 +37,9 @@
 
   {#await card.data}
     <SkeletonCard />
-  {:then media}
-    {#if media}
-      <SmallCard media={cache.mediaCache.value[media.id]} {variables} />
+  {:then data}
+    {#if data}
+      <SmallCard {data} {variables} />
     {/if}
   {/await}
 

@@ -6,7 +6,7 @@ import { alToken, settings } from '@/modules/settings.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { toast } from 'svelte-sonner'
 import { getRandomInt, sleep } from '@/modules/util.js'
-import { cache, caches } from '@/modules/cache.js'
+import { cache, caches, mediaCache } from '@/modules/cache.js'
 import { malClient } from '@/modules/myanimelist.js'
 import IPC from '@/modules/ipc.js'
 import Debug from 'debug'
@@ -497,8 +497,8 @@ class AnilistClient {
       targetList = { status: listEntry?.status, entries: [] }
       lists.push(targetList)
     }
-    await cache.updateMedia([{ ...cache.mediaCache.value[mediaId], mediaListEntry: listEntry }])
-    targetList.entries.unshift({ media: cache.mediaCache.value[mediaId] })
+    await cache.updateMedia([{ ...mediaCache.value[mediaId], mediaListEntry: listEntry }])
+    targetList.entries.unshift({ media: mediaCache.value[mediaId] })
     this.userLists.value = Promise.resolve({
       data: {
         MediaListCollection: {
@@ -509,7 +509,7 @@ class AnilistClient {
   }
 
   async deleteListEntry(mediaId) {
-    await cache.updateMedia([{ ...cache.mediaCache.value[mediaId], mediaListEntry: null }])
+    await cache.updateMedia([{ ...mediaCache.value[mediaId], mediaListEntry: null }])
     this.userLists.value = Promise.resolve({
       data: {
         MediaListCollection: {
@@ -723,9 +723,9 @@ class AnilistClient {
   /** @returns {Promise<import('./al.d.ts').Query<{Media: import('./al.d.ts').Media}>>} */
   async recommendations(variables) {
     debug(`Getting recommendations for ${variables.id}`)
-    if (settings.value.queryComplexity === 'Complex' && cache.mediaCache.value[variables.id]) {
+    if (settings.value.queryComplexity === 'Complex' && mediaCache.value[variables.id]) {
       debug(`Complex queries are enabled, returning cached recommendations from media ${variables.id}`)
-      return { data: { Media: { ...cache.mediaCache.value[variables.id] } } }
+      return { data: { Media: { ...mediaCache.value[variables.id] } } }
     }
     const cachedEntry = cache.cachedEntry(caches.RECOMMENDATIONS, variables.id)
     if (cachedEntry) return cachedEntry
@@ -752,7 +752,7 @@ class AnilistClient {
 
   /** @param {import('./al.d.ts').Media} media */
   title(media) {
-    const cachedMedia = cache.mediaCache.value[media?.id || media] || media
+    const cachedMedia = mediaCache.value[media?.id || media] || media
     const preferredTitle = cachedMedia?.title.userPreferred
     if (alToken) return preferredTitle
     if (settings.value.titleLang === 'romaji') return cachedMedia?.title.romaji || preferredTitle

@@ -1,5 +1,5 @@
 import { anilistClient } from './anilist.js'
-import { cache } from './cache.js'
+import { mediaCache } from './cache.js'
 import { anitomyscript } from './anime.js'
 import { chunks, matchKeys } from './util.js'
 import Debug from 'debug'
@@ -132,7 +132,7 @@ export default new class AnimeResolver {
    * @param {number} id
    */
   async getAnimeById (id) {
-    if (cache.mediaCache.value[id]) return cache.mediaCache.value[id]
+    if (mediaCache.value[id]) return mediaCache.value[id]
     const res = await anilistClient.searchIDSingle({ id })
 
     return res.data.Media

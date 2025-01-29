@@ -3,7 +3,7 @@
   import { click, hoverExit } from '@/modules/click.js'
   import { createListener, debounce, since } from '@/modules/util.js'
   import { MailCheck, MailOpen, Play, X } from 'lucide-svelte'
-  import { cache, caches } from '@/modules/cache.js'
+  import { cache, caches, mediaCache } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import smoothScroll from '@/modules/scroll.js'
 
@@ -27,7 +27,6 @@
   export let overlay
 
   let modal
-  let mediaCache = writable({})
   const { reactive, init } = createListener(['btn'])
   function close () {
     $notifyView = false
@@ -48,10 +47,6 @@
     if (!overlay.includes('notifications')) overlay = [...overlay, 'notifications']
   }
 
-  cache.mediaCache.subscribe((value) => {
-    mediaCache.set(value)
-  })
-
   window.addEventListener('overlay-check', () => { if ($notifyView) close() })
   window.addEventListener('notification-app', (event) => addNotification(event.detail))
   window.addEventListener('notification-reset', () => notifications.set([]))
@@ -65,7 +60,7 @@
 
       if (filterDelayed.findIndex((existing) => existing.id === notification.id && ((existing.episode === notification.episode && !(existing.season !== notification.season)) || (existing.format === 'MOVIE' && notification.format === 'MOVIE')) && existing.dub === notification.dub && (existing.click_action === 'TORRENT')) !== -1) return filterDelayed
       const filtered = filterDelayed.filter((existing) => (existing.id !== notification.id || existing.episode !== notification.episode || existing.dub !== notification.dub || existing.click_action === 'TORRENT'))
-      if (notification.episode && (mediaCache[notification?.id]?.mediaListEntry?.status === 'COMPLETED' || (mediaCache[notification?.id]?.mediaListEntry?.progress >= (!notification.season ? notification.episode : mediaCache[notification?.id].episodes)))) notification.read = true
+      if (notification.episode && (mediaCache.value[notification?.id]?.mediaListEntry?.status === 'COMPLETED' || (mediaCache.value[notification?.id]?.mediaListEntry?.progress >= (!notification.season ? notification.episode : mediaCache.value[notification?.id].episodes)))) notification.read = true
       return sort([notification, ...filtered])
     })
   }
@@ -133,7 +128,7 @@
               {@const delayed = notification.delayed}
               {@const announcement = notification.click_action === 'VIEW' && !delayed}
               {@const notWatching = !announcement && !delayed && notification.episode && ((!$mediaCache[notification?.id]?.mediaListEntry?.progress) || ($mediaCache[notification?.id]?.mediaListEntry?.progress === 0 && ($mediaCache[notification?.id]?.mediaListEntry?.status !== 'CURRENT' || $mediaCache[notification?.id]?.mediaListEntry?.status !== 'REPEATING' && $mediaCache[notification?.id]?.mediaListEntry?.status !== 'COMPLETED')))}
-              {@const behind = !announcement && !delayed && !notWatching && notification.episode && (mediaCache[notification?.id]?.mediaListEntry?.status !== 'COMPLETED' && ($mediaCache[notification?.id]?.mediaListEntry?.progress < ((!notification.season ? notification.episode : $mediaCache[notification?.id].episodes) - 1)))}
+              {@const behind = !announcement && !delayed && !notWatching && notification.episode && ($mediaCache[notification?.id]?.mediaListEntry?.status !== 'COMPLETED' && ($mediaCache[notification?.id]?.mediaListEntry?.progress < ((!notification.season ? notification.episode : $mediaCache[notification?.id].episodes) - 1)))}
               {@const watched = !announcement && !delayed && !notWatching && !behind && notification.episode && ($mediaCache[notification?.id]?.mediaListEntry?.status === 'COMPLETED' || ($mediaCache[notification?.id]?.mediaListEntry?.progress >= (!notification.season ? notification.episode : $mediaCache[notification?.id].episodes)))}
               {#if watched && !notification.read}
                 {(notification.read = true) && updateSort() && ''}
@@ -308,13 +303,6 @@
   }
   .line-clamp-2 {
     -webkit-line-clamp: 2;
-  }
-
-  .tisdsdtle {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-height: 1.2;
   }
 
   .hero-img {

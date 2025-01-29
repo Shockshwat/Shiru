@@ -3,7 +3,7 @@ import { writable } from 'simple-store-svelte'
 import { anilistClient, codes } from '@/modules/anilist.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { settings } from '@/modules/settings.js'
-import { cache, caches } from '@/modules/cache.js'
+import { cache, caches, mediaCache } from '@/modules/cache.js'
 import { getEpisodeMetadataForMedia } from '@/modules/anime.js'
 import { hasNextPage } from '@/modules/sections.js'
 import Helper from '@/modules/helper.js'
@@ -72,7 +72,7 @@ class AnimeSchedule {
         await anilistClient.searchAllIDS({id: delayedEpisodes.map(entry => entry?.media?.media.id)})
         for (const entry of delayedEpisodes) {
             const media = entry?.media?.media
-            const cachedMedia = cache.mediaCache.value[media?.id]
+            const cachedMedia = mediaCache.value[media?.id]
             const notify = (cache.getEntry(caches.NOTIFICATIONS, `lastDub`) > 0) && ((!cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (cachedMedia?.mediaListEntry && settings.value.releasesNotify?.includes(cachedMedia?.mediaListEntry?.status)))
             if (notify && media.format !== 'MUSIC') {
                 const details = {
@@ -129,7 +129,7 @@ class AnimeSchedule {
             if (newNotifications?.length === 0) return
             await anilistClient.searchAllIDS({id: newNotifications.map(media => media.id)})
             for (const media of newNotifications) {
-                const cachedMedia = cache.mediaCache.value[media?.id]
+                const cachedMedia = mediaCache.value[media?.id]
                 if (settings.value[key] !== 'none' && media?.id) {
                     const res = await Helper.getClient().userLists.value
                     const isFollowing = () => {

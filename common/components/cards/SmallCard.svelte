@@ -8,15 +8,17 @@
 
   import { page } from '@/App.svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import { mediaCache } from '@/modules/cache.js'
   import Helper from '@/modules/helper.js'
   import { CalendarDays, Tv, ThumbsUp, ThumbsDown } from 'lucide-svelte'
 
   /** @type {import('@/modules/al.d.ts').Media} */
-  export let media
+  export let data
   export let type = null
   export let variables = null
   let _variables = variables
 
+  $: media = data && $mediaCache[data?.id]
   const view = getContext('view')
   function viewMedia () {
     $view = media

@@ -8,7 +8,7 @@
   import { getContext } from 'svelte'
   import { liveAnimeEpisodeProgress } from '@/modules/animeprogress.js'
   import { anilistClient } from '@/modules/anilist.js'
-  import { cache } from '@/modules/cache.js'
+  import { mediaCache } from '@/modules/cache.js'
   import { Play } from 'lucide-svelte'
   export let data
   export let section = false
@@ -16,12 +16,8 @@
   let preview = false
   let prompt = writable(false)
 
-  let mediaCache
-  cache.mediaCache.subscribe(value => mediaCache = value)
-
   /** @type {import('@/modules/al.d.ts').Media | null} */
-  $: media = data.media && mediaCache[data.media.id]
-
+  $: media = data.media && $mediaCache[data.media.id]
   $: episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
 
   const view = getContext('view')

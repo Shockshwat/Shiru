@@ -276,11 +276,12 @@ function createDebouncers(userID, delay = 2000) {
     return debouncers
 }
 
+/** @type {import('simple-store-svelte').Writable<Record<number, import('./al.d.ts').Media>>} */
+export let mediaCache
+
 class Cache {
     /** @type {string} */
     cacheID = (JSON.parse(localStorage.getItem('ALviewer')) || JSON.parse(localStorage.getItem('MALviewer')))?.viewer?.data?.Viewer?.id || 'default'
-    /** @type {import('simple-store-svelte').Writable<Record<number, import('./al.d.ts').Media>>} */
-    mediaCache
     /** @type {import('svelte/store').Writable<GeneralDefaults>} */
     #general
     /** @type {import('svelte/store').Writable<QueryDefaults>} */
@@ -314,7 +315,7 @@ class Cache {
      */
     async #initialize(subscribe = true) {
         debug(`Loading caches with id: ${this.cacheID}...`)
-        this.mediaCache = writable({ ...(await loadAll(this.cacheID, caches.MEDIA_CACHE)) })
+        mediaCache = writable({ ...(await loadAll(this.cacheID, caches.MEDIA_CACHE)) })
         this.#general = writable({ ...generalDefaults, ...(await loadAll(this.cacheID, caches.GENERAL)) })
         this.#queries = writable({ ...queryDefaults, ...(await loadAll(this.cacheID, caches.QUERIES)) })
         this.#mappings = writable({ ...(await loadAll(this.cacheID, caches.MAPPINGS)) })
@@ -324,7 +325,7 @@ class Cache {
         if (subscribe) {
             const debouncers = createDebouncers(this.cacheID)
             this.subscribers.push(
-                this.mediaCache.subscribe(value => debouncers[1](caches.MEDIA_CACHE, value)),
+                mediaCache.subscribe(value => debouncers[1](caches.MEDIA_CACHE, value)),
                 this.#general.subscribe(value => debouncers[2](caches.GENERAL, value)),
                 this.#queries.subscribe(value => debouncers[3](caches.QUERIES, value)),
                 this.#mappings.subscribe(value => debouncers[4](caches.MAPPINGS, value)),
@@ -340,7 +341,7 @@ class Cache {
     destroy() {
         this.subscribers.forEach((unsubscribe) => unsubscribe())
         this.#pending.clear()
-        this.mediaCache = null
+        mediaCache = null
         this.#general = null
         this.#queries = null
         this.#mappings = null
@@ -492,7 +493,7 @@ class Cache {
         for (const media of medias) {
             if (media) updatedMedias[media.id] = media
         }
-        this.mediaCache.update((currentCache) => {
+        mediaCache.update((currentCache) => {
             return { ...currentCache, ...updatedMedias }
         })
     }
@@ -515,9 +516,9 @@ class Cache {
                 debug(`Found cached ${cache.key} for ${key}`)
                 const data = structuredClone(cachedEntry.data)
                 if (cache !== caches.RECOMMENDATIONS || this.#general.value.settings.queryComplexity === 'Complex') { // remap media ids to the medias in the cache.
-                    if (data.data?.Page?.media) data.data.Page.media = data.data.Page.media.map(mediaId => this.mediaCache.value[mediaId])
-                    if (data.data?.Media) data.data.Media = this.mediaCache.value[data.data.Media]
-                    if (data.data?.MediaListCollection) data.data.MediaListCollection.lists = (data.data.MediaListCollection.lists || []).map(list => ({ ...list, entries: list.entries.map(entry => ({ ...entry, media: this.mediaCache.value[entry.media] })) }))
+                    if (data.data?.Page?.media) data.data.Page.media = data.data.Page.media.map(mediaId => mediaCache.value[mediaId])
+                    if (data.data?.Media) data.data.Media = mediaCache.value[data.data.Media]
+                    if (data.data?.MediaListCollection) data.data.MediaListCollection.lists = (data.data.MediaListCollection.lists || []).map(list => ({ ...list, entries: list.entries.map(entry => ({ ...entry, media: mediaCache.value[entry.media] })) }))
                 }
                 return Promise.resolve(data)
             }

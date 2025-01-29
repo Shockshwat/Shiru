@@ -6,12 +6,14 @@
   import { SUPPORTS } from '@/modules/support.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import { anilistClient } from '@/modules/anilist.js'
+  import { mediaCache } from '@/modules/cache.js'
   import Helper from '@/modules/helper.js'
   /** @type {import('@/modules/al.d.ts').Media} */
-  export let media
+  export let data
   export let variables = null
   let _variables = variables
 
+  $: media = data && $mediaCache[data?.id]
   $: maxEp = getMediaMaxEp(media)
 
   const view = getContext('view')

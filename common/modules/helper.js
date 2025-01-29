@@ -3,7 +3,7 @@ import { codes, anilistClient } from '@/modules/anilist.js'
 import { malClient } from '@/modules/myanimelist.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { profiles } from '@/modules/settings.js'
-import { cache, mapStatus } from '@/modules/cache.js'
+import { mediaCache, mapStatus } from '@/modules/cache.js'
 import { getMediaMaxEp, hasZeroEpisode } from '@/modules/anime.js'
 import { matchKeys } from '@/modules/util.js'
 import { toast } from 'svelte-sonner'
@@ -137,7 +137,7 @@ export default class Helper {
     // check if values exist
     if (filemedia.media && this.isAuthorized()) {
       const { media, failed } = filemedia
-      const cachedMedia = cache.mediaCache.value[media?.id] || media
+      const cachedMedia = mediaCache.value[media?.id] || media
       debug(`Checking entry for ${cachedMedia?.title?.userPreferred}`)
 
       debug(`Media viability: ${cachedMedia?.status}, Is from failed resolve: ${failed}`)

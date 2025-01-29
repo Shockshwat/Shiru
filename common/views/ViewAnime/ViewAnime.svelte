@@ -3,7 +3,7 @@
   import { getMediaMaxEp, formatMap, playMedia, genreIcons, getKitsuMappings } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { settings } from '@/modules/settings.js'
-  import { cache } from '@/modules/cache.js'
+  import { mediaCache } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { add } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
@@ -53,10 +53,8 @@
   let scrollTags = null
   let scrollGenres = null
   let mediaList = []
-  let mediaCache
   let mediaId
-  cache.mediaCache.subscribe(value => mediaCache = value)
-  $: media = mediaCache[$view?.id] || $view
+  $: media = $mediaCache[$view?.id] || $view
   $: mediaId = media?.id
   $: watched = media?.mediaListEntry?.status === 'COMPLETED'
   $: userProgress =  ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media?.mediaListEntry?.status) && media?.mediaListEntry?.progress
@@ -120,15 +118,15 @@
   window.addEventListener('overlay-check', (event) => { if (!event?.detail?.nowPlaying && media) close() })
 
   function handlePlay(id, episode, torrentOnly) {
-    const mediaCache = cache.mediaCache.value[id]
-    const cachedEpisode = episode || mediaCache?.mediaListEntry?.progress
+    const cachedMedia = mediaCache.value[id]
+    const cachedEpisode = episode || cachedMedia?.mediaListEntry?.progress
     const desiredEpisode = (episode ? episode : cachedEpisode && cachedEpisode !== 0 ? cachedEpisode + 1 : cachedEpisode)
     if (torrentOnly) {
-      if (desiredEpisode) return playAnime(mediaCache, desiredEpisode)
-      if (mediaCache?.status === 'NOT_YET_RELEASED') return
-      playMedia(mediaCache)
+      if (desiredEpisode) return playAnime(cachedMedia, desiredEpisode)
+      if (cachedMedia?.status === 'NOT_YET_RELEASED') return
+      playMedia(cachedMedia)
     } else {
-      $view = mediaCache
+      $view = cachedMedia
       setTimeout(() => {
         play(desiredEpisode)
         IPC.emit('overlay-check')
@@ -316,8 +314,8 @@
                   <SkeletonCard />
                 {:then res }
                   {#if res}
-                    {#if cache.mediaCache.value[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
-                      <SmallCard media={cache.mediaCache.value[item.node.id]} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
+                    {#if $mediaCache[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                      <SmallCard data={item.node} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
                     {/if}
                   {/if}
                 {/await}
@@ -332,8 +330,8 @@
                       <SkeletonCard />
                     {:then res}
                       {#if res}
-                        {#if cache.mediaCache.value[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
-                          <SmallCard media={cache.mediaCache.value[item.node.mediaRecommendation.id]} type={item.node.rating} />
+                        {#if $mediaCache[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                          <SmallCard data={item.node.mediaRecommendation} type={item.node.rating} />
                         {/if}
                       {/if}
                     {/await}
