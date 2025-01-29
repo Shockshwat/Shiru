@@ -83,7 +83,12 @@
       <div class='col-auto d-flex flex-column align-items-end text-right' title={data.parseObject?.file_name} >
         <div class='text-white font-weight-bold font-weight-very-bold'>
           {#if data.episode}
-            Episode {Number(data.episode) || data.episode}
+            {@const episodes = (data.parseObject?.file_name?.match(/\b\d+\s*[-~]\s*\d+\b/) || []).map(m => m.split(/[-~]/).map(n => +n.trim()))[0] || []}
+            {#if episodes?.length > 0}
+              Episodes {Number(episodes[0]) || episodes[0]} ~ {Number(episodes[1]) || episodes[1]}
+            {:else}
+              Episode {Number(data.episode) || data.episode}
+            {/if}
           {:else if media?.format === 'MOVIE' }
             Movie
           {:else if data.parseObject?.anime_title?.match(/S(\d{2})/)}
