@@ -13,6 +13,11 @@
 
   const episodeRx = /Episode (\d+) - (.*)/
 
+  /**
+   * This works pretty well now but isn't the most well designed, primarily this could be improved to decrease load times and the number of anilist queries by storing verified media mapped to their torrent.
+   *
+   * TODO: rewrite the MediaHandler, put less focus on "nowPlaying" and separately store verified (resolved) media.
+   */
   export const nowPlaying = writable({})
 
   export const files = writable([])
@@ -33,14 +38,13 @@
 
   export function findInCurrent (obj) {
     const oldNowPlaying = nowPlaying.value
-
     if (oldNowPlaying.media?.id === obj.media.id && oldNowPlaying.episode === obj.episode) return false
 
     const fileList = files.value
-
     const targetFile = fileList.find(file => file.media?.media?.id === obj.media.id &&
       (file.media?.episode === obj.episode || obj.media.episodes === 1 || (!obj.media.episodes && (obj.episode === 1 || !obj.episode) && (oldNowPlaying.episode === 1 || !oldNowPlaying.episode))) // movie check
     )
+
     if (!targetFile) return false
     if (oldNowPlaying.media?.id !== obj.media.id) {
       handleMedia(obj, { media: obj.media, episode: obj.episode })
@@ -157,7 +161,6 @@
       }
       if (file.torrent_name) torrentNames.push(file.torrent_name)
     }
-    let newPlaying = nowPlaying.value
     const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => file.name))
     if (resolved[0].failed) {
       debug('Media has failed to resolve using the file name, trying again using the torrent name ...')
@@ -182,20 +185,12 @@
         }
         return true
     })
-    if (newPlaying?.verified && videoFiles.length === 1) {
-      debug('Media was verified, skipping verification')
-      videoFiles[0].media.media = newPlaying.media
-      if (newPlaying.episode) videoFiles[0].media.episode = newPlaying.episode
-    }
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
-    if (!newPlaying || Object.keys(newPlaying).length === 0) {
-      newPlaying = await findPreferredPlaybackMedia(videoFiles)
-      debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
-    }
+    const newPlaying = await findPreferredPlaybackMedia(videoFiles)
+    debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
 
-    const filtered = newPlaying?.media && videoFiles.filter(file => file.media?.media?.id && file.media?.media?.id === newPlaying.media.id)
-
+    const filtered = newPlaying?.media && videoFiles.filter(file => (file.media?.media?.id && file.media?.media?.id === newPlaying.media.id) || !file.media?.media?.id)
     debug(`Filtered ${filtered?.length} files based on media`, fileListToDebug(filtered))
 
     let result

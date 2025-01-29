@@ -198,7 +198,7 @@ export default new class AnimeResolver {
     if (!fileName) return [{}]
     const parseObjs = await this.findAndCacheTitle(this.cleanFileName(fileName))
     const fileAnimes = []
-    for (const parseObj of parseObjs) {
+    for (let parseObj of parseObjs) {
       let failed = false
       let episode
       let media = this.animeNameCache[this.getCacheKeyForTitle(parseObj)]
@@ -280,14 +280,28 @@ export default new class AnimeResolver {
                 result = await this.resolveSeason({ media: (!isRoot ? root : media) || media, episode: parseInt(parseObj.episode_number), offset })
               }
               if (result.failed) {
-                const search = await anilistClient.search({ search: parseObj.anime_title + (parseObj.anime_season ? ` Season ${parseObj.anime_season}` : ``), ...(media ? { id_not: media.id } : {}) })
-                if (search.data.Page.media) {
-                  for (const searchMedia of search.data.Page.media) {
-                    if (matchKeys(searchMedia, parseObj?.anime_title, titleKeys, threshold)) {
-                      debug(`Found media from manual search for ${parseObj.anime_title}: ${searchMedia?.id}:${searchMedia?.title?.userPreferred} while ignoring the original compound ${media.id}:${media.title?.userPreferred}, this is likely correct...`)
-                      media = searchMedia
-                      result = null
-                      break
+                if ((parseObj.episode_number > maxep) || (parseObj.episode_number < 0)) {
+                  debug(`Detected that the episode number ${parseObj.episode_number} is ${(parseObj.episode_number > maxep) ? `greater than the expect max ${maxep} episode(s)` : `is a negative number`} assuming the actual episode number is in the title for [${parseObj.anime_title}]...`)
+                  const parseNew = await this.findAndCacheTitle(parseObj.anime_title.replace(/S\d+(E\d+)?/, ''))
+                  const probeMedia = this.animeNameCache[this.getCacheKeyForTitle(parseNew[0])]
+                  if ((parseNew[0]?.episode_number < maxep) && probeMedia && matchKeys(probeMedia, parseNew[0]?.anime_title, titleKeys, threshold)) {
+                    debug(`Found media and proper episode for ${parseObj.anime_title}: ${probeMedia?.id}:${probeMedia?.title?.userPreferred}:E${parseNew[0]?.episode}, the episode title was likely being weird by starting with a numerical value.`)
+                    media = probeMedia
+                    episode = Number(parseNew[0]?.episode_number)
+                    parseObj = parseNew[0]
+                    result = null
+                  }
+                  if (result?.failed) {
+                    const search = await anilistClient.search({ search: parseObj.anime_title + (parseObj.anime_season ? ` Season ${parseObj.anime_season}` : ``), ...(media ? { id_not: media.id } : {}) })
+                    if (search.data.Page.media) {
+                      for (const searchMedia of search.data.Page.media) {
+                        if (matchKeys(searchMedia, parseObj?.anime_title, titleKeys, threshold)) {
+                          debug(`Found media from manual search for ${parseObj.anime_title}: ${searchMedia?.id}:${searchMedia?.title?.userPreferred} while ignoring the original compound ${media.id}:${media.title?.userPreferred}, this is likely correct...`)
+                          media = searchMedia
+                          result = null
+                          break
+                        }
+                      }
                     }
                   }
                 }
