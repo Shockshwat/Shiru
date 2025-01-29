@@ -844,7 +844,7 @@
   }
   const skippableChaptersRx = [
     ['Intro', /^intro$/mi],
-    ['Opening', /^op$|opening$|^ncop/mi],
+    ['Opening', /^op$|opening$|title$|^ncop/mi],
     ['Outro', /^outro$/mi],
     ['Ending', /^ed$|ending$|^nced/mi],
     ['Credits', /^credits$/mi],
