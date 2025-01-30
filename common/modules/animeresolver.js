@@ -96,6 +96,13 @@ export default new class AnimeResolver {
       titles.add(mainTitle.trim())
       titles.add(altTitle.trim())
     }
+
+    // Remove numbers with spaces
+    const numbersMatch = modified.match(/\s?\d{2,}(?:\s?\d{2,})*\s?/g, '')
+    if (numbersMatch) {
+      modified = modified.replace(/\s?\d{2,}(?:\s?\d{2,})*\s?/g, '')
+      titles.add(modified)
+    }
     return [...titles]
   }
 
