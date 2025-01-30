@@ -219,7 +219,7 @@
   let hasNext = false
   let hasLast = false
   function checkAvail (media, current) {
-    if (((media?.media?.nextAiringEpisode?.episode - 1 || getMediaMaxEp(media?.media)) > media?.episode) || (!media?.media?.nextAiringEpisode?.episode && !media?.media?.airingSchedule?.nodes?.[0]?.episode && !media?.media?.episodes)) hasNext = true
+    if (((media?.media?.nextAiringEpisode?.episode - 1 || getMediaMaxEp(media?.media)) > media?.episode) || ((media?.media && !media.media.nextAiringEpisode?.episode && !media.media.airingSchedule?.nodes?.[0]?.episode && !media.media.episodes))) hasNext = true
     else hasNext = videos.indexOf(current) !== videos.length - 1
     if (media?.episode > 1) hasLast = true
     else hasLast = videos.indexOf(current) > 0
