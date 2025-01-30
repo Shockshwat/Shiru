@@ -136,7 +136,7 @@
     if (lowestUnwatched) return lowestUnwatched
 
     // highest occurrence if all else fails - unlikely
-    const max = highestOccurrence(videoFiles, file => file.media.media?.id).media
+    const max = highestOccurrence(videoFiles, file => file.media.media?.id)?.media
     if (max?.media) {
       const zeroEpisode = await hasZeroEpisode(max?.media)
       return { media: max.media, episode: ((mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + (!zeroEpisode ? 1 : 0) || (!zeroEpisode ? 1 : 0)) }
@@ -197,10 +197,16 @@
     if (filtered?.length) {
       result = filtered
     } else {
-      const max = highestOccurrence(videoFiles, file => file.media.parseObject.anime_title).media.parseObject.anime_title
-      debug(`Highest occurrence anime title: ${max}`)
-      result = videoFiles.filter(file => file.media.parseObject.anime_title === max)
+      const max = highestOccurrence(videoFiles, file => file.media.parseObject.anime_title)?.media?.parseObject?.anime_title
+      if (max) {
+          debug(`Highest occurrence anime title: ${max}`)
+          result = videoFiles.filter(file => file.media.parseObject.anime_title === max)
+      } else {
+          result = remapByTitle(videoFiles)
+          debug(`All occurrences were identical, guessing the episode and/or season and attaching to the files`, fileListToDebug(result))
+      }
     }
+    result = remapByTitle(result)
     result.sort((a, b) => a.media.episode - b.media.episode)
     result.sort((a, b) => (b.media.parseObject.anime_season ?? 1) - (a.media.parseObject.anime_season ?? 1))
 
@@ -213,13 +219,34 @@
     playFile(file || 0)
   }
 
-  // find element with most occurrences in array according to map function
-  const highestOccurrence = (arr = [], mapfn = a => a) => arr.reduce((acc, el) => {
-    const mapped = mapfn(el)
-    acc.sums[mapped] = (acc.sums[mapped] || 0) + 1
-    acc.max = (acc.max !== undefined ? acc.sums[mapfn(acc.max)] : -1) > acc.sums[mapped] ? acc.max : el
-    return acc
-  }, { sums: {} }).max
+  // find element with most occurrences in array according to map function, if occurrences are identical return null.
+  const highestOccurrence = (arr = [], mapfn = a => a) => {
+      const result = arr.reduce((acc, el) => {
+          const mapped = mapfn(el)
+          acc.sums[mapped] = (acc.sums[mapped] || 0) + 1
+          acc.max = (acc.max !== undefined ? acc.sums[mapfn(acc.max)] : -1) > acc.sums[mapped] ? acc.max : el
+          return acc
+      }, { sums: {} })
+      const occurrences = Object.values(result.sums)
+      return occurrences.every(count => count === occurrences[0]) ? null : result.max
+  }
+
+  // map the episode and season by attempting to fetch them from the title, should only occur in when there is a severe error in media resolving.
+  const remapByTitle = (arr = []) => {
+      return arr.map((el) => {
+          if (!el.media.episode) {
+              const matches = el.media.parseObject.anime_title.match(/(\d{2})/g)
+              if (matches && matches.length > 0) {
+                  const seasonNumber = matches[0]
+                  const episodeNumber = matches[matches.length - 1]
+                  el.media.season = parseInt(seasonNumber)
+                  el.media.episode = parseInt(episodeNumber)
+                  el.media.parseObject.anime_title = el.media.parseObject.anime_title.replace(seasonNumber, '').replace(episodeNumber, '').trim()
+              }
+          }
+          return el
+      })
+  }
 
   files.subscribe((files = []) => {
     handleFiles(files)
