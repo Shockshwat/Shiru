@@ -296,10 +296,12 @@ class AnimeSchedule {
             if (type === 'Hentai' && settings.value.adult !== 'hentai') return
             const lastNotified = cache.getEntry(caches.NOTIFICATIONS, `last${type}`)
             const newReleases = combinedItems?.data?.Page?.media?.filter(media => (Math.floor(new Date(media.episode.airedAt).getTime() / 1000) >= lastNotified) || (Math.floor(new Date(media.episode.addedAt).getTime() / 1000) >= lastNotified))
+            debug(`Found ${newReleases?.length} new ${type} releases, notifying...`)
             if (newReleases && settings.value.releasesNotify?.length > 0 && lastNotified > 0) {
                 for (const media of newReleases) {
                     const addedAt = Math.floor(new Date(media.episode.addedAt).getTime() / 1000)
                     const notify = (!media?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (media?.mediaListEntry && settings.value.releasesNotify?.includes(media?.mediaListEntry?.status))
+                    debug(`Attempting to notify for ${media?.id}:${media?.title?.userPreferred}...`)
                     if (notify && (type === 'Dub' || !settings.value.rssNotifyDubs || !malDubs.isDubMedia(media)) && media.format !== 'MUSIC') {
                         const details = {
                             title: anilistClient.title(media),
@@ -316,22 +318,24 @@ class AnimeSchedule {
                                     launch: `shiru://anime/${media?.id}`
                                 }
                             })
-                            window.dispatchEvent(new CustomEvent('notification-app', {
-                                detail: {
-                                    ...details,
-                                    id: media?.id,
-                                    episode: media?.episode?.aired,
-                                    timestamp: addedAt,
-                                    format: media?.format,
-                                    dub: type === 'Dub',
-                                    click_action: 'PLAY'
-                                }
-                            }))
                         }
+                        window.dispatchEvent(new CustomEvent('notification-app', {
+                            detail: {
+                                ...details,
+                                id: media?.id,
+                                episode: media?.episode?.aired,
+                                timestamp: addedAt,
+                                format: media?.format,
+                                dub: type === 'Dub',
+                                click_action: 'PLAY'
+                            }
+                        }))
+                        debug(`Successfully notified for ${media?.id}:${media?.title?.userPreferred}!`)
+                    } else {
+                        debug(`Failed to notify for ${media?.id}:${media?.title?.userPreferred}:${notify}:${(type === 'Dub' || !settings.value.rssNotifyDubs || !malDubs.isDubMedia(media))}:${(media.format !== 'MUSIC')}`)
                     }
                 }
             }
-            debug(`Found ${newReleases?.length} new ${type} releases, notifying...`)
             if ((newReleases?.length > 0) || (lastNotified <= 1)) cache.setEntry(caches.NOTIFICATIONS, `last${type}`, currentTime)
         }
 
