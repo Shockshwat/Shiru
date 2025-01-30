@@ -45,7 +45,7 @@
       </NavbarLink>
     {/if}
     <NavbarLink click={() => { $notifyView = !$notifyView }} icon='bell' css='{!$settings.donate ? `ml-auto donate` : ``}' {page} overlay={$notifyView && 'notify'} nowPlaying={$view === $media?.media} let:active>
-      {#if $hasUnreadNotifications}
+      {#if $hasUnreadNotifications &&  $hasUnreadNotifications > 0}
         <BellDot size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded notify' strokeWidth={active ? '3' : '2'} />
       {:else}
         <Bell size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />

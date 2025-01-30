@@ -5,7 +5,7 @@ import { toXmlString } from 'powertoast'
 import Jimp from 'jimp'
 import fs from 'fs'
 
-import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, app, dialog, ipcMain, powerMonitor, shell } from 'electron'
+import { BrowserWindow, MessageChannelMain, Notification, Tray, Menu, nativeImage, app, dialog, ipcMain, powerMonitor, shell } from 'electron'
 import electronShutdownHandler from '@paymoapp/electron-shutdown-handler'
 
 import { store, development } from './util.js'
@@ -16,6 +16,8 @@ import Dialog from './dialog.js'
 import Debug from './debugger.js'
 
 export default class App {
+  logo = join(__dirname, '/logo_filled.png')
+
   webtorrentWindow = new BrowserWindow({
     show: development,
     webPreferences: {
@@ -41,7 +43,7 @@ export default class App {
       backgroundThrottling: false,
       preload: join(__dirname, '/preload.js')
     },
-    icon: join(__dirname, '/logo_filled.png'),
+    icon: this.logo,
     show: false
   })
 
@@ -49,7 +51,7 @@ export default class App {
   protocol = new Protocol(this.mainWindow)
   updater = new Updater(this.mainWindow, this.webtorrentWindow)
   dialog = new Dialog(this.webtorrentWindow)
-  tray = new Tray(join(__dirname, '/logo_filled.png'))
+  tray = new Tray(this.logo)
   cacheDir = join(app.getPath('userData'), 'Cache', 'Cache_Data')
   debug = new Debug()
   close = false
@@ -108,11 +110,42 @@ export default class App {
       { label: 'Quit', click: () => { this.close = true; this.destroy() } }
     ]))
     this.tray.on('click', () => this.showAndFocus())
+
+    ipcMain.on('notification-unread', async (e, notificationCount) => {
+      const baseIcon = nativeImage.createFromPath(this.logo)
+      if (notificationCount <= 0 || !notificationCount) {
+        this.tray.setImage(baseIcon)
+        this.mainWindow.setOverlayIcon(null, '')
+      } else {
+        const badgePath = join(__dirname, `/logo_filled_notify_${notificationCount < 10 ? notificationCount : `filled`}.png`)
+        this.mainWindow.setOverlayIcon(badgePath, `${notificationCount} Unread Notifications`)
+
+        const baseSize = baseIcon.getSize()
+        const badgeSize = Math.round(baseSize.width * 0.55)
+        const baseBitmap = baseIcon.toBitmap()
+        const badgeBitmap = nativeImage.createFromPath(badgePath).resize({ width: badgeSize, height: badgeSize }).toBitmap()
+        const mergedImage = Buffer.alloc(baseBitmap.length)
+        baseBitmap.copy(mergedImage)
+
+        for (let y = 0; y < badgeSize; y++) {
+          for (let x = 0; x < badgeSize; x++) {
+            const baseIndex = (y * baseSize.width + (x + (baseSize.width - badgeSize))) * 4
+            const badgeIndex = (y * badgeSize + x) * 4
+            const alpha = badgeBitmap[badgeIndex + 3] / 255
+            mergedImage[baseIndex] = mergedImage[baseIndex] * (1 - alpha) + badgeBitmap[badgeIndex] * alpha
+            mergedImage[baseIndex + 1] = mergedImage[baseIndex + 1] * (1 - alpha) + badgeBitmap[badgeIndex + 1] * alpha
+            mergedImage[baseIndex + 2] = mergedImage[baseIndex + 2] * (1 - alpha) + badgeBitmap[badgeIndex + 2] * alpha
+            mergedImage[baseIndex + 3] = Math.max(mergedImage[baseIndex + 3], badgeBitmap[badgeIndex + 3])
+          }
+        }
+        this.tray.setImage(nativeImage.createFromBuffer(mergedImage, { width: baseSize.width, height: baseSize.height }))
+      }
+    })
+
     ipcMain.on('notification', async (e, opts) => {
       opts.icon &&= await this.getImage(opts.icon)
       opts.heroImg &&= await this.getImage(opts.heroImg, true)
       opts.inlineImg &&= await this.getImage(opts.inlineImg)
-      //const id = Symbol()
       const notification = new Notification({toastXml: toXmlString(opts) })
       notification.show()
     })

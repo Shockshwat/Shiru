@@ -67,7 +67,7 @@
       </SidebarLink>
     {/if}
     <SidebarLink click={() => { $notifyView = !$notifyView }} icon='bell' text='Notifications' css='{!$settings.donate && updateState !== `downloading` && updateState !== `ready` ? `mt-auto` : ``}' {page} overlay={!$actionPrompt && $notifyView && 'notify'} nowPlaying={$view} let:active>
-      {#if $hasUnreadNotifications}
+      {#if $hasUnreadNotifications && $hasUnreadNotifications > 0}
         <BellDot size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded notify' strokeWidth={active ? '3' : '2'} />
       {:else}
         <Bell size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />

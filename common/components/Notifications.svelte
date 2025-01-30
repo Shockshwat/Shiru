@@ -3,18 +3,20 @@
   import { click, hoverExit } from '@/modules/click.js'
   import { createListener, debounce, since } from '@/modules/util.js'
   import { MailCheck, MailOpen, Play, X } from 'lucide-svelte'
+  import IPC from '@/modules/ipc.js'
   import { cache, caches, mediaCache } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import smoothScroll from '@/modules/scroll.js'
 
   export const notifyView = writable(false)
   export const notifications = writable(cache.getEntry(caches.NOTIFICATIONS, 'notifications') || [])
-  export const hasUnreadNotifications = derived(notifications, _notifications => _notifications?.filter(notification => notification.read !== true)?.length > 0)
+  export const hasUnreadNotifications = derived(notifications, _notifications => _notifications?.filter(notification => notification.read !== true)?.length)
 
   let debounceNotify = false
   const debounceBatch = debounce(() => {
     if (debounceNotify) {
       cache.setEntry(caches.NOTIFICATIONS, 'notifications', notifications.value)
+      setTimeout(() => IPC.emit('notification-unread', hasUnreadNotifications.value), 500)
       debounceNotify = false
     }
   }, 1500)
@@ -35,6 +37,14 @@
   }
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
+  }
+  $: { // MAKE SURE TO REMOVE THIS
+    $notifyView
+    const oldNotifications = localStorage.getItem(`notify_${cache.cacheID}`)
+    if (oldNotifications) {
+      notifications.value = notifications.value.concat(JSON.parse(oldNotifications).notifications)
+      localStorage.removeItem(`notify_${cache.cacheID}`)
+    }
   }
   $: $notifyView && (modal?.focus(), setOverlay())
   $: !$notifyView && close()
@@ -113,6 +123,7 @@
       currentNotifications = [...new Set([...currentNotifications, ...nextBatch])]
     }
   }
+  IPC.emit('notification-unread', hasUnreadNotifications.value)
 </script>
 
 <div class='modal z-55' class:show={$notifyView}>
@@ -186,8 +197,8 @@
           </div>
           <div class='d-flex flex-column justify-content-between align-items-center'>
             {#if currentNotifications.length > 0}
-              <button type='button' class='btn text-light font-weight-bold shadow-none border-0 d-flex align-items-center mt-20' on:click={() => markAll($hasUnreadNotifications)}>
-                {#if $hasUnreadNotifications}
+              <button type='button' class='btn text-light font-weight-bold shadow-none border-0 d-flex align-items-center mt-20' on:click={() => markAll($hasUnreadNotifications && $hasUnreadNotifications > 0)}>
+                {#if $hasUnreadNotifications && $hasUnreadNotifications > 0}
                   <MailCheck strokeWidth='3' class='mr-10' size='1.7rem' />
                   Mark All As Read
                 {:else}
