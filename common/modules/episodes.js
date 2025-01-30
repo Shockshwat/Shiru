@@ -78,14 +78,14 @@ class Episodes {
         const mappings = await getKitsuMappings(id)
         const kitsuId = mappings?.data?.[0]?.relationships?.data?.id || mappings?.included?.[0]?.id
         if (kitsuId) {
-            return await this.requestEpisodes(false, kitsuId, 1)
+            return this.requestEpisodes(false, kitsuId, 1)
         }
         return null
     }
 
     async getMedia(idMal) {
         if (!idMal) return []
-        return await this.requestEpisodes(true, idMal, 1, true)
+        return this.requestEpisodes(true, idMal, 1, true)
     }
 
     async requestEpisodes(jikan, id, episode, root) {

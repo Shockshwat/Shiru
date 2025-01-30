@@ -507,7 +507,7 @@ class Cache {
      * @returns {Object|null} The cached entry if found and valid; otherwise, `null`.
      */
     cachedEntry(cache, key, ignoreExpiry) {
-        if (this.#pending.has(`${cache.key}:${key}`)) {
+        if (this.#pending.has(`${cache.key}:${key}`) && !ignoreExpiry) {
             debug(`Found pending query ${cache.key} for ${key}`)
             return this.#pending.get(`${cache.key}:${key}`)
         } else if (cache !== caches.MAPPINGS) {

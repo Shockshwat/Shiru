@@ -16,7 +16,7 @@
   const debounceBatch = debounce(() => {
     if (debounceNotify) {
       cache.setEntry(caches.NOTIFICATIONS, 'notifications', notifications.value)
-      setTimeout(() => IPC.emit('notification-unread', hasUnreadNotifications.value), 500)
+      setTimeout(() => IPC.emit('notification-unread', hasUnreadNotifications.value), 50)
       debounceNotify = false
     }
   }, 1500)
