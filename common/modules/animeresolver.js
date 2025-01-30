@@ -69,6 +69,20 @@ export default new class AnimeResolver {
       titles.add(modified)
     }
 
+    // Remove (OVA)
+    const ovaMatch = modified.match(/\(ova\)/i) || modified.match(/ova/i)
+    if (ovaMatch) {
+      modified = modified.replace(/\(ova\)/i, '').replace(/ova/i, '')
+      titles.add(modified)
+    }
+
+    // Remove (ONA)
+    const onaMatch = modified.match(/\(ona\)/i) || modified.match(/ona/i)
+    if (onaMatch) {
+      modified = modified.replace(/\(ona\)/i, '').replace(/ona/i, '')
+      titles.add(modified)
+    }
+
     // Remove Episode Titles identified by -
     const splitMatch = title.match(/\s+-\s+/)
     if (splitMatch) {
