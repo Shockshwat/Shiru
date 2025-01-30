@@ -16,7 +16,9 @@ import Dialog from './dialog.js'
 import Debug from './debugger.js'
 
 export default class App {
-  logo = join(__dirname, '/logo_filled.png')
+  logo = process.platform === 'win32'
+      ? join(__dirname, '/logo_filled.ico')  // Windows
+      : join(__dirname, '/logo_filled.png')  // macOS & Linux
 
   webtorrentWindow = new BrowserWindow({
     show: development,
