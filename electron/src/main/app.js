@@ -59,7 +59,7 @@ export default class App {
   close = false
   notifications = {}
 
-  constructor () {
+  constructor() {
     this.mainWindow.setMenuBarVisibility(false)
     this.mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
     this.mainWindow.once('ready-to-show', () => this.mainWindow.show())
@@ -113,37 +113,7 @@ export default class App {
     ]))
     this.tray.on('click', () => this.showAndFocus())
 
-    ipcMain.on('notification-unread', async (e, notificationCount) => {
-      const baseIcon = nativeImage.createFromPath(this.logo)
-      if (notificationCount <= 0 || !notificationCount) {
-        this.tray.setImage(baseIcon)
-        this.mainWindow.setOverlayIcon(null, '')
-      } else {
-        const badgePath = join(__dirname, `/logo_filled_notify_${notificationCount < 10 ? notificationCount : `filled`}.png`)
-        this.mainWindow.setOverlayIcon(badgePath, `${notificationCount} Unread Notifications`)
-
-        const baseSize = baseIcon.getSize()
-        const badgeSize = Math.round(baseSize.width * 0.55)
-        const baseBitmap = baseIcon.toBitmap()
-        const badgeBitmap = nativeImage.createFromPath(badgePath).resize({ width: badgeSize, height: badgeSize }).toBitmap()
-        const mergedImage = Buffer.alloc(baseBitmap.length)
-        baseBitmap.copy(mergedImage)
-
-        for (let y = 0; y < badgeSize; y++) {
-          for (let x = 0; x < badgeSize; x++) {
-            const baseIndex = (y * baseSize.width + (x + (baseSize.width - badgeSize))) * 4
-            const badgeIndex = (y * badgeSize + x) * 4
-            const alpha = badgeBitmap[badgeIndex + 3] / 255
-            mergedImage[baseIndex] = mergedImage[baseIndex] * (1 - alpha) + badgeBitmap[badgeIndex] * alpha
-            mergedImage[baseIndex + 1] = mergedImage[baseIndex + 1] * (1 - alpha) + badgeBitmap[badgeIndex + 1] * alpha
-            mergedImage[baseIndex + 2] = mergedImage[baseIndex + 2] * (1 - alpha) + badgeBitmap[badgeIndex + 2] * alpha
-            mergedImage[baseIndex + 3] = Math.max(mergedImage[baseIndex + 3], badgeBitmap[badgeIndex + 3])
-          }
-        }
-        this.tray.setImage(nativeImage.createFromBuffer(mergedImage, { width: baseSize.width, height: baseSize.height }))
-      }
-    })
-
+    ipcMain.on('notification-unread', async (e, notificationCount) => this.setOverlayIcon(notificationCount))
     ipcMain.on('notification', async (e, opts) => {
       opts.icon &&= await this.getImage(opts.icon)
       opts.heroImg &&= await this.getImage(opts.heroImg, true)
@@ -209,7 +179,7 @@ export default class App {
 
   destroyed = false
 
-  async destroy (forceRunAfter = false) {
+  async destroy(forceRunAfter = false) {
     if (this.destroyed) return
     this.webtorrentWindow.webContents.postMessage('destroy', null)
     await new Promise(resolve => {
@@ -247,7 +217,40 @@ export default class App {
     return imagePath
   }
 
-  showAndFocus () {
+  notificationCount = 0
+  setOverlayIcon(notificationCount, verify) {
+    if (!verify) this.notificationCount = notificationCount
+    const baseIcon = nativeImage.createFromPath(this.logo)
+    if (this.notificationCount <= 0 || !this.notificationCount) {
+      this.tray.setImage(baseIcon)
+      this.mainWindow.setOverlayIcon(null, '')
+    } else {
+      const badgePath = join(__dirname, `/logo_filled_notify_${this.notificationCount < 10 ? this.notificationCount : `filled`}.png`)
+      this.mainWindow.setOverlayIcon(badgePath, `${this.notificationCount} Unread Notifications`)
+
+      const baseSize = baseIcon.getSize()
+      const badgeSize = Math.round(baseSize.width * 0.55)
+      const baseBitmap = baseIcon.toBitmap()
+      const badgeBitmap = nativeImage.createFromPath(badgePath).resize({ width: badgeSize, height: badgeSize }).toBitmap()
+      const mergedImage = Buffer.alloc(baseBitmap.length)
+      baseBitmap.copy(mergedImage)
+
+      for (let y = 0; y < badgeSize; y++) {
+        for (let x = 0; x < badgeSize; x++) {
+          const baseIndex = (y * baseSize.width + (x + (baseSize.width - badgeSize))) * 4
+          const badgeIndex = (y * badgeSize + x) * 4
+          const alpha = badgeBitmap[badgeIndex + 3] / 255
+          mergedImage[baseIndex] = mergedImage[baseIndex] * (1 - alpha) + badgeBitmap[badgeIndex] * alpha
+          mergedImage[baseIndex + 1] = mergedImage[baseIndex + 1] * (1 - alpha) + badgeBitmap[badgeIndex + 1] * alpha
+          mergedImage[baseIndex + 2] = mergedImage[baseIndex + 2] * (1 - alpha) + badgeBitmap[badgeIndex + 2] * alpha
+          mergedImage[baseIndex + 3] = Math.max(mergedImage[baseIndex + 3], badgeBitmap[badgeIndex + 3])
+        }
+      }
+      this.tray.setImage(nativeImage.createFromBuffer(mergedImage, { width: baseSize.width, height: baseSize.height }))
+    }
+  }
+
+  showAndFocus() {
     if (this.mainWindow.isMinimized()) {
       this.mainWindow.restore()
     } else if (!this.mainWindow.isVisible()) {
@@ -256,5 +259,6 @@ export default class App {
       this.mainWindow.moveTop()
     }
     this.mainWindow.focus()
+    this.setOverlayIcon(0, true)
   }
 }
