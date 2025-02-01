@@ -169,6 +169,8 @@ export default class App {
     })
 
     ipcMain.on('webtorrent-reload', () => { if (!this.mainWindow?.isDestroyed() && !this.webtorrentWindow?.isDestroyed()) this.webtorrentWindow.webContents.postMessage('webtorrent-reload', null) })
+    ipcMain.on('main-heartbeat', () => this.webtorrentWindow.webContents.postMessage('main-heartbeat', null))
+    ipcMain.on('webtorrent-heartbeat', () => this.mainWindow.webContents.send('webtorrent-heartbeat'))
 
     ipcMain.on('quit-and-install', () => {
       if (this.updater.hasUpdate) {

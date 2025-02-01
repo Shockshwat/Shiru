@@ -92,6 +92,7 @@ export default class TorrentClient extends WebTorrent {
     this.current = null
 
     setInterval(() => {
+      if (this.hault) return
       this.dispatch('stats', {
         numPeers: (this.torrents.length && this.torrents[0].numPeers) || 0,
         uploadSpeed: (this.torrents.length && this.torrents[0].uploadSpeed) || 0,
@@ -99,6 +100,7 @@ export default class TorrentClient extends WebTorrent {
       })
     }, 200)
     setInterval(() => {
+      if (this.hault) return
       if (this.torrents[0]?.pieces) this.dispatch('progress', this.current?.progress)
     }, 2000)
     this.on('torrent', this.torrentReady.bind(this))
@@ -139,6 +141,7 @@ export default class TorrentClient extends WebTorrent {
   }
 
   async torrentReady (torrent) {
+    if (this.hault) return
     debug('Got torrent metadata: ' + torrent?.name)
     const files = torrent.files.map(file => {
       return {
@@ -154,7 +157,7 @@ export default class TorrentClient extends WebTorrent {
     this.dispatch('files', files)
     this.dispatch('magnet', { magnet: torrent.magnetURI, hash: torrent.infoHash })
     setTimeout(() => {
-      if (torrent.destroyed) return
+      if (this.hault || torrent.destroyed) return
       if (torrent.progress !== 1) {
         if (torrent.numPeers === 0) this.dispatchError('No peers found for torrent, try using a different torrent.')
       }
@@ -283,6 +286,7 @@ export default class TorrentClient extends WebTorrent {
   }
 
   async addTorrent (data, skipVerify = false) {
+    if (this.hault) return
     debug('Adding torrent: ' + data)
     const existing = await this.get(data)
     if (existing) {
@@ -302,22 +306,25 @@ export default class TorrentClient extends WebTorrent {
     })
 
     torrent.once('verified', () => {
+      if (this.hault) return
       if (!torrent.ready && !skipVerify) this.dispatch('info', 'Detected already downloaded files. Verifying file integrity. This might take a minute...')
     })
 
     setTimeout(() => {
-      if (torrent.destroyed || skipVerify) return
+      if (this.hault || torrent.destroyed || skipVerify) return
       if (!torrent.progress && !torrent.ready) {
         if (torrent.numPeers === 0) this.dispatchError('No peers found for torrent, try using a different torrent.')
       }
     }, 10000).unref?.()
 
-    torrent.once('done', () => {
-      if (this.settings.torrentPathNew) cache.write(caches.GENERAL, 'lastFinished', true)
+    torrent.once('done', async () => {
+      if (this.hault) return
+      if (this.settings.torrentPathNew) await cache.write(caches.GENERAL, 'lastFinished', true)
     })
   }
 
   async handleMessage ({ data }) {
+    if (this.hault) return
     switch (data.type) {
       case 'current': {
         if (data.data) {
@@ -345,6 +352,7 @@ export default class TorrentClient extends WebTorrent {
               this.playerProcess.stdout.on('data', () => {})
               const startTime = Date.now()
               this.playerProcess.once('close', () => {
+                if (this.hault) return
                 this.playerProcess = null
                 const seconds = (Date.now() - startTime) / 1000
                 this.dispatch('externalWatched', seconds)
@@ -385,7 +393,7 @@ export default class TorrentClient extends WebTorrent {
   destroy () {
     debug('Destroying TorrentClient')
     if (this.destroyed) return
-    this.hault = true;
+    this.hault = true
     this.parser?.destroy()
     this.server.close()
     super.destroy(() => {

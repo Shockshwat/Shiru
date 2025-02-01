@@ -1,6 +1,6 @@
-import { indexedDB as fakeIndexedDB } from "fake-indexeddb"
-import { cache, caches, setCache } from 'common/modules/cache.js'
+import { indexedDB as fakeIndexedDB } from 'fake-indexeddb'
 import TorrentClient from 'common/modules/webtorrent.js'
+import { cache, caches, setCache } from 'common/modules/cache.js'
 import { channel } from 'bridge'
 import { env } from 'node:process'
 import { statfs } from 'fs/promises'
@@ -24,6 +24,12 @@ if (typeof indexedDB === 'undefined') {
 
 await setCache(false)
 let client
+let heartbeatId
+function setHeartBeat() {
+  heartbeatId = setInterval(() => channel.send('webtorrent-heartbeat'), 1000)
+}
+
+channel.on('main-heartbeat', () => clearInterval(heartbeatId))
 
 channel.on('port-init', data => {
   cache.setEntry(caches.GENERAL, 'settings', data)
@@ -41,16 +47,18 @@ channel.on('port-init', data => {
   channel.on('ipc', a => port.onmessage(a))
   if (!client) {
     client = new TorrentClient(channel, storageQuota, 'node', storedSettings.torrentPathNew || env.TMPDIR)
+    setHeartBeat()
     channel.emit('port', {
       ports: [port]
     })
   }
   channel.on('webtorrent-reload', async () => {
     if (client) {
-      await setCache(false)
       client.destroy()
+      await setCache(false)
       storedSettings = cache.getEntry(caches.GENERAL, 'settings') || {}
       client = new TorrentClient(channel, storageQuota, 'node', storedSettings.torrentPathNew || env.TMPDIR)
+      setHeartBeat()
     }
   })
 })

@@ -21,6 +21,8 @@ main.on('portRequest', async () => {
   await ready
   await cache.isReady
   NodeJS.send({ eventName: 'port-init', args: [cache.getEntry(caches.GENERAL, 'settings')] })
+  main.on('main-heartbeat', () => NodeJS.send({ eventName: 'main-heartbeat', args: [] }))
+  NodeJS.addListener('webtorrent-heartbeat', () => main.emit('webtorrent-heartbeat'))
   main.emit('port')
 })
 
