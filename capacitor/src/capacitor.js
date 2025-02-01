@@ -31,21 +31,94 @@ LocalNotifications.checkPermissions().then(async value => {
   }
 })
 
+LocalNotifications.registerActionTypes({
+  types: [
+    {
+      id: 'view_anime',
+      actions: [
+        {
+          id: 'view_anime',
+          title: 'View Anime'
+        }
+      ]
+    },
+    {
+      id: 'start_watching',
+      actions: [
+        {
+          id: 'watch_anime',
+          title: 'Start Watching'
+        },
+        {
+          id: 'view_anime',
+          title: 'View Anime'
+        }
+      ]
+    },
+    {
+      id: 'continue_watching',
+      actions: [
+        {
+          id: 'watch_anime',
+          title: 'Resume'
+        },
+        {
+          id: 'view_anime',
+          title: 'View Anime'
+        }
+      ]
+    },
+    {
+      id: 'watch_now',
+      actions: [
+        {
+          id: 'watch_anime',
+          title: 'Watch'
+        },
+        {
+          id: 'view_anime',
+          title: 'View Anime'
+        }
+      ]
+    }
+  ]
+})
+
 let id = 0
-IPC.on('notification', noti => {
+IPC.on('notification', opts => {
   /** @type {import('@capacitor/local-notifications').LocalNotificationSchema} */
   const notification = {
-    title: noti.title,
-    body: noti.body,
+    smallIcon: 'ic_filled',
+    //sound: 'ic_notification.wav', // for future reference, put with ic_filled.png
+    iconColor: '#2F4F4F',
     id: id++,
-    attachments: [
-      {
-        id: '' + id++,
-        url: noti.icon
+    title: opts.title,
+    body: opts.message,
+    actionTypeId: opts.button.length > 1 ? opts.button[0].text?.includes('Start') ? 'start_watching' : opts.button[0].text?.includes('Continue') ? 'continue_watching' : 'watch_now' : 'view_anime',
+    attachments: [{ id: 'my_preview',
+        url: opts.heroImg || opts.iconXL || opts.icon
       }
-    ]
+    ],
+    extra: {
+      buttons: opts.button
+    }
   }
   if (canShowNotifications) LocalNotifications.schedule({ notifications: [notification] })
+})
+
+
+let handleNotifications = false
+IPC.on('portRequest', () => handleNotifications = true)
+LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
+  const url = notification.actionId === 'watch_anime' ? notification.notification.extra?.buttons?.[0]?.activation : notification.notification.extra?.buttons?.[1]?.activation
+  if (url) {
+    const checkInterval = setInterval(() => {
+      if (handleNotifications) {
+        clearInterval(checkInterval)
+        window.location.href = url
+      }
+    }, 50)
+  }
 })
 
 IPC.on('get-device-info', async () => {
@@ -124,16 +197,16 @@ function sendMalToken (line) {
  * @param {string} id - The media id.
  */
 function play(id) {
-  IPC.emit.send('play-anime', id)
-  IPC.emit.send('window-show')
+  IPC.emit('play-anime', id)
+  IPC.emit('window-show')
 }
 
 /**
  * @param {string} magnet - The magnet link.
  */
 function add(magnet) {
-  IPC.emit.send('play-torrent', magnet)
-  IPC.emit.send('window-show')
+  IPC.emit('play-torrent', magnet)
+  IPC.emit('window-show')
 }
 
 App.getLaunchUrl().then(res => {

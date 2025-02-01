@@ -87,12 +87,13 @@ class AnimeSchedule {
                         hour12: true
                     }))) + '!',
                     icon: media?.coverImage?.medium,
+                    iconXL: media?.coverImage?.extraLarge,
                     heroImg: media?.bannerImage
                 }
                 if (settings.value.systemNotify) {
                     IPC.emit('notification', {
                         ...details,
-                        button: [{text: 'View Anime', activation: `shiru://anime/${media?.id}`}],
+                        button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
                         activation: {
                             type: 'protocol',
                             launch: `shiru://anime/${media?.id}`
@@ -155,12 +156,13 @@ class AnimeSchedule {
                                 hour12: true
                             })) + '!',
                             icon: media?.coverImage?.medium,
+                            iconXL: media?.coverImage?.extraLarge,
                             heroImg: media?.bannerImage
                         }
                         if (settings.value.systemNotify) {
                             IPC.emit('notification', {
                                 ...details,
-                                button: [{text: 'View Anime', activation: `shiru://anime/${media?.id}`}],
+                                button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
                                 activation: {
                                     type: 'protocol',
                                     launch: `shiru://anime/${media?.id}`
@@ -307,12 +309,13 @@ class AnimeSchedule {
                             title: anilistClient.title(media),
                             message: `${media.format !== 'MOVIE' ? ` ${media?.episodes === media?.episode?.aired ? `The wait is over! ` : ''}Episode ${media?.episode?.aired}` : `The Movie`} (${type}) is out in ${type === 'Dub' ? 'the United States' : 'Japan'}, ${media.format !== 'MOVIE' && media?.episodes === media?.episode?.aired ? `this season should be available to binge soon!` : `it should be available soon.`}`,
                             icon: media?.coverImage?.medium,
+                            iconXL: media?.coverImage?.extraLarge,
                             heroImg: media?.bannerImage
                         }
                         if (settings.value.systemNotify) {
                             IPC.emit('notification', {
                                 ...details,
-                                button: [{text: 'View Anime', activation: `shiru://anime/${media?.id}`}],
+                                button: [{ text: 'View Anime', activation: `shiru://anime/${media?.id}` }],
                                 activation: {
                                     type: 'protocol',
                                     launch: `shiru://anime/${media?.id}`

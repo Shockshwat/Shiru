@@ -332,6 +332,7 @@ class AnilistClient {
             title: media.title.userPreferred,
             message: type === 'AIRING' ? `${media.format !== 'MOVIE' ? `Episode ${episode}` : `The Movie`} (Sub) is out in Japan, it should be available soon.` : 'Was recently announced!',
             icon: media.coverImage.medium,
+            iconXL: media.coverImage.extraLarge,
             heroImg: media?.bannerImage
           }
           if (settings.value.systemNotify) {

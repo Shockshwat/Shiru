@@ -4,6 +4,14 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@capacitor/android':
+    hash: o2gyek6kxyozbikiuqke2wm3zi
+    path: patches/@capacitor__android.patch
+  '@capacitor/local-notifications':
+    hash: d54ncql5oezr7dvfqfbcsvmi6a
+    path: patches/@capacitor__local-notifications.patch
+
 importers:
 
   .:
@@ -68,7 +76,7 @@ importers:
     dependencies:
       '@capacitor/android':
         specifier: ^6.1.2
-        version: 6.1.2(@capacitor/core@6.1.2)
+        version: 6.1.2(patch_hash=o2gyek6kxyozbikiuqke2wm3zi)(@capacitor/core@6.1.2)
       '@capacitor/app':
         specifier: ^6.0.1
         version: 6.0.1(@capacitor/core@6.1.2)
@@ -89,7 +97,7 @@ importers:
         version: 6.1.2(@capacitor/core@6.1.2)
       '@capacitor/local-notifications':
         specifier: ^6.1.0
-        version: 6.1.0(@capacitor/core@6.1.2)
+        version: 6.1.0(patch_hash=d54ncql5oezr7dvfqfbcsvmi6a)(@capacitor/core@6.1.2)
       '@capacitor/status-bar':
         specifier: ^6.0.1
         version: 6.0.1(@capacitor/core@6.1.2)
@@ -6136,7 +6144,7 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
-  '@capacitor/android@6.1.2(@capacitor/core@6.1.2)':
+  '@capacitor/android@6.1.2(patch_hash=o2gyek6kxyozbikiuqke2wm3zi)(@capacitor/core@6.1.2)':
     dependencies:
       '@capacitor/core': 6.1.2
 
@@ -6231,7 +6239,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 6.1.2
 
-  '@capacitor/local-notifications@6.1.0(@capacitor/core@6.1.2)':
+  '@capacitor/local-notifications@6.1.0(patch_hash=d54ncql5oezr7dvfqfbcsvmi6a)(@capacitor/core@6.1.2)':
     dependencies:
       '@capacitor/core': 6.1.2
 
