@@ -15,7 +15,8 @@ const config = {
   plugins: {
     SplashScreen: { launchShowDuration: 0 },
     CapacitorHttp: { enabled: true },
-    CapacitorNodeJS: { nodeDir: 'nodejs' }
+    CapacitorNodeJS: { nodeDir: 'nodejs' },
+    LocalNotifications: { sound: 'ic_notification.wav' }
   },
   server: {
     cleartext: true

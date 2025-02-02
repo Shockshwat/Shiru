@@ -1,15 +1,72 @@
 diff --git a/android/src/main/java/com/capacitorjs/plugins/localnotifications/LocalNotification.java b/android/src/main/java/com/capacitorjs/plugins/localnotifications/LocalNotification.java
-index 7463256d40cdf87580e2b7d20a29cf6f80de281a..96226831ba5f733b302dc006dadbd7bddd6e952b 100644
+index 7463256d40cdf87580e2b7d20a29cf6f80de281a..a261929c69033f1b177d7df2a488e1483e5442fe 100644
 --- a/android/src/main/java/com/capacitorjs/plugins/localnotifications/LocalNotification.java
 +++ b/android/src/main/java/com/capacitorjs/plugins/localnotifications/LocalNotification.java
-@@ -1,5 +1,6 @@
+@@ -1,5 +1,7 @@
  package com.capacitorjs.plugins.localnotifications;
  
++import android.util.Log;
 +import android.net.Uri;
  import android.content.ContentResolver;
  import android.content.Context;
  import android.graphics.Bitmap;
-@@ -358,6 +359,23 @@ public class LocalNotification {
+@@ -107,7 +109,15 @@ public class LocalNotification {
+     }
+ 
+     public void setLargeIcon(String largeIcon) {
+-        this.largeIcon = AssetUtil.getResourceBaseName(largeIcon);
++		if (largeIcon == null) {
++			this.largeIcon = null;
++			return;
++		}
++		if (largeIcon.startsWith("http://") || largeIcon.startsWith("https://") || largeIcon.startsWith("file://")) {
++			this.largeIcon = largeIcon;
++		} else {
++			this.largeIcon = AssetUtil.getResourceBaseName(largeIcon);
++		}
+     }
+ 
+     public void setInboxList(List<String> inboxList) {
+@@ -343,21 +353,55 @@ public class LocalNotification {
+ 
+         return resId;
+     }
+-
+-    public Bitmap getLargeIcon(Context context) {
+-        if (largeIcon != null) {
++	
++	public Bitmap getLargeIcon(Context context) {
++		if (largeIcon != null) {
++			try {
++				final AssetUtil assets = AssetUtil.getInstance(context);
++				Uri uri = assets.parse(largeIcon);
++				if (uri != Uri.EMPTY) {
++					return assets.getIconFromUri(uri);
++				} else {
++					return getLargeDrawableIcon(context);
++				}
++			} catch (Exception e) {
++				return getLargeDrawableIcon(context);
++			}
++		}
++		return null;
++	}
++	
++	public Bitmap getLargeDrawableIcon(Context context) {
++		if (largeIcon != null) {
+             int resId = AssetUtil.getResourceID(context, largeIcon, "drawable");
+             return BitmapFactory.decodeResource(context.getResources(), resId);
+-        }
+-
+-        return null;
+-    }
++		}
++		return null;
++	}
++		
+ 
+     public boolean isScheduled() {
+         return (
              this.schedule != null && (this.schedule.getOn() != null || this.schedule.getAt() != null || this.schedule.getEvery() != null)
          );
      }

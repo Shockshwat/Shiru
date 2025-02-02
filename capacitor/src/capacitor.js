@@ -89,7 +89,8 @@ IPC.on('notification', opts => {
   /** @type {import('@capacitor/local-notifications').LocalNotificationSchema} */
   const notification = {
     smallIcon: 'ic_filled',
-    //sound: 'ic_notification.wav', // for future reference, put with ic_filled.png
+    largeIcon: opts.icon || opts.iconXL,
+    sound: 'ic_notification.wav',
     iconColor: '#2F4F4F',
     id: id++,
     title: opts.title,
