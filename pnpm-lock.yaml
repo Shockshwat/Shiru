@@ -9,7 +9,7 @@ patchedDependencies:
     hash: o2gyek6kxyozbikiuqke2wm3zi
     path: patches/@capacitor__android.patch
   '@capacitor/local-notifications':
-    hash: aupmalgjltae43ls2h2ob463yu
+    hash: mt4j7xcmtdpmadktuymv52y4qa
     path: patches/@capacitor__local-notifications.patch
 
 importers:
@@ -97,7 +97,7 @@ importers:
         version: 6.1.2(@capacitor/core@6.1.2)
       '@capacitor/local-notifications':
         specifier: ^6.1.0
-        version: 6.1.0(patch_hash=aupmalgjltae43ls2h2ob463yu)(@capacitor/core@6.1.2)
+        version: 6.1.0(patch_hash=mt4j7xcmtdpmadktuymv52y4qa)(@capacitor/core@6.1.2)
       '@capacitor/status-bar':
         specifier: ^6.0.1
         version: 6.0.1(@capacitor/core@6.1.2)
@@ -6239,7 +6239,7 @@ snapshots:
     dependencies:
       '@capacitor/core': 6.1.2
 
-  '@capacitor/local-notifications@6.1.0(patch_hash=aupmalgjltae43ls2h2ob463yu)(@capacitor/core@6.1.2)':
+  '@capacitor/local-notifications@6.1.0(patch_hash=mt4j7xcmtdpmadktuymv52y4qa)(@capacitor/core@6.1.2)':
     dependencies:
       '@capacitor/core': 6.1.2
 
