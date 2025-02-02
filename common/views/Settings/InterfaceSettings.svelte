@@ -143,7 +143,7 @@
         </div>
       </div>
     {/each}
-    <button type='button' disabled={listStatus.every(option => settings.releasesNotify.includes(option[1]))} use:click={() => { settings.releasesNotify = [...settings.releasesNotify, ''] }} class='btn btn-primary mb-10 mr-10 text-center'>Add Status</button>
+    <button type='button' disabled={listStatus.every(option => settings.releasesNotify.includes(option[1]))} use:click={() => { settings.releasesNotify = [...settings.releasesNotify, ''] }} class='btn btn-primary mb-10 mr-10 d-flex align-items-center justify-content-center'><span>Add Status</span></button>
   </div>
 </SettingCard>
 <SettingCard title='RSS Feed' description={'When each RSS feed updates with new entries, notifications will be sent depending on your list status.\n\nThese notifications will combine with Anilist and Releases notifications for the in-app notification tray.'}>
@@ -161,7 +161,7 @@
         </div>
       </div>
     {/each}
-    <button type='button' disabled={listStatus.every(option => settings.rssNotify.includes(option[1]))} use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10 text-center'>Add Status</button>
+    <button type='button' disabled={listStatus.every(option => settings.rssNotify.includes(option[1]))} use:click={() => { settings.rssNotify = [...settings.rssNotify, ''] }} class='btn btn-primary mb-10 d-flex align-items-center justify-content-center'><span>Add Status</span></button>
   </div>
 </SettingCard>
 
@@ -191,7 +191,7 @@
         </div>
       </div>
     {/each}
-    <button type='button' use:click={() => { settings.rssFeedsNew[settings.rssFeedsNew.length] = ['New Releases', null] }} class='btn btn-primary mb-10 text-center'>Add Feed</button>
+    <button type='button' use:click={() => { settings.rssFeedsNew[settings.rssFeedsNew.length] = ['New Releases', null] }} class='btn btn-primary mb-10 d-flex align-items-center justify-content-center'><span>Add Feed</span></button>
   </div>
 </SettingCard>
 <SettingCard title='Custom Sections' description={'Create custom sections that can be added to the home screen.\n\nNewly created custom sections will not appear in "Sections And Order" until you restart the app.'}>
@@ -226,7 +226,7 @@
         </div>
       </div>
     {/each}
-    <button type='button' use:click={() => { settings.customSections[settings.customSections.length] = ['New Section', [], [], [], []] }} class='btn btn-primary mb-10 text-center'>Add Section</button>
+    <button type='button' use:click={() => { settings.customSections[settings.customSections.length] = ['New Section', [], [], [], []] }} class='btn btn-primary mb-10 d-flex align-items-center justify-content-center'><span>Add Section</span></button>
   </div>
 </SettingCard>
 <SettingCard title='Sections And Order' description="Sections and their order on the home screen, if you want more RSS feeds to show up here, create them first in the RSS feed list. Adding many multiple normal lists doesn't impact performance, but adding a lot of RSS feeds will impact app startup times. Drag/drop these sections to re-order them.">

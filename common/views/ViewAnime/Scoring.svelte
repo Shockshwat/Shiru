@@ -247,9 +247,9 @@
     </div>
     <div class='d-flex justify-content-center'>
       {#if !status.includes('NOT IN LIST') && media.mediaListEntry}
-        <button type='button' class='btn btn-delete btn-secondary text-dark mr-20 font-weight-bold shadow-none text-center' use:click={() => toggleModal({ delete: true })}>Delete</button>
+        <button type='button' class='btn btn-delete btn-secondary text-dark mr-20 font-weight-bold shadow-none d-flex align-items-center justify-content-center' use:click={() => toggleModal({ delete: true })}><span>Delete</span></button>
       {/if}
-      <button type='button' class='btn btn-save btn-secondary text-dark font-weight-bold shadow-none text-center' use:click={() => toggleModal({ save: true })}>Save</button>
+      <button type='button' class='btn btn-save btn-secondary text-dark font-weight-bold shadow-none d-flex align-items-center justify-content-center' use:click={() => toggleModal({ save: true })}><span>Save</span></button>
     </div>
   </div>
 {/if}

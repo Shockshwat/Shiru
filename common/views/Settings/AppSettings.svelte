@@ -106,30 +106,30 @@
 </SettingCard>
 
 <SettingCard title='App and Device Info' description='Copy app and device debug info and capabilities, such as GPU information, GPU capabilities, version information and settings to clipboard.'>
-  <button type='button' use:click={() => IPC.emit('get-device-info')} class='btn btn-primary text-center'>Copy To Clipboard</button>
+  <button type='button' use:click={() => IPC.emit('get-device-info')} class='btn btn-primary d-flex align-items-center justify-content-center'><span>Copy To Clipboard</span></button>
 </SettingCard>
 
 {#if !SUPPORTS.isAndroid}
   <SettingCard title='Log Output' description='Copy debug logs to clipboard. Once you enable a logging level you can use this to quickly copy the created logs to clipboard instead of navigating to the log file in directories.'>
-    <button type='button' use:click={() => IPC.emit('get-log-contents')} class='btn btn-primary text-center'>Copy To Clipboard</button>
+    <button type='button' use:click={() => IPC.emit('get-log-contents')} class='btn btn-primary d-flex align-items-center justify-content-center'><span>Copy To Clipboard</span></button>
   </SettingCard>
 
   <SettingCard title='Open Torrent Devtools' description="Open devtools for the detached torrent process, this allows to inspect code execution and memory. DO NOT PASTE ANY CODE IN THERE, YOU'RE LIKELY BEING SCAMMED IF SOMEONE TELLS YOU TO!">
-    <button type='button' use:click={() => IPC.emit('torrent-devtools')} class='btn btn-primary text-center'>Open Devtools</button>
+    <button type='button' use:click={() => IPC.emit('torrent-devtools')} class='btn btn-primary d-flex align-items-center justify-content-center'><span>Open Devtools</span></button>
   </SettingCard>
 
   <SettingCard title='Open UI Devtools' description="Open devtools for the UI process, this allows to inspect media playback information, rendering performance and more. DO NOT PASTE ANY CODE IN THERE, YOU'RE LIKELY BEING SCAMMED IF SOMEONE TELLS YOU TO!">
-    <button type='button' use:click={() => IPC.emit('ui-devtools')} class='btn btn-primary text-center'>Open Devtools</button>
+    <button type='button' use:click={() => IPC.emit('ui-devtools')} class='btn btn-primary d-flex align-items-center justify-content-center'><span>Open Devtools</span></button>
   </SettingCard>
 {/if}
 <SettingCard title='Reset Notifications' description='Resets all notifications that have been cached, this is not recommended unless you are experiencing issues. This will also reset the last time you have been notified, so expect previous notifications to appear again.'>
-  <button type='button' use:click={() => cache.resetNotifications()} class='btn btn-primary text-center'>Reset Notifications</button>
+  <button type='button' use:click={() => cache.resetNotifications()} class='btn btn-primary d-flex align-items-center justify-content-center'><span>Reset Notifications</span></button>
 </SettingCard>
 <SettingCard title='Reset History' description='Resets all history data that has been cached, this is not recommended unless you are experiencing issues. You will lose your local episode progress and magnet links history.'>
-  <button type='button' use:click={() => cache.resetHistory()} class='btn btn-primary text-center'>Reset History</button>
+  <button type='button' use:click={() => cache.resetHistory()} class='btn btn-primary d-flex align-items-center justify-content-center'><span>Reset History</span></button>
 </SettingCard>
 <SettingCard title='Reset Caches' description='Resets everything the app has cached, this is not recommended unless you are experiencing issues. Caching increases load times and decreases down time. This does not reset the notifications or history cache. THIS WILL FORCE RESTART THE APP!'>
-  <button type='button' use:click={() => cache.resetCaches()} class='btn btn-primary text-center'>Reset Caches</button>
+  <button type='button' use:click={() => cache.resetCaches()} class='btn btn-primary d-flex align-items-center justify-content-center'><span>Reset Caches</span></button>
 </SettingCard>
 
 <h4 class='mb-10 font-weight-bold'>App Settings</h4>
@@ -153,10 +153,10 @@
 </SettingCard>
 
 <div class='d-inline-flex flex-column'>
-  <button use:click={importSettings} class='btn btn-primary mt-10 text-center' type='button'>Import Settings From Clipboard</button>
-  <button use:click={exportSettings} class='btn btn-primary mt-10 text-center' type='button'>Export Settings To Clipboard</button>
+  <button use:click={importSettings} class='btn btn-primary mt-10 d-flex align-items-center justify-content-center' type='button'><span>Import Settings From Clipboard</span></button>
+  <button use:click={exportSettings} class='btn btn-primary mt-10 d-flex align-items-center justify-content-center' type='button'><span>Export Settings To Clipboard</span></button>
   {#if SUPPORTS.update}
-    <button use:click={checkUpdate} class='btn btn-primary mt-10 text-center' type='button'>Check For Updates</button>
+    <button use:click={checkUpdate} class='btn btn-primary mt-10 d-flex align-items-center justify-content-center' type='button'><span>Check For Updates</span></button>
   {/if}
-  <button use:click={() => cache.resetSettings()} class='btn btn-danger mt-10 text-center' type='button' data-toggle='tooltip' data-placement='top' data-title='Restores All Settings Back To Their Recommended Defaults'>Restore Default Settings</button>
+  <button use:click={() => cache.resetSettings()} class='btn btn-danger mt-10 d-flex align-items-center justify-content-center' type='button' data-toggle='tooltip' data-placement='top' data-title='Restores All Settings Back To Their Recommended Defaults'><span>Restore Default Settings</span></button>
 </div>

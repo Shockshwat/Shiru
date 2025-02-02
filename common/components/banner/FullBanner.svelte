@@ -97,9 +97,8 @@
     {/each}
   </div>
   <div class='d-flex flex-row pb-10 w-600 mw-full'>
-    <button class='btn bg-dark-light px-20 shadow-none border-0 text-center'
-      use:click={() => playMedia(current)}>
-      Watch Now
+    <button class='btn bg-dark-light px-20 shadow-none border-0 d-flex align-items-center justify-content-center' use:click={() => playMedia(current)}>
+      <span>Watch Now</span>
     </button>
     {#if Helper.isAuthorized()}
       <Scoring media={current} />
