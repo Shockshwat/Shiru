@@ -162,15 +162,16 @@ export default class App {
     ipcMain.on('portRequest', async ({ sender }) => {
       const { port1, port2 } = new MessageChannelMain()
       await torrentLoad
-      this.webtorrentWindow.webContents.postMessage('player', store.get('player'))
-      this.webtorrentWindow.webContents.postMessage('torrentPath', store.get('torrentPath'))
-      this.webtorrentWindow.webContents.postMessage('port', null, [port1])
-      sender.postMessage('port', null, [port2])
+      ipcMain.once('webtorrent-heartbeat', () => {
+        this.webtorrentWindow.webContents.postMessage('player', store.get('player'))
+        this.webtorrentWindow.webContents.postMessage('torrentPath', store.get('torrentPath'))
+        this.webtorrentWindow.webContents.postMessage('port', null, [port1])
+        this.webtorrentWindow.webContents.postMessage('main-heartbeat', null)
+        sender.postMessage('port', null, [port2])
+      })
     })
 
     ipcMain.on('webtorrent-reload', () => { if (!this.mainWindow?.isDestroyed() && !this.webtorrentWindow?.isDestroyed()) this.webtorrentWindow.webContents.postMessage('webtorrent-reload', null) })
-    ipcMain.on('main-heartbeat', () => this.webtorrentWindow.webContents.postMessage('main-heartbeat', null))
-    ipcMain.on('webtorrent-heartbeat', () => this.mainWindow.webContents.send('webtorrent-heartbeat'))
 
     ipcMain.on('quit-and-install', () => {
       if (this.updater.hasUpdate) {

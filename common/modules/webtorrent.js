@@ -161,7 +161,7 @@ export default class TorrentClient extends WebTorrent {
       if (torrent.progress !== 1) {
         if (torrent.numPeers === 0) this.dispatchError('No peers found for torrent, try using a different torrent.')
       }
-    }, 10000).unref?.()
+    }, 30000).unref?.()
     await cache.write(caches.GENERAL, 'loadedTorrent', JSON.stringify([...torrent.torrentFile]))
   }
 
@@ -315,7 +315,7 @@ export default class TorrentClient extends WebTorrent {
       if (!torrent.progress && !torrent.ready) {
         if (torrent.numPeers === 0) this.dispatchError('No peers found for torrent, try using a different torrent.')
       }
-    }, 10000).unref?.()
+    }, 30000).unref?.()
 
     torrent.once('done', async () => {
       if (this.hault) return

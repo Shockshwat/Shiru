@@ -8,13 +8,13 @@ async function storageQuota (directory) {
   return bsize * bavail
 }
 
-await setCache(false)
-globalThis.client = new TorrentClient(ipcRenderer, storageQuota, 'node')
-
 let heartbeatId
 function setHeartBeat() {
-  heartbeatId = setInterval(() => ipcRenderer.send('webtorrent-heartbeat'), 10)
+  heartbeatId = setInterval(() => ipcRenderer.send('webtorrent-heartbeat'), 500)
 }
+
+await setCache(false)
+globalThis.client = new TorrentClient(ipcRenderer, storageQuota, 'node')
 setHeartBeat()
 
 ipcRenderer.on('main-heartbeat', () => clearInterval(heartbeatId))

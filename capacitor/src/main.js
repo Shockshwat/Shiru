@@ -26,11 +26,10 @@ await setCache(false)
 let client
 let heartbeatId
 function setHeartBeat() {
-  heartbeatId = setInterval(() => channel.send('webtorrent-heartbeat'), 1000)
+  heartbeatId = setInterval(() => channel.send('webtorrent-heartbeat'), 500)
 }
 
 channel.on('main-heartbeat', () => clearInterval(heartbeatId))
-
 channel.on('port-init', data => {
   cache.setEntry(caches.GENERAL, 'settings', data)
   const port = {
