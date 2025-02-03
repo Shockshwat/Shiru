@@ -1297,16 +1297,16 @@
       <span class='icon'><ArrowUp size='3rem' /></span>
       <span class='stats'>{fastPrettyBytes(torrent.up)}/s</span>
       {#if skipPrompt}
-        <div class='position-absolute top-0 text-monospace rounded skipPrompt d-flex flex-column align-items-center text-center bg-dark-light p-20 z-50'>
+        <div class='position-absolute top-0 text-monospace rounded skipPrompt d-flex flex-column align-items-center text-center bg-dark-light p-20 z-50' class:w-500={SUPPORTS.isAndroid}>
           <div class='skipFont'>
             This episode has been marked as a <b>{filler || recap}</b>, do you want to skip?
           </div>
           <div class='d-flex justify-content-center mt-20'>
-            <button class='btn btn-primary mx-2 mr-20' type='button' use:click={() => skipResponse(true)}>
-              Yes
+            <button class='btn btn-primary mx-2 mr-20 d-flex align-items-center justify-content-center' type='button' use:click={() => skipResponse(true)}>
+              <span>Yes</span>
             </button>
-            <button class='btn btn-secondary mx-2 ml-20' type='button' use:click={() => skipResponse(false)}>
-              No
+            <button class='btn btn-secondary mx-2 ml-20 d-flex align-items-center justify-content-center' type='button' use:click={() => skipResponse(false)}>
+              <span>No</span>
             </button>
           </div>
         </div>
