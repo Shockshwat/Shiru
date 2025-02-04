@@ -46,7 +46,7 @@
     },
     "asarUnpack": "**/*.node",
     "electronDownload": {
-      "mirror": "https://craftationgaming.com/api/resources/",
+      "mirror": "https://github.com/RockinChaos/electron-dist/releases/download/",
       "version": "29.1.4",
       "customDir": "shiru"
     },
