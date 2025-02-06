@@ -199,11 +199,12 @@ export async function anitomyscript (...args) {
   return parseObjs
 }
 
+//TODO: Mushoku zero episodes, they're weird. Why does season 1 part 1 show a zero episode when its a part of season 2 part 2...? We could manually specify it since very few series do this but its better to programmatically guestimate. We are not a database.
 export async function hasZeroEpisode(media, existingMappings) { // really wish they could make fetching zero episodes less painful.
   if (!media) return null
   const mappings = existingMappings || (await getAniMappings(media.id)) || {}
   let hasZeroEpisode = media.streamingEpisodes?.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) && Number(parseFloat(match[1])) === 0 : false})
-  if (hasZeroEpisode?.length > 0) {
+  if (hasZeroEpisode?.length > 0 && media.episodes >= media.streamingEpisodes?.length) {
     return [{...hasZeroEpisode[0], title: hasZeroEpisode[0]?.title?.replace('Episode 0 - ', '')}]
   } else if (!(media.episodes && media.episodes === mappings?.episodeCount && media.status === 'FINISHED')) {
     const special = (mappings?.episodes?.S0 || mappings?.episodes?.s0 || mappings?.episodes?.S1 || mappings?.episodes?.s1)

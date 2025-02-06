@@ -161,8 +161,8 @@
           return null
         }
         const zeroEpisode = findZeroEpisode(title, mappings?.episodes)
-        zeroSummary = zeroEpisode?.summary || zeroEpisode[0]?.summary || 'This is a zero episode which means a prequel, prologue or a teaser which may be important to the story.'
-        lastDuration = zeroEpisode?.length || zeroEpisode[0]?.length || lastDuration
+        zeroSummary = zeroEpisode?.summary || zeroEpisode?.[0]?.summary || 'This is a zero episode which means a prequel, prologue or a teaser which may be important to the story.'
+        lastDuration = zeroEpisode?.length || zeroEpisode?.[0]?.length || lastDuration
       }
 
       episodeList[episode - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === (image || kitsuEpisode?.thumbnail?.original) && ep.episode !== episode) ? null : (image || kitsuEpisode?.thumbnail?.original), summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description) && ep.episode !== episode) ? null : (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description), rating, title: title || kitsuEpisode?.titles?.en_us || kitsuEpisode?.titles?.en_jp || newTitle?.jp || oldTitle?.jp, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
