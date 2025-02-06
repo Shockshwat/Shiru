@@ -244,7 +244,7 @@ class AnimeSchedule {
         if (!this[`${type.toLowerCase()}AiredLists`].value) await this.feedChanged(type)
         const currentTime = Math.floor(Date.now() / 1000)
         let res = await this[`${type.toLowerCase()}AiredLists`].value
-        const section = settings.value.homeSections.find(s => s[0].includes(type))
+        const section = settings.value.homeSections.find(s => s[0] === `${type}${type === `Hentai` ? `` : `bed`} Releases`)
         if (section && section[2].length > 0) res = res.filter(episode => section[2].includes(episode.format))
         const cachedAiredLists = this[`${type.toLowerCase()}AiredListsCache`].value[`${page}-${perPage}`]
         const paginatedLists = res.slice((page - 1) * perPage, page * perPage) || []
