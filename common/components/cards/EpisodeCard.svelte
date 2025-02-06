@@ -9,7 +9,7 @@
   import { liveAnimeEpisodeProgress } from '@/modules/animeprogress.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { mediaCache } from '@/modules/cache.js'
-  import { Play } from 'lucide-svelte'
+  import { Play, RefreshCwOff } from 'lucide-svelte'
   export let data
   export let section = false
 
@@ -47,6 +47,11 @@
   <div class='item d-flex flex-column h-full pointer content-visibility-auto' class:opacity-half={completed}>
     <div class='image h-200 w-full position-relative rounded overflow-hidden d-flex justify-content-between align-items-end text-white' class:bg-black={episodeThumbnail === ' '}>
       <img loading='lazy' src={episodeThumbnail} alt='cover' class='cover-img w-full h-full position-absolute' style:--color={media?.coverImage?.color || '#1890ff'} />
+      {#if data.failed}
+        <div class='pr-10 pt-10 z-10 position-absolute top-0 right-0 text-danger failed' title='Failed to resolve media'>
+          <RefreshCwOff size='3rem' />
+        </div>
+      {/if}
       <Play class='mb-5 ml-5 pl-10 pb-10 z-10' fill='currentColor' size='3rem' />
       <div class='pr-15 pb-10 font-size-16 font-weight-medium z-10'>
         {#if media?.duration}
@@ -125,6 +130,9 @@
 </div>
 
 <style>
+  .failed {
+    filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1))
+  }
   .episode-card:hover {
     z-index: 30 !important;
     /* fixes transform scaling on click causing z-index issues */

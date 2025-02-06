@@ -7,7 +7,7 @@
   import { mediaCache } from '@/modules/cache.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import { getContext } from 'svelte'
-  import { CalendarDays, Play, Tv } from 'lucide-svelte'
+  import { CalendarDays, Play, Tv, RefreshCwOff } from 'lucide-svelte'
 
   export let data
   export let prompt
@@ -39,6 +39,11 @@
         muted
         on:loadeddata={() => { hide = false }}
         autoplay />
+    {/if}
+    {#if data.failed}
+      <div class='pr-10 pt-10 z-10 position-absolute top-0 right-0 text-danger failed' title='Failed to resolve media'>
+        <RefreshCwOff size='3rem' />
+      </div>
     {/if}
     <Play class='mb-5 ml-5 pl-10 pb-10 z-10' fill='currentColor' size='3rem' />
     <div class='pr-20 pb-10 font-size-16 font-weight-medium z-10'>
@@ -154,6 +159,9 @@
 </div>
 
 <style>
+  .failed {
+    filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1))
+  }
   .overlay {
     background-color: rgba(28, 28, 28, 0.9);
   }
