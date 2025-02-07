@@ -101,7 +101,7 @@
     <label for='system-notify'>{settings.systemNotify ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
-<SettingCard title='Prefer Dubs' description='This will send notifications for an anime only if a dubbed episode is available or if the series is sub-only (no dub exists). This is ideal for viewers who prioritize watching dubbed content whenever possible.'>
+<SettingCard title='Prefer Dubs' description='This will send notifications for an anime only if a dubbed episode is available or if the series is sub-only (no dub exists). Additionally if your progress on a series matches the latest airing dub episode the series will be hidden from your continue watching until the next episode is available. This is ideal for viewers who prioritize watching dubbed content whenever possible.'>
   <div class='custom-switch'>
     <input type='checkbox' id='rss-notify-dubs' bind:checked={settings.rssNotifyDubs} />
     <label for='rss-notify-dubs'>{settings.rssNotifyDubs ? 'On' : 'Off'}</label>
