@@ -47,8 +47,7 @@
     "asarUnpack": "**/*.node",
     "electronDownload": {
       "mirror": "https://github.com/RockinChaos/electron-dist/releases/download/",
-      "version": "29.1.4",
-      "customDir": "shiru"
+      "customDir": "v29.1.4"
     },
     "protocols": {
       "name": "shiru",
