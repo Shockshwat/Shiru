@@ -1,9 +1,10 @@
 <script>
   import { formatMap, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
-  import { malDubs } from '@/modules/animedubs.js'
+  import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
+  import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
   import Helper from "@/modules/helper.js"
   import { Heart, Eye } from 'lucide-svelte'
@@ -72,9 +73,11 @@
         {current.duration + ' Minutes'}
       </span>
     {/if}
-    <span class='text-nowrap d-flex align-items-center'>
-      {malDubs.isDubMedia(current) ? 'Dub' : 'Sub'}
-    </span>
+    {#if settings.value.cardAudio}
+      <span class='text-nowrap d-flex align-items-center'>
+        <AudioLabel bind:media={current} banner={true} />
+      </span>
+    {/if}
     {#if current.isAdult}
       <span class='text-nowrap d-flex align-items-center'>
         Rated 18+

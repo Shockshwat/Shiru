@@ -11,6 +11,9 @@ patchedDependencies:
   '@capacitor/local-notifications':
     hash: mt4j7xcmtdpmadktuymv52y4qa
     path: patches/@capacitor__local-notifications.patch
+  lucide-svelte@0.455.0:
+    hash: 257hav5cfbu4s2uwd42sauxm2u
+    path: patches/lucide-svelte@0.455.0.patch
 
 importers:
 
@@ -185,7 +188,7 @@ importers:
         version: 1.1.6
       lucide-svelte:
         specifier: ^0.455.0
-        version: 0.455.0(svelte@4.2.12)
+        version: 0.455.0(patch_hash=257hav5cfbu4s2uwd42sauxm2u)(svelte@4.2.12)
       p2pt:
         specifier: github:ThaUnknown/p2pt#modernise
         version: https://codeload.github.com/ThaUnknown/p2pt/tar.gz/9ad7a56ed6ee43f5664ebad33b803702ee349316
@@ -10320,7 +10323,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  lucide-svelte@0.455.0(svelte@4.2.12):
+  lucide-svelte@0.455.0(patch_hash=257hav5cfbu4s2uwd42sauxm2u)(svelte@4.2.12):
     dependencies:
       svelte: 4.2.12
 

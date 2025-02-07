@@ -220,7 +220,7 @@ class AnimeSchedule {
         const content = this.getFeed(`${type.toLowerCase()}-episode-feed`)
         const res = await this[`${type.toLowerCase()}AiredLists`].value
         if (JSON.stringify(await content) !== JSON.stringify(res)) {
-            this[`${type.toLowerCase()}AiredLists`].value = content
+            this[`${type.toLowerCase()}AiredLists`].value = await content
             return true
         }
         return false

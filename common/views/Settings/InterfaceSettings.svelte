@@ -65,8 +65,7 @@
     <option value='full'>Full</option>
   </select>
 </SettingCard>
-<SettingCard title='Card Audio' description={'If the dub or sub icon should be shown on the cards in the menu, will be hidden on the schedule page.\nThis will show one of three simple icons which are previewed as follows:'}>
-  <AudioLabel example={true}/>
+<SettingCard title='Card Audio' description={'If the sub, dub, partial dub, and age rating icons should be shown on the cards, the corresponding episode number will be shown when possible. Additionally a label will be shown on the preview cards, anime view, episode cards, and the home banner of the highest possible audio available, either dub, partial dub, or sub. Note these will not be visible when viewing the schedule page. '}>
   <div class='custom-switch'>
     <input type='checkbox' id='card-audio' bind:checked={settings.cardAudio} />
     <label for='card-audio'>{settings.cardAudio ? 'On' : 'Off'}</label>

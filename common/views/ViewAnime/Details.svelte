@@ -1,5 +1,5 @@
 <script>
-  import { Building2, Earth, TriangleAlert, FolderKanban, Languages, CalendarRange, MonitorPlay, Type } from 'lucide-svelte'
+  import { Building2, Earth, Adult, FolderKanban, Languages, CalendarRange, MonitorPlay, Type } from 'lucide-svelte'
 
   export let media = null
   export let alt = null
@@ -15,7 +15,7 @@
     { property: 'studios', label: 'Studio', icon: Building2, custom: 'property' },
     { property: 'source', label: 'Source', icon: FolderKanban },
     { property: 'countryOfOrigin', label: 'Country', icon: Earth, custom: 'property' },
-    { property: 'isAdult', label: 'Adult', icon: TriangleAlert },
+    { property: 'isAdult', label: 'Adult', icon: Adult },
     { property: 'english', label: 'English', icon: Type },
     { property: 'romaji', label: 'Romaji', icon: Languages },
     { property: 'native', label: 'Native', icon: '語', custom: 'icon' }

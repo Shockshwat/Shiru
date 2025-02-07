@@ -1,8 +1,10 @@
 <script>
     import { settings } from '@/modules/settings.js'
     import { malDubs } from '@/modules/animedubs.js'
+    import { animeSchedule } from '@/modules/animeschedule.js'
+    import { getMediaMaxEp } from '@/modules/anime.js'
     import { writable } from 'svelte/store'
-    import { Mic, MicOff, Captions, TriangleAlert } from 'lucide-svelte'
+    import { Mic, MicOff, Captions, Adult } from 'lucide-svelte'
 
     /** @type {import('@/modules/al.d.ts').Media} */
     export let media = null
@@ -10,13 +12,13 @@
 
     export let banner = false
     export let viewAnime = false
-    export let example = false
+    export let smallCard = true
     export let episode = false
     let isDubbed = writable(false)
     let isPartial = writable(false)
 
     $: {
-        if (!example && media) {
+        if (media) {
             setLabel()
         }
     }
@@ -30,88 +32,83 @@
         }
     }
 </script>
-
-{#if !banner && !viewAnime && !example}
-    {#if settings.value.cardAudio}
-        <div class='position-absolute top-0 left-0 ml-10 mt-10 d-flex align-items-center justify-content-center'>
-        <div class='w-auto h-auto z-10 text-white d-flex align-items-center justify-content-center {$isDubbed ? "dubbed" : $isPartial ? "incomplete" : "subbed"}'>
-            {#if $isDubbed}
-                <Mic size='2.5rem' />
-            {:else if $isPartial}
-                <MicOff size='2.5rem' />
-            {:else}
-                <Captions size='2.5rem' />
+{#if settings.value.cardAudio}
+    {#if !banner && !viewAnime}
+        {@const dubEpisodes = String(($isDubbed || $isPartial) && animeSchedule.dubAiredLists?.value?.filter(episode => episode.id === media.id)?.reduce((max, ep) => Math.max(max, ep.episode.aired), 0) || (!$isPartial && media.status !== 'RELEASING' && media.status !== 'NOT_YET_RELEASED' && Number(media.seasonYear || 0) < 2025 && getMediaMaxEp(media)) || '')}
+        {@const subEpisodes = String(media.status !== 'NOT_YET_RELEASED' && media.status !== 'CANCELLED' && getMediaMaxEp(media, true) || dubEpisodes || '')}
+        <div class='position-absolute bottom-0 right-0 d-flex h-2' class:mb-4={smallCard} class:mb-3={!smallCard}>
+            {#if media.isAdult}
+                <div class='pl-10 pr-15 text-dark font-weight-bold d-flex align-items-center h-full lg-slant adult mrl-2'>
+                    <Adult size='2rem' strokeWidth='1.8' />
+                </div>
             {/if}
-        </div>
-        {#if media.isAdult}
-            <div class='ml-5 w-auto h-auto z-10 text-white d-flex align-items-center justify-content-center adult'>
-                <TriangleAlert size='2.5rem' />
+            {#if $isDubbed || $isPartial}
+                <div class='pl-10 pr-20 text-dark font-weight-bold d-flex align-items-center h-full slant' class:w-icon={!dubEpisodes || dubEpisodes.length === 0} class:w-text={dubEpisodes && dubEpisodes.length > 0} class:dubbed={$isDubbed} class:incomplete={$isPartial}>
+                    <svelte:component this={$isDubbed ? Mic : MicOff} size='1.8rem' strokeWidth='2' />
+                    <span class='d-flex align-items-center line-height-1 ml-2'><div class='line-height-1 mt-1'>{dubEpisodes}</div></span>
+                </div>
+            {/if}
+            <div class='px-10 z-10 text-dark rounded-right font-weight-bold d-flex align-items-center h-full subbed slant mrl-1'>
+                <Captions size='2rem' strokeWidth='1.5' />
+                <span class='d-flex align-items-center line-height-1' class:ml-3={subEpisodes && subEpisodes.length > 0}><div class='line-height-1 mt-1'>{subEpisodes}</div></span>
             </div>
-        {/if}
         </div>
+
+    {:else if !viewAnime}
+        {$isDubbed ? 'Dub' : $isPartial ? 'Partial Dub' : 'Sub'}
+    {:else if viewAnime}
+        <svelte:component this={$isDubbed ? Mic : $isPartial ? MicOff : Captions} class='mx-10' size='2.2rem' />
+        <span class='mr-20'>{$isDubbed ? 'Dub' : $isPartial ? 'Partial Dub' : 'Sub'}</span>
     {/if}
- {:else if !viewAnime && !example}
-     {$isDubbed ? 'Dub' : $isPartial ? 'Partial Dub' : 'Sub'}
- {:else if viewAnime}
-    {#if $isDubbed}
-        <Mic class='mx-10' size='2.2rem' />
-    {:else if $isPartial}
-        <MicOff class='mx-10' size='2.2rem' />
-    {:else}
-        <Captions class='mx-10' size='2.2rem' />
-    {/if}
-     <span class='mr-20'>
-         {$isDubbed ? 'Dub' : $isPartial ? 'Partial Dub' : 'Sub'}
-     </span>
- {:else}
-     <div>
-         <div class='position-relative d-flex align-items-center justify-content-center mt-5'>
-             <div class='position-relative d-flex align-items-center justify-content-center'>
-                 <div class='font-size-24 label ml-20 z-10 adult'>
-                     <TriangleAlert size='2.5rem' />
-                 </div>
-                 <span class='ml-5 mb-5'>Rated 18+</span>
-             </div>
-             <div class='position-relative d-flex align-items-center justify-content-center'>
-                 <div class='font-size-24 label ml-20 z-10 subbed'>
-                     <Captions size='2.5rem' />
-                 </div>
-                 <span class='ml-5 mb-5'>Sub Only</span>
-             </div>
-             <div class='position-relative d-flex align-items-center justify-content-center'>
-                 <div class='font-size-24 label ml-20 z-10 incomplete'>
-                     <MicOff size='2.5rem' />
-                 </div>
-                 <span class='ml-5 mb-5'>Partial Dub</span>
-             </div>
-             <div class='position-relative d-flex align-items-center justify-content-center'>
-                 <div class='font-size-24 label ml-20 z-10 dubbed'>
-                     <Mic size='2.5rem' />
-                 </div>
-                 <span class='ml-5 mb-5 mr-10'>Dub</span>
-              </div>
-          </div>
-     </div>
- {/if}
+{/if}
 
  <style>
-     .label {
-         top: .625rem;
+     .w-icon {
+         margin-right: -2rem !important;
+     }
+     .w-text {
+         margin-right: -1.3rem !important;
+     }
+     .ml-2 {
+         margin-left: 0.2rem;
+     }
+     .ml-3 {
+         margin-left: 0.3rem;
+     }
+     .mrl-1 {
+         margin-right: -.3rem !important;
+     }
+     .mrl-2 {
+         margin-right: -1.3rem !important;
+     }
+     .mt-1 {
+         margin-top: .1rem;
+     }
+     .mb-4 {
+         margin-bottom: .38rem;
+     }
+     .mb-3 {
+         margin-bottom: -.3rem !important;
+     }
+     .h-2 {
+         height: 2rem;
+     }
+     .slant {
+         clip-path: polygon(15% -1px, 100% 0, 100% 100%, 0% calc(100% + 1px));
+     }
+     .lg-slant {
+         clip-path: polygon(21% -1px, 100% 0, 100% 100%, 0% calc(100% + 1px));
      }
      .adult {
-         color: rgb(215, 6, 10) !important;
-         filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1)) drop-shadow(0 0 .4rem rgba(0, 0, 0, 1));
+         background-color: rgb(215, 6, 10) !important;
      }
      .dubbed {
-         color: rgb(255, 214, 0) !important;
-         filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1)) drop-shadow(0 0 .4rem rgba(0, 0, 0, 1));
+         background-color: rgb(255, 214, 0) !important;
      }
      .subbed {
-         color: rgb(137, 39, 255) !important;
-         filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1)) drop-shadow(0 0 .4rem rgba(0, 0, 0, 1));
+         background-color: rgb(137, 39, 255) !important;
      }
      .incomplete {
-         color: rgb(255, 94, 0) !important;
-         filter: drop-shadow(0 0 .4rem rgba(0, 0, 0, 1)) drop-shadow(0 0 .4rem rgba(0, 0, 0, 1));
+         background-color: rgb(255, 94, 0) !important;
      }
  </style>

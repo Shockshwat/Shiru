@@ -37,7 +37,7 @@
   {#if preview}
     <PreviewCard {media} {type} variables={_variables} />
   {/if}
-  <div class='item small-card d-flex flex-column pointer content-visibility-auto' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}>
+  <div class='item small-card d-flex flex-column pointer' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}>
     {#if $page === 'schedule'}
       <div class='w-full text-center pb-10'>
         {#if airingAt(media, _variables)}

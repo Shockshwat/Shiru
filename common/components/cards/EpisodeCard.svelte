@@ -8,6 +8,7 @@
   import { getContext } from 'svelte'
   import { liveAnimeEpisodeProgress } from '@/modules/animeprogress.js'
   import { anilistClient } from '@/modules/anilist.js'
+  import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
   import { Play, RefreshCwOff } from 'lucide-svelte'
   export let data
@@ -109,9 +110,11 @@
             <AudioLabel {media} {data} banner={true} episode={true} />
           </div>
           {#if data.date}
-            <div class='text-muted font-size-12 title ml-5 mr-5 overflow-hidden'>
-              •
-            </div>
+            {#if settings.value.cardAudio}
+              <div class='text-muted font-size-12 title ml-5 mr-5 overflow-hidden'>
+                •
+              </div>
+            {/if}
             <div class='text-muted font-size-12 title overflow-hidden'>
               {since(data.date)}
             </div>

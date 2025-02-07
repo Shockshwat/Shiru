@@ -1,0 +1,126 @@
+diff --git a/dist/aliases.d.ts b/dist/aliases.d.ts
+index 820b05582946525ae446126ac3eda45cf2413ec6..5ea8f9a205fe89bdab28803187e1fe455e8c8d2d 100644
+--- a/dist/aliases.d.ts
++++ b/dist/aliases.d.ts
+@@ -4,6 +4,9 @@
+  * This source code is licensed under the ISC license.
+  * See the LICENSE file in the root directory of this source tree.
+  */
++// Custom Aliases
++export { default as AdultIcon } from './icons/adult.svelte';
++// End of Custom Aliases
+ export { default as AArrowDownIcon } from './icons/a-arrow-down.svelte';
+ export { default as LucideAArrowDown } from './icons/a-arrow-down.svelte';
+ export { default as AArrowUpIcon } from './icons/a-arrow-up.svelte';
+diff --git a/dist/aliases.js b/dist/aliases.js
+index 30a56e986b7bfc8b5ca26fd55f833404d55a8f76..8b0ed0c1837dbeb257b6811628d95707dc3bdef1 100644
+--- a/dist/aliases.js
++++ b/dist/aliases.js
+@@ -4,6 +4,11 @@
+  * This source code is licensed under the ISC license.
+  * See the LICENSE file in the root directory of this source tree.
+  */
++// Custom Aliases
++// Adult aliases
++export { default as AdultIcon } from './icons/adult.svelte';
++export { default as LucideAdultIcon } from './icons/adult.svelte';
++// End of Custom Aliases
+ // AArrowDown aliases
+ export { default as AArrowDownIcon } from './icons/a-arrow-down.svelte';
+ export { default as LucideAArrowDown } from './icons/a-arrow-down.svelte';
+diff --git a/dist/icons/adult.svelte b/dist/icons/adult.svelte
+new file mode 100644
+index 0000000000000000000000000000000000000000..a17fae948f3bc769b90502625d4778e6bd177d53
+--- /dev/null
++++ b/dist/icons/adult.svelte
+@@ -0,0 +1,23 @@
++<script>/**
++ * @license lucide-svelte v0.455.0 - ISC
++ *
++ * This source code is licensed under the ISC license.
++ * See the LICENSE file in the root directory of this source tree.
++ */
++import Icon from '../Icon.svelte';
++const iconNode = [["path", { "d": "M6.5 10 L9 8" }], ["path", { "d": "M9 8 L9 16" }], ["path", { "d": "M14 2.2a10 10 0 1 0 7.8 7.8" }], ["path", { "d": "M18 4h4" }], ["path", { "d": "M20 6V2" }], ["circle", { "cx": "15", "cy": "10", "r": "2" }], ["circle", { "cx": "15", "cy": "14", "r": "2" }]];
++/**
++ * @component @name Adult
++ * @description Lucide SVG icon component, renders SVG Element with children.
++ *
++ * @see https://lucide.dev/guide/packages/lucide-svelte - Documentation
++ *
++ * @param {Object} props - Lucide icons props and any valid SVG attribute
++ * @returns {FunctionalComponent} Svelte component
++ *
++ */
++</script>
++
++<Icon name="adult" {...$$props} iconNode={iconNode}>
++  <slot/>
++</Icon>
+diff --git a/dist/icons/adult.svelte.d.ts b/dist/icons/adult.svelte.d.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b674c168b475c8ee5cb6988eaa307c5bc864f25a
+--- /dev/null
++++ b/dist/icons/adult.svelte.d.ts
+@@ -0,0 +1,33 @@
++/**
++ * @license lucide-svelte v0.455.0 - ISC
++ *
++ * This source code is licensed under the ISC license.
++ * See the LICENSE file in the root directory of this source tree.
++ */
++import { SvelteComponentTyped } from "svelte";
++import type { IconProps } from '../types.js';
++declare const __propDef: {
++    props: IconProps;
++    events: {
++        [evt: string]: CustomEvent<any>;
++    };
++    slots: {
++        default: {};
++    };
++};
++export type AdultProps = typeof __propDef.props;
++export type AdultEvents = typeof __propDef.events;
++export type AdultSlots = typeof __propDef.slots;
++/**
++ * @component @name Adult
++ * @description Lucide SVG icon component, renders SVG Element with children.
++ *
++ * @see https://lucide.dev/guide/packages/lucide-svelte - Documentation
++ *
++ * @param {Object} props - Lucide icons props and any valid SVG attribute
++ * @returns {FunctionalComponent} Svelte component
++ *
++ */
++export default class Adult extends SvelteComponentTyped<AdultProps, AdultEvents, AdultSlots> {
++}
++export {};
+diff --git a/dist/icons/index.d.ts b/dist/icons/index.d.ts
+index 0e74c325b84e09493607c558138cdfe7645de9bd..93b3c568fbc92064f998dab604d73746a04f9ba8 100644
+--- a/dist/icons/index.d.ts
++++ b/dist/icons/index.d.ts
+@@ -4,6 +4,9 @@
+  * This source code is licensed under the ISC license.
+  * See the LICENSE file in the root directory of this source tree.
+  */
++// Custom Icons
++export { default as Adult } from './adult.svelte';
++// End of Custom Icons
+ export { default as AArrowDown } from './a-arrow-down.svelte';
+ export { default as AArrowUp } from './a-arrow-up.svelte';
+ export { default as ALargeSmall } from './a-large-small.svelte';
+diff --git a/dist/icons/index.js b/dist/icons/index.js
+index 0e74c325b84e09493607c558138cdfe7645de9bd..93b3c568fbc92064f998dab604d73746a04f9ba8 100644
+--- a/dist/icons/index.js
++++ b/dist/icons/index.js
+@@ -4,6 +4,9 @@
+  * This source code is licensed under the ISC license.
+  * See the LICENSE file in the root directory of this source tree.
+  */
++// Custom Icons
++export { default as Adult } from './adult.svelte';
++// End of Custom Icons
+ export { default as AArrowDown } from './a-arrow-down.svelte';
+ export { default as AArrowUp } from './a-arrow-up.svelte';
+ export { default as ALargeSmall } from './a-large-small.svelte';

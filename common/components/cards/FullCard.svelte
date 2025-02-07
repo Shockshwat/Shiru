@@ -1,6 +1,7 @@
 <script>
   import { getContext } from 'svelte'
   import { airingAt, episode, formatMap, getMediaMaxEp, statusColorMap } from '@/modules/anime.js'
+  import { settings } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
   import { page } from '@/App.svelte'
   import { SUPPORTS } from '@/modules/support.js'
@@ -23,13 +24,13 @@
 </script>
 
 <div class='d-flex px-md-20 py-10 position-relative justify-content-center' use:click={viewMedia}>
-  <div class='card m-0 p-0 overflow-hidden pointer content-visibility-auto full-card' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}
+  <div class='card m-0 p-0 pointer full-card' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}
     style:--color={media.coverImage.color || '#1890ff'}>
     <div class='row h-full'>
       <div class='img-col d-inline-block position-relative' class:col-4={!SUPPORTS.isAndroid} class:col-3={SUPPORTS.isAndroid}>
         <img loading='lazy' src={media.coverImage.extraLarge || ''} alt='cover' class='cover-img w-full h-full' />
         {#if !_variables?.scheduleList}
-          <AudioLabel {media} />
+          <AudioLabel {media} smallCard={false} />
         {/if}
       </div>
       <div class='col h-full card-grid'>
@@ -41,39 +42,39 @@
             {anilistClient.title(media)}
           </h5>
           <div class='details text-muted m-0 pt-5 text-capitalize d-flex flex-wrap'>
-              <span class='badge'>
+              <span class='badge pl-5 pr-5'>
                 {#if media.format}
                   {formatMap[media.format]}
                 {/if}
               </span>
             {#if maxEp > 1 || (maxEp !== 1 && ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress)}
-                <span class='badge'>
+                <span class='badge pl-5 pr-5'>
                   {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'} Episodes
                 </span>
             {:else if media.duration}
-                <span class='badge'>
+                <span class='badge pl-5 pr-5'>
                   {media.duration + ' Minutes'}
                 </span>
             {/if}
-            {#if !_variables?.scheduleList}
-                <span class='badge'>
+            {#if !_variables?.scheduleList && settings.value.cardAudio}
+                <span class='badge pl-5 pr-5'>
                   <AudioLabel {media} banner={true}/>
                 </span>
             {/if}
             {#if media.isAdult}
-                <span class='badge'>
+                <span class='badge pl-5 pr-5'>
                   Rated 18+
                 </span>
             {/if}
             {#if media.season || media.seasonYear}
-                <span class='badge'>
+                <span class='badge pl-5 pr-5'>
                   {[media.season?.toLowerCase(), media.seasonYear].filter(s => s).join(' ')}
                 </span>
             {/if}
             {#if media.averageScore}
-              <span class='badge'>{media.averageScore + '%'} Rating</span>
+              <span class='badge pl-5 pr-5'>{media.averageScore + '%'} Rating</span>
               {#if media.stats?.scoreDistribution}
-                <span class='badge'>{anilistClient.reviews(media)} Reviews</span>
+                <span class='badge pl-5 pr-5'>{anilistClient.reviews(media)} Reviews</span>
               {/if}
             {/if}
           </div>

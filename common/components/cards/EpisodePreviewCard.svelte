@@ -4,6 +4,7 @@
   import { click } from '@/modules/click.js'
   import { liveAnimeEpisodeProgress } from '@/modules/animeprogress.js'
   import { anilistClient } from '@/modules/anilist.js'
+  import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import { getContext } from 'svelte'
@@ -106,9 +107,11 @@
             <AudioLabel {media} {data} banner={true} episode={true} />
           </div>
           {#if data.date}
-            <div class='text-muted font-size-12 title ml-5 mr-5 overflow-hidden'>
-              •
-            </div>
+            {#if settings.value.cardAudio}
+              <div class='text-muted font-size-12 title ml-5 mr-5 overflow-hidden'>
+                •
+              </div>
+            {/if}
             <div class='text-muted font-size-12 title overflow-hidden'>
               {since(data.date)}
             </div>

@@ -2,6 +2,7 @@
   import { formatMap, getMediaMaxEp, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { episodesList } from '@/modules/episodes.js'
+  import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
@@ -92,50 +93,50 @@
     <div class='text-truncate pb-10'>
       <div class='details text-white text-capitalize pt-10 d-flex flex-wrap'>
         {#if type || type === 0}
-          <span class='d-flex badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+          <span class='d-flex badge pl-5 pr-5 d-flex align-items-center justify-content-center' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
             {#if Number.isInteger(type) && type >= 0}
-              <ThumbsUp fill='currentColor' class='pr-5 pb-5 {type === 0 ? "text-muted" : "text-success"}' size='2rem'/>
+              <ThumbsUp fill='currentColor' class='m-0 p-0 pr-5 {type === 0 ? "text-muted" : "text-success"}' size='1.9rem'/>
             {:else if Number.isInteger(type) && type < 0}
-              <ThumbsDown fill='currentColor' class='text-danger pr-5 pb-5' size='2rem'/>
+              <ThumbsDown fill='currentColor' class='text-danger m-0 p-0 pr-5' size='1.9rem'/>
             {/if}
-            {(Number.isInteger(type) ? Math.abs(type).toLocaleString() + (type >= 0 ? ' likes' : ' dislikes') : type)}
+            <span> {(Number.isInteger(type) ? Math.abs(type).toLocaleString() + (type >= 0 ? ' likes' : ' dislikes') : type)}</span>
           </span>
         {/if}
-        <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+        <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
           {#if media.format}
             {formatMap[media.format]}
           {/if}
         </span>
+        {#if !variables?.scheduleList && settings.value.cardAudio}
+          <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+            <AudioLabel {media} banner={true}/>
+          </span>
+        {/if}
         {#if maxEp > 1 || (maxEp !== 1 && ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress)}
-          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+          <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
             {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'}
             Episodes
           </span>
         {:else if media.duration}
-          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+          <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
             {media.duration + ' Minutes'}
           </span>
         {/if}
-        {#if !variables?.scheduleList}
-          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
-            <AudioLabel {media} banner={true}/>
-          </span>
-        {/if}
         {#if media.isAdult}
-        <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+        <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
             Rated 18+
           </span>
         {/if}
         {#if media.season || media.seasonYear}
-          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
+          <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
             {[media.season?.toLowerCase(), media.seasonYear].filter(s => s).join(' ')}
           </span>
         {/if}
         {#if media.averageScore}
-          <span class='badge' class:font-size-14={!SUPPORTS.isAndroid}
+          <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid}
                 class:font-size-12={SUPPORTS.isAndroid}>{media.averageScore + '%'} Rating</span>
           {#if media.stats?.scoreDistribution && (!type && type !== 0)}
-            <span class='badge' class:font-size-14={!SUPPORTS.isAndroid}
+            <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid}
                   class:font-size-12={SUPPORTS.isAndroid}>{anilistClient.reviews(media)} Reviews</span>
           {/if}
         {/if}
