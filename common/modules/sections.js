@@ -185,6 +185,23 @@ function createSections () {
                 return !ids.includes(media?.media?.id || media?.node?.id)
               })
             }
+            return animeSchedule.subAiringLists.value.then(airing => {
+              if (Helper.isMalAuth()) {
+                const ids = []
+                mediaList.forEach(watchMedia => {
+                  const media = watchMedia?.node
+                  if (media?.my_list_status) {
+                    const matchingAiring = airing?.find(item => item?.idMal === media?.id)
+                    const episodeNumber = new Date(matchingAiring?.airingSchedule?.nodes?.[0]?.airingAt * 1000) > new Date() ? (matchingAiring?.airingSchedule?.nodes?.[0]?.episode - 1) : matchingAiring?.airingSchedule?.nodes?.[0]?.episode
+                    if (media?.my_list_status?.num_episodes_watched >= (episodeNumber || media?.num_episodes)) ids.push(media?.id)
+                  }
+                })
+                mediaList = mediaList.filter(media => {
+                  return !ids.includes(media?.media?.id || media?.node?.id)
+                })
+              }
+              return Helper.getPaginatedMediaList(page, perPage, variables, mediaList)
+            })
           })
         })
         return SectionsManager.wrapResponse(res, perPage)

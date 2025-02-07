@@ -24,8 +24,7 @@
 </script>
 
 <div class='d-flex px-md-20 py-10 position-relative justify-content-center' use:click={viewMedia}>
-  <div class='card m-0 p-0 pointer full-card' class:opacity-half={variables?.continueWatching && Helper.isMalAuth() && media?.status !== 'FINISHED' && media?.mediaListEntry?.progress >= media?.nextAiringEpisode?.episode - 1}
-    style:--color={media.coverImage.color || '#1890ff'}>
+  <div class='card m-0 p-0 pointer full-card' style:--color={media.coverImage.color || '#1890ff'}>
     <div class='row h-full'>
       <div class='img-col d-inline-block position-relative' class:col-4={!SUPPORTS.isAndroid} class:col-3={SUPPORTS.isAndroid}>
         <img loading='lazy' src={media.coverImage.extraLarge || ''} alt='cover' class='cover-img w-full h-full' />
@@ -118,9 +117,6 @@
   }
 .pre-wrap {
   white-space: pre-wrap
-}
-.opacity-half {
-  opacity: 30%;
 }
 .details {
   font-size: 1.3rem;
