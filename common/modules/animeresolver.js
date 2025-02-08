@@ -225,10 +225,10 @@ export default new class AnimeResolver {
     const fileAnimes = []
     for (let parseObj of parseObjs) {
       let failed = false
-      const titleKeys = ['title.userPreferred', 'title.english', 'title.romaji', 'title.native']
       let episode
       let media = this.animeNameCache[this.getCacheKeyForTitle(parseObj)]
       const threshold = parseObj?.anime_title?.length > 15 ? 0.3 : parseObj?.anime_title?.length > 9 ? 0.2 : 0.15 // play nice with small anime titles
+      const titleKeys = ['title.userPreferred', 'title.english', 'title.romaji', 'title.native', 'synonyms']
       let needsVerification = !media || !matchKeys(media, parseObj?.anime_title, titleKeys, threshold)
       // resolve episode, if movie, dont.
       let maxep = media?.nextAiringEpisode?.episode || media?.episodes
