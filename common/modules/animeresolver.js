@@ -306,7 +306,7 @@ export default new class AnimeResolver {
     const prequel = await this.findPrequel(parseObj, offset, media, titleKeys, threshold)
     const defaults = { parseObj, media }
     if (prequel.result.failed) {
-      const handleEp = await this.handleEpisode(parseObj, maxep, media, prequel, titleKeys, threshold)
+      const handleEp = await this.handleEpisode(parseObj, maxep, offset, media, prequel, titleKeys, threshold)
       defaults.parseObj = handleEp.parseObj
       defaults.media = handleEp.media
       prequel.result.ignore = !handleEp.failed
@@ -363,6 +363,7 @@ export default new class AnimeResolver {
    *
    * @param {Object} parseObj - The parsed object containing details about the anime episode (e.g., title, episode number).
    * @param {number} maxep - The maximum episode number available for the media, used to validate episode range.
+   * @param {number} offset - The offset to adjust for episode numbering discrepancies (e.g., for sequels or side stories).
    * @param {Object} media - The media object that contains data about the anime (e.g., title, episodes, format).
    * @param {boolean} prequel - The prequel object contains isRoot indicating if the current media is the root (first season or main series), and the root media reference.
    * @param {string[]} titleKeys - The list of title keys to match against when verifying media (e.g., 'title.english', 'title.userPreferred').
@@ -370,7 +371,7 @@ export default new class AnimeResolver {
    *
    * @returns {Object} An object containing the resolved `media`, `parseObj`, `episode`, and a `failed` flag indicating resolution success or failure.
    */
-  async handleEpisode(parseObj, maxep, media, prequel, titleKeys, threshold) {
+  async handleEpisode(parseObj, maxep, offset, media, prequel, titleKeys, threshold) {
     debug(`Attempting last ditch effort for failed result ${parseObj.anime_title}: ${media?.id}:${media?.title?.userPreferred}.`)
     const episodeNumber = Array.isArray(parseObj.episode_number) ? parseObj.episode_number[1] : parseObj.episode_number
     if (parseObj.anime_season) {
