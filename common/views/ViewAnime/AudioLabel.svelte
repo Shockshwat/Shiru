@@ -45,12 +45,12 @@
             {#if $isDubbed || $isPartial}
                 <div class='pl-10 pr-20 text-dark font-weight-bold d-flex align-items-center h-full slant' class:w-icon={!dubEpisodes || dubEpisodes.length === 0} class:w-text={dubEpisodes && dubEpisodes.length > 0} class:dubbed={$isDubbed} class:incomplete={$isPartial}>
                     <svelte:component this={$isDubbed ? Mic : MicOff} size='1.8rem' strokeWidth='2' />
-                    <span class='d-flex align-items-center line-height-1 ml-2'><div class='line-height-1 mt-1'>{dubEpisodes}</div></span>
+                    <span class='d-flex align-items-center line-height-1 ml-2'><div class='line-height-1 mt-2'>{dubEpisodes}</div></span>
                 </div>
             {/if}
             <div class='px-10 z-10 text-dark rounded-right font-weight-bold d-flex align-items-center h-full subbed slant mrl-1'>
                 <Captions size='2rem' strokeWidth='1.5' />
-                <span class='d-flex align-items-center line-height-1' class:ml-3={subEpisodes && subEpisodes.length > 0}><div class='line-height-1 mt-1'>{subEpisodes}</div></span>
+                <span class='d-flex align-items-center line-height-1' class:ml-3={subEpisodes && subEpisodes.length > 0}><div class='line-height-1 mt-2'>{subEpisodes}</div></span>
             </div>
         </div>
 
@@ -81,8 +81,8 @@
      .mrl-2 {
          margin-right: -1.3rem !important;
      }
-     .mt-1 {
-         margin-top: .1rem;
+     .mt-2 {
+         margin-top: .2rem;
      }
      .mb-4 {
          margin-bottom: .38rem;
