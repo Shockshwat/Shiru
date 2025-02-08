@@ -39,7 +39,7 @@
   function scrollCarousel(direction) {
     const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth
     const scrollAmount = scrollContainer.offsetWidth
-    if (direction === 'right' && scrollContainer.scrollLeft >= maxScrollLeft) scrollContainer.scrollLeft = 0
+    if (direction === 'right' && (scrollContainer.scrollLeft + 1) >= maxScrollLeft) scrollContainer.scrollLeft = 0
     else if (direction === 'left' && scrollContainer.scrollLeft <= 0) scrollContainer.scrollLeft = maxScrollLeft
     else scrollContainer.scrollBy({ left: direction === 'right' ? scrollAmount : -scrollAmount, behavior: 'smooth' })
   }
