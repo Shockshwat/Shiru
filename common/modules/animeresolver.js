@@ -376,7 +376,7 @@ export default new class AnimeResolver {
     const episodeNumber = Array.isArray(parseObj.episode_number) ? parseObj.episode_number[1] : parseObj.episode_number
     if (parseObj.anime_season) {
       const result = await this.resolveSeason({ media: (!prequel.isRoot ? prequel.root : media) || media, episode: parseInt(episodeNumber), offset })
-      if (!result.failed) return { ...result }
+      if (!result.failed) return { ...result, parseObj }
     }
     if ((episodeNumber > maxep) || (episodeNumber < 0)) {
       debug(`Detected that the episode number ${episodeNumber} is ${(episodeNumber > maxep) ? `greater than the expect max ${maxep} episode(s)` : `is a negative number`} assuming the actual episode number is in the title for [${parseObj.anime_title}]...`)
