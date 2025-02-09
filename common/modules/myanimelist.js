@@ -2,6 +2,7 @@ import { writable } from 'simple-store-svelte'
 import Bottleneck from 'bottleneck'
 
 import { malToken, refreshMalToken, settings } from '@/modules/settings.js'
+import { mediaCache } from '@/modules/cache.js'
 import { codes } from "@/modules/anilist.js"
 import { toast } from 'svelte-sonner'
 import { sleep } from "@/modules/util.js";
@@ -190,7 +191,7 @@ class MALClient {
   async malEntry (media, variables) {
     variables.idMal = media.idMal
     const res = await malClient.entry(variables)
-    if (!variables.token) media.mediaListEntry = res?.data?.SaveMediaListEntry
+    if (!variables.token) mediaCache.value[media.id].mediaListEntry = res?.data?.SaveMediaListEntry
     return res
   }
 

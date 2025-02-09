@@ -75,43 +75,47 @@ export function mapStatus(status) {
 }
 
 /**
- * Fills the queried AniList media entry with additional user list data from alternate authorizations (e.g., MyAnimeList).
+ * Fills the queried AniList media entries with additional user list data from alternate authorizations (e.g., MyAnimeList).
  *
- * This function attaches user-specific data to the AniList media entry, such as progress, status, start/completion dates,
+ * This function attaches user-specific data to each AniList media entry, such as progress, status, start/completion dates,
  * and custom list information, by matching the media's ID with entries from the provided user lists.
  *
- * @param {Object} media - The AniList media object to be filled with user list data.
+ * @param {Array<Object>} medias - An array of AniList media objects to be filled with user list data.
  * @param {Object} userLists - The user list data, containing entries from alternate authorizations like MyAnimeList.
  * @param {Object} userLists.data - The user list data structure containing a list of media entries.
  * @param {Array<Object>} userLists.data.MediaList - An array of media list entries from alternate authorizations.
+ * @returns {Array<Object>} The updated array of AniList media objects with attached user list data.
  */
-function fillEntry(media, userLists) {
-    debug(`Filling MyAnimeList entry data for ${media?.id} -> AniList`)
-    const malEntry = userLists.data?.MediaList?.find(({ node }) => node.id === media.idMal)
-    if (malEntry) {
-        const start_date = malEntry.node.my_list_status.start_date ? new Date(malEntry.node.my_list_status.start_date) : undefined
-        const finish_date = malEntry.node.my_list_status.finish_date ? new Date(malEntry.node.my_list_status.finish_date) : undefined
-        const startedAt = start_date ? {
-            year: start_date.getFullYear(),
-            month: start_date.getMonth() + 1,
-            day: start_date.getDate()
-        } : undefined
-        const completedAt = finish_date ? {
-            year: finish_date.getFullYear(),
-            month: finish_date.getMonth() + 1,
-            day: finish_date.getDate()
-        } : undefined
-        media.mediaListEntry = {
-            id: media.id,
-            progress: malEntry.node.my_list_status.num_episodes_watched,
-            repeat: malEntry.node.my_list_status.number_times_rewatched,
-            status: mapStatus(malEntry.node.my_list_status?.is_rewatching ? 'rewatching' : malEntry.node.my_list_status?.status),
-            customLists: [],
-            score: malEntry.node.my_list_status.score,
-            startedAt,
-            completedAt
+function fillEntries(medias, userLists) {
+    debug(`Filling MyAnimeList entry data for ${JSON.stringify(medias.map(media => media.id))}`)
+    return medias.map(media => {
+        const malEntry = userLists.data?.MediaList?.find(({ node }) => node.id === media.idMal)
+        if (malEntry) {
+            const start_date = malEntry.node.my_list_status.start_date ? new Date(malEntry.node.my_list_status.start_date) : undefined
+            const finish_date = malEntry.node.my_list_status.finish_date ? new Date(malEntry.node.my_list_status.finish_date) : undefined
+            const startedAt = start_date ? {
+                year: start_date.getFullYear(),
+                month: start_date.getMonth() + 1,
+                day: start_date.getDate()
+            } : undefined
+            const completedAt = finish_date ? {
+                year: finish_date.getFullYear(),
+                month: finish_date.getMonth() + 1,
+                day: finish_date.getDate()
+            } : undefined
+            media.mediaListEntry = {
+                id: media.id,
+                progress: malEntry.node.my_list_status.num_episodes_watched,
+                repeat: malEntry.node.my_list_status.number_times_rewatched,
+                status: mapStatus(malEntry.node.my_list_status?.is_rewatching ? 'rewatching' : malEntry.node.my_list_status?.status),
+                customLists: [],
+                score: malEntry.node.my_list_status.score,
+                startedAt,
+                completedAt
+            }
         }
-    }
+        return media
+    })
 }
 
 /**
@@ -488,11 +492,11 @@ class Cache {
      */
     async updateMedia(medias, fillLists) {
         if (!medias) return
-        if (fillLists) await Promise.all(medias.map(media => fillEntry(media, fillLists))) // attaches any alternative authorization userList information to the anilist media for tracking.
-        const updatedMedias = {}
-        for (const media of medias) {
-            if (media) updatedMedias[media.id] = media
-        }
+        const filledMedias = fillLists ? fillEntries(medias, fillLists) : medias // attaches any alternative authorization userList information to the anilist media for tracking.
+        const updatedMedias = filledMedias.reduce((acc, media) => {
+            if (media) acc[media.id] = media
+            return acc
+        }, {})
         mediaCache.update((currentCache) => {
             return { ...currentCache, ...updatedMedias }
         })

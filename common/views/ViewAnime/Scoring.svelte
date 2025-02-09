@@ -61,20 +61,17 @@
     episode = 0
     status = 'NOT IN LIST'
     if (media.mediaListEntry) {
-      const res = await Helper.delete(Helper.isAniAuth() ? {id: media.mediaListEntry.id, idAni: media.id} : {idMal: media.idMal})
+      const res = await Helper.delete(media, Helper.isAniAuth() ? {id: media.mediaListEntry.id, idAni: media.id} : {idMal: media.idMal})
       const description = `${anilistClient.title(media)} has been deleted from your list.`
       printToast(res, description, false, false)
-
-      if (res) media.mediaListEntry = undefined
-
       if (sync.value.length > 0) { // handle profile syncing
-        const mediaId = media.id
+        const media = media
         for (const profile of profiles.value) {
           if (sync.value.includes(profile?.viewer?.data?.Viewer?.id)) {
             const anilist = profile.viewer?.data?.Viewer?.avatar
-            const listId = (anilist ? {id: (await anilistClient.getUserLists({userID: profile.viewer.data.Viewer.id, token: profile.token}))?.data?.MediaListCollection?.lists?.flatMap(list => list.entries).find(({ media }) => media.id === mediaId)?.media?.mediaListEntry?.id} : {idMal: media.idMal})
+            const listId = (anilist ? {id: (await anilistClient.getUserLists({userID: profile.viewer.data.Viewer.id, token: profile.token}))?.data?.MediaListCollection?.lists?.flatMap(list => list.entries).find(({ media }) => media.id === media.id)?.media?.mediaListEntry?.id} : {idMal: media.idMal})
             if (listId?.id || listId?.idMal) {
-              const res = await Helper.delete({...listId, token: profile.token, refresh_in: profile.refresh_in, anilist})
+              const res = await Helper.delete(media, {...listId, token: profile.token, refresh_in: profile.refresh_in, anilist})
               printToast(res, description, false, profile)
             }
           }
@@ -98,11 +95,6 @@
             }
       if (media?.mediaListEntry?.status !== variables.status || media?.mediaListEntry?.progress !== variables.episode || media?.mediaListEntry?.score !== variables.score || media?.mediaListEntry?.repeat !== variables.repeat) {
         const res = await Helper.entry(media, variables)
-
-        if (res?.data?.SaveMediaListEntry) {
-          media.mediaListEntry = res?.data?.SaveMediaListEntry
-        }
-
         const description = `Title: ${anilistClient.title(media)}\nStatus: ${Helper.statusName[status]}\nEpisode: ${episode} / ${totalEpisodes}${score !== 0 ? `\nYour Score: ${score}` : ''}`
         printToast(res, description, true, false)
         if (sync.value.length > 0) { // handle profile syncing

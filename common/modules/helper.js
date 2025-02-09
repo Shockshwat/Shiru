@@ -110,7 +110,7 @@ export default class Helper {
     let res
     if (!variables.token) {
       res = await this.getClient().entry(variables)
-      media.mediaListEntry = res?.data?.SaveMediaListEntry
+      if (res?.data?.SaveMediaListEntry) mediaCache.update((currentCache) => ({ ...currentCache, [media.id]: { ...currentCache[media.id], mediaListEntry: res?.data?.SaveMediaListEntry } }))
     } else {
       if (variables.anilist) {
         res = await anilistClient.entry(variables)
@@ -121,16 +121,19 @@ export default class Helper {
     return res
   }
 
-  static async delete(variables) {
+  static async delete(media, variables) {
+    let res
     if (!variables.token) {
-      return await this.getClient().delete(variables)
+      res = await this.getClient().delete(variables)
+      if (res) mediaCache.update((currentCache) => ({ ...currentCache, [media.id]: { ...currentCache[media.id], mediaListEntry: undefined } }))
     } else {
       if (variables.anilist) {
-        return await anilistClient.delete(variables)
+        res = await anilistClient.delete(variables)
       } else {
-        return await malClient.delete(variables)
+        res = await malClient.delete(variables)
       }
     }
+    return res
   }
 
   static async updateEntry(filemedia) {
