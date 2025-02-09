@@ -555,13 +555,14 @@ export function setStatus (status, other = {}, media) {
   return Helper.entry(media, variables)
 }
 
-const episodeMetadataMap = {}
-
+const episodeMetadataMap = new Map()
 export async function getEpisodeMetadataForMedia (media) {
-  if (episodeMetadataMap[media?.id]) return episodeMetadataMap[media?.id]
-  const { episodes } = await getAniMappings(media?.id) || {}
-  episodeMetadataMap[media?.id] = episodes
-  return episodes
+  if (episodeMetadataMap.has(`${media?.id}`)) {
+    return episodeMetadataMap.get(`${media?.id}`)
+  }
+  const promiseData = (async () => (await getAniMappings(media?.id) || {}))()
+  episodeMetadataMap.set(`${media?.id}`, promiseData)
+  return promiseData
 }
 
 export function episode(media, variables) {
@@ -605,7 +606,6 @@ export function nextAiring(nodes, variables) {
 const concurrentRequests = new Map()
 export async function getKitsuMappings(anilistID) {
   if (!anilistID) return
-  debug(`Searching for kitsu mappings for anilist media: ${anilistID}`)
   const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `kitsu-${anilistID}`)
   if (cachedEntry) return cachedEntry
   if (concurrentRequests.has(`kitsu-${anilistID}`)) return concurrentRequests.get(`kitsu-${anilistID}`)
@@ -644,7 +644,6 @@ export async function getKitsuMappings(anilistID) {
 
 export async function getAniMappings(anilistID) {
   if (!anilistID) return
-  debug(`Searching for ani mappings for anilist media: ${anilistID}`)
   const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `ani-${anilistID}`)
   if (cachedEntry) return cachedEntry
   if (concurrentRequests.has(`ani-${anilistID}`)) return concurrentRequests.get(`ani-${anilistID}`)

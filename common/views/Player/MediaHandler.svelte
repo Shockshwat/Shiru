@@ -55,9 +55,19 @@
     return true
   }
 
+  const zeroEpisodes = new Map()
+  async function checkForZero(media) {
+    if (zeroEpisodes.has(`${media?.id}`)) {
+        return zeroEpisodes.get(`${media?.id}`)
+    }
+    const promiseData = (async () => await hasZeroEpisode(media))()
+    zeroEpisodes.set(`${media?.id}`, promiseData)
+    return promiseData
+  }
+
   async function handleMedia ({ media, episode, parseObject }, newPlaying) {
     if (media || episode || parseObject) {
-      const zeroEpisode = media && await hasZeroEpisode(media)
+      const zeroEpisode = media && await checkForZero(media)
       const ep = (Number(episode || parseObject?.episode_number) === 0) || (zeroEpisode && !episode) ? 0 : (Number(episode || parseObject?.episode_number) || null)
       const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
       let streamingEpisode = streamingTitle
@@ -108,13 +118,13 @@
   async function findPreferredPlaybackMedia (videoFiles) {
     for (const { media } of videoFiles) {
       const cachedMedia = mediaCache.value[media.media?.id] || media?.media
-      const zeroEpisode = await hasZeroEpisode(cachedMedia)
+      const zeroEpisode = await checkForZero(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     for (const { media } of videoFiles) {
       const cachedMedia = mediaCache.value[media.media?.id] || media?.media
-        const zeroEpisode = await hasZeroEpisode(cachedMedia)
+        const zeroEpisode = await checkForZero(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
@@ -138,7 +148,7 @@
     // highest occurrence if all else fails - unlikely
     const max = highestOccurrence(videoFiles, file => file.media.media?.id)?.media
     if (max?.media) {
-      const zeroEpisode = await hasZeroEpisode(max?.media)
+      const zeroEpisode = await checkForZero(max?.media)
       return { media: max.media, episode: ((mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + (!zeroEpisode ? 1 : 0) || (!zeroEpisode ? 1 : 0)) }
     }
   }
