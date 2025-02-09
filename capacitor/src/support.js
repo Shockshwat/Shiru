@@ -7,6 +7,7 @@ export const SUPPORTS = {
   doh: false,
   discord: false,
   keybinds: false,
+  extensions: true,
   isAndroid: true,
   externalPlayer: false,
   permamentNAT: false // no way of safely closing app
