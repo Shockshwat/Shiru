@@ -137,6 +137,7 @@
       const { image, summary, overview, rating, title: newTitle, length, airdate } = needsValidation ? episodeByAirDate(null, episodes, episode) : ((episodes && episodes[Number(episode)]) || {})
       const kitsuEpisode = kitsuMappings?.data?.find(ep => ep?.attributes?.number === episode)?.attributes
       const streamingTitle = !media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === (media?.episodes + 1)) && media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === episode && episodeRx.exec(ep.title)[2] && !episodeRx.exec(ep.title)[2].toLowerCase().trim().startsWith('episode'))
+      const streamingThumbnail = media.streamingEpisodes?.find(ep => episodeRx.exec(ep.title) && Number(episodeRx.exec(ep.title)[1]) === episode)?.thumbnail
       const title = episode === 0 ? oldTitle : episodeRx.exec(streamingTitle?.title)?.[2] || newTitle?.en || oldTitle?.en || (await episodesList.getSingleEpisode(idMal, episode))?.title
       lastDuration = length || duration || lastDuration
 
@@ -165,7 +166,7 @@
         lastDuration = zeroEpisode?.length || zeroEpisode?.[0]?.length || lastDuration
       }
 
-      episodeList[episode - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === (image || kitsuEpisode?.thumbnail?.original) && ep.episode !== episode) ? null : (image || kitsuEpisode?.thumbnail?.original), summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description) && ep.episode !== episode) ? null : (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description), rating, title: title || kitsuEpisode?.titles?.en_us || kitsuEpisode?.titles?.en_jp || newTitle?.jp || oldTitle?.jp, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
+      episodeList[episode - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === (image || kitsuEpisode?.thumbnail?.original || streamingThumbnail) && ep.episode !== episode) ? null : (image || kitsuEpisode?.thumbnail?.original || streamingThumbnail), summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description) && ep.episode !== episode) ? null : (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description), rating, title: title || kitsuEpisode?.titles?.en_us || kitsuEpisode?.titles?.en_jp || newTitle?.jp || oldTitle?.jp, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
     }
 
     currentEpisodes = episodeList?.slice(0, maxEpisodes)
@@ -259,7 +260,7 @@
               <div class='h-full w-full px-20 pt-15 d-flex flex-column'>
                 <div class='w-full d-flex flex-row mb-15'>
                   <div class='text-white font-weight-bold font-size-16 overflow-hidden title'>
-                    {#if !resolvedTitle || !resolvedTitle.includes(episode)}{episode}. {/if}{resolvedTitle || 'Episode ' + episode}
+                    {#if resolvedTitle && !resolvedTitle.includes(episode)}{episode}. {/if}{resolvedTitle || 'Episode ' + episode}
                   </div>
                   {#if length}
                     <div class='ml-auto pl-5'>
