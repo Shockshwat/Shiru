@@ -162,8 +162,8 @@ export default class Subtitles {
         subContent: defaultHeader,
         fonts: this.fonts,
         offscreenRender: SUPPORTS.offscreenRender,
-        libassMemoryLimit: 2024,
-        libassGlyphLimit: 100000,
+        libassMemoryLimit: 1024,
+        libassGlyphLimit: 80000,
         maxRenderHeight: parseInt(settings.value.subtitleRenderHeight) || 0,
         fallbackFont: settings.value.font?.name || 'roboto medium',
         availableFonts: {

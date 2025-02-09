@@ -281,6 +281,7 @@
     skipPrompt = filler || recap
     if (!miniplayer && !filler && !recap) {
       video.play()
+      setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
     } else {
       video.pause()
     }
@@ -288,6 +289,7 @@
   function playPause () {
     paused = !paused
     resetImmerse()
+    setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
   }
   function toggleMute () {
     muted = !muted
@@ -384,7 +386,7 @@
       for (const track of video.videoTracks) {
         track.selected = track.id === id
       }
-      setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesnt update for multiple frames
+      setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
     }
   }
   function toggleCast () {
@@ -778,6 +780,7 @@
       playNext()
     } else {
       video.play()
+      setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
     }
   }
   let stats = null
@@ -1448,11 +1451,11 @@
           </span>
           <div class='dropdown-menu dropdown-menu-right ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto mh-40 text-nowrap'>
             <input name='subtitle-radio-set' type='radio' id='subtitle-off-radio' value='off' checked={subHeaders && subs?.current === -1} />
-            <label for='subtitle-off-radio' use:click={() => subs.selectCaptions(-1)} class='pb-5'> OFF </label>
+            <label for='subtitle-off-radio' use:click={() => { subs.selectCaptions(-1); setTimeout(() => subs?.renderer?.resize(), 200) }} class='pb-5'> OFF </label> <!-- stupid fix (resize) because video metadata doesn't update for multiple frames -->
             {#each subHeaders as track}
               {#if track}
                 <input name='subtitle-radio-set' type='radio' id='subtitle-{track.number}-radio' value={track.number} checked={track.number === subs.current} />
-                <label for='subtitle-{track.number}-radio' use:click={() => subs.selectCaptions(track.number)} class='pb-5'>
+                <label for='subtitle-{track.number}-radio' use:click={() => { subs.selectCaptions(track.number); setTimeout(() => subs?.renderer?.resize(), 200) }} class='pb-5'> <!-- stupid fix (resize) because video metadata doesn't update for multiple frames -->
                   {(track.language || (!Object.values(subs.headers).some(header => header.language === 'eng' || header.language === 'en') ? 'eng' : track.type)) + (track.name ? ' - ' + track.name : '')}
                 </label>
               {/if}
