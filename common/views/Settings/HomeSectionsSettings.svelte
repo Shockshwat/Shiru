@@ -99,7 +99,7 @@
       </select>
     </div>
     <div class='position-relative flex-shrink-1 w-150 bg-dark'>
-      <CustomDropdown id={`format-hs-${index}`} options={{ TV: 'TV Show', MOVIE: 'Movie', TV_SHORT: 'TV Short', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA' }} bind:value={homeSections[index][2]}/>
+      <CustomDropdown id={`format-hs-${index}`} options={{ TV: 'TV Show', MOVIE: 'Movie', TV_SHORT: 'TV Short', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA' }} bind:value={homeSections[index][2]} disabled={homeSections[index][2]?.includes('N/A')}/>
     </div>
     <div class='input-group-append'>
       <button type='button' use:click={() => { homeSections.splice(index, 1); homeSections = homeSections }} class='btn btn-danger btn-square input-group-append px-5 d-flex align-items-center'><Trash2 size='1.8rem' /></button>

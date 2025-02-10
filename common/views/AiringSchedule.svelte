@@ -6,7 +6,7 @@
   import { animeSchedule } from '@/modules/animeschedule.js'
   import Helper from '@/modules/helper.js'
 
-  const vars = { scheduleList: true, format: 'TV' }
+  const vars = { scheduleList: true, format: ['TV'], format_not: [] }
 
   async function fetchAllScheduleEntries (variables) {
     const results = { data: { Page: { media: [], pageInfo: { hasNextPage: false } } } }

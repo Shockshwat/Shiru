@@ -2,7 +2,7 @@
   import { writable } from 'simple-store-svelte'
   import SectionsManager from '@/modules/sections.js'
 
-  export const search = writable({})
+  export const search = writable({ format: [], format_not: [], status: [], status_not: [] })
 
   const items = writable([])
   export const key = writable({})
@@ -28,7 +28,7 @@
     return nextData[nextData.length - 1].data
   }
   const update = debounce((event) => {
-    if (event.target.id !== 'genre' && event.target.id !== 'tag') {
+    if (!event.target.classList.contains('no-bubbles')) {
       $key = {}
     }
   }, 300)
@@ -61,7 +61,7 @@
     }
   }
   onDestroy(() => {
-    if ($search.clearNext || $search.disableSearch) $search = {}
+    if ($search.clearNext || $search.disableSearch) $search = { format: [], format_not: [], status: [], status_not: [] }
   })
   onMount(loadTillFull)
 </script>
