@@ -8,6 +8,7 @@ import { toast } from 'svelte-sonner'
 import { getRandomInt, sleep } from '@/modules/util.js'
 import { cache, caches, mediaCache } from '@/modules/cache.js'
 import { malClient } from '@/modules/myanimelist.js'
+import Helper from '@/modules/helper.js'
 import IPC from '@/modules/ipc.js'
 import Debug from 'debug'
 
@@ -417,8 +418,9 @@ class AnilistClient {
   async getUserLists(variables = {}, ignoreExpiry) {
     debug('Getting user lists')
     variables.id = !variables.userID ? this.userID?.viewer?.data?.Viewer.id : variables.userID
-    variables.sort = variables.sort?.replace('USER_SCORE_DESC', 'SCORE_DESC') || 'UPDATED_TIME_DESC' // doesn't exist, AniList uses SCORE_DESC for both MediaSort and MediaListSort.
-    const cachedEntry = cache.cachedEntry(caches.USER_LISTS, JSON.stringify(variables), ignoreExpiry)
+    const userSort = variables.sort || 'UPDATED_TIME_DESC'
+    if (Helper.isUserSort(variables)) variables.sort = 'UPDATED_TIME_DESC'
+    const cachedEntry = this.sortListEntries(userSort, await cache.cachedEntry(caches.USER_LISTS, JSON.stringify(variables), ignoreExpiry))
     if (cachedEntry) return cachedEntry
     const query = /* js */` 
       query($id: Int, $sort: [MediaListSort]) {
@@ -437,14 +439,53 @@ class AnilistClient {
     for (let attempt = 1; attempt <= 3; attempt++) { // VERY large user lists can sometimes result in a timeout, typically trying again succeeds.
       res = await this.alRequest(query, variables)
       if (res?.data?.MediaListCollection) break
-      if (attempt < 3) { // stupid hack... probably could be improved...
+      if (attempt < 3) { // stupid fix... probably could be improved...
         debug(`Error fetching user lists, attempt ${attempt} failed. Retrying in 5 seconds...`)
         await new Promise(resolve => setTimeout(resolve, 5000))
       } else {
         debug('Failed fetching user lists. Maximum of 3 attempts reached, giving up.')
       }
     }
-    return cache.cacheEntry(caches.USER_LISTS, JSON.stringify(variables), variables, res, Date.now() + 14 * 60 * 1000) // expire after 14 minutes as this will be re-cached by our 15-minute interval.
+    return this.sortListEntries(userSort, await cache.cacheEntry(caches.USER_LISTS, JSON.stringify(variables), variables, res, Date.now() + 14 * 60 * 1000)) // expire after 14 minutes as this will be re-cached by our 15-minute interval.
+  }
+
+  /**
+   * Sorts the media list entries based on the specified sorting criteria.
+   * UPDATED_TIME_DESC should be the default sort for the data, so if this is used the list will not be sorted.
+   *
+   * @param {string} sort - The sorting type (e.g., 'STARTED_ON_DESC', 'FINISHED_ON_DESC').
+   * @param {Object} data - The media list data containing the lists and entries.
+   * @returns {Object} The reorganized media list with sorted entries.
+   */
+  sortListEntries(sort, data) {
+    if (!data?.data?.MediaListCollection?.lists) return data
+    const res = structuredClone(data)
+    debug(`Sorting user lists based on custom sort order: ${sort}`)
+    const getSortValue = (entry) => {
+      const { mediaListEntry } = entry.media
+      switch (sort) {
+        case 'STARTED_ON_DESC':
+          return mediaListEntry?.startedAt ? (mediaListEntry.startedAt.year || 0) * 10000 + (mediaListEntry.startedAt.month || 0) * 100 + (mediaListEntry.startedAt.day || 0) : 0
+        case 'FINISHED_ON_DESC':
+          return mediaListEntry?.completedAt ? (mediaListEntry.completedAt.year || 0) * 10000 + (mediaListEntry.completedAt.month || 0) * 100 + (mediaListEntry.completedAt.day || 0) : 0
+        case 'PROGRESS_DESC':
+          return mediaListEntry?.progress || 0
+        case 'USER_SCORE_DESC': // doesn't exist, AniList uses SCORE_DESC for both MediaSort and MediaListSort.
+          return mediaListEntry?.score || 0
+        default:
+          return 0
+      }
+    }
+    res.data.MediaListCollection.lists.forEach(list => {
+      list.entries.sort((a, b) => {
+        const aValue = getSortValue(a)
+        const bValue = getSortValue(b)
+        if (aValue === 0 && bValue !== 0) return 1
+        if (bValue === 0 && aValue !== 0) return -1
+        return bValue - aValue // Descending order, this will need to change to implement different sort orders in the future.
+      })
+    })
+    return res
   }
 
   alEntry (lists, variables) {
