@@ -70,6 +70,12 @@
     <label for='card-audio'>{settings.cardAudio ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+<SettingCard title='Prefer Dubs' description='If your progress on a series matches the latest airing dub episode the series will be hidden from your continue watching until the next episode is available. This will also send notifications for an anime only if a dubbed episode is available or if the series is sub-only (no dub exists). This is an ideal setting for viewers who prioritize watching dubbed content whenever possible.'>
+  <div class='custom-switch'>
+    <input type='checkbox' id='prefer-dubs' bind:checked={settings.preferDubs} />
+    <label for='prefer-dubs'>{settings.preferDubs ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 <SettingCard title='Adult Content' description={'Adult enables searching for adult (18+) rated anime, typically series with nudity.\nHentai enables searching straight up Hentai. This includes adding the Hentai home feed, Hentai genre, and Hentai related tags for search queries.'}>
   <select class='form-control bg-dark w-100 mw-full' bind:value={settings.adult}>
     <option value='none' selected>None</option>
@@ -98,12 +104,6 @@
   <div class='custom-switch'>
     <input type='checkbox' id='system-notify' bind:checked={settings.systemNotify} />
     <label for='system-notify'>{settings.systemNotify ? 'On' : 'Off'}</label>
-  </div>
-</SettingCard>
-<SettingCard title='Prefer Dubs' description='This will send notifications for an anime only if a dubbed episode is available or if the series is sub-only (no dub exists). Additionally if your progress on a series matches the latest airing dub episode the series will be hidden from your continue watching until the next episode is available. This is ideal for viewers who prioritize watching dubbed content whenever possible.'>
-  <div class='custom-switch'>
-    <input type='checkbox' id='rss-notify-dubs' bind:checked={settings.rssNotifyDubs} />
-    <label for='rss-notify-dubs'>{settings.rssNotifyDubs ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
 {#if Helper.isAniAuth()}

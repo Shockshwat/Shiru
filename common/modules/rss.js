@@ -118,7 +118,7 @@ class RSSMediaManager {
     for (const { media, parseObject, episode, link, date } of newReleases) {
       const notify = (!media?.mediaListEntry && settings.value.rssNotify?.includes('NOTONLIST')) || (media?.mediaListEntry && settings.value.rssNotify?.includes(media?.mediaListEntry?.status))
       const dubbed = malDubs.isDubMedia(parseObject)
-      if (notify && (!settings.value.rssNotifyDubs || dubbed || !malDubs.isDubMedia(media))) {
+      if (notify && (!settings.value.preferDubs || dubbed || !malDubs.isDubMedia(media))) {
         const progress = media?.mediaListEntry?.progress
         const behind = progress < (Number(episode) - 1)
         const details = {

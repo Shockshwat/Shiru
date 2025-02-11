@@ -304,7 +304,7 @@ class AnimeSchedule {
                     const addedAt = Math.floor(new Date(media.episode.addedAt).getTime() / 1000)
                     const notify = (!media?.mediaListEntry && settings.value.releasesNotify?.includes('NOTONLIST')) || (media?.mediaListEntry && settings.value.releasesNotify?.includes(media?.mediaListEntry?.status))
                     debug(`Attempting to notify for ${media?.id}:${media?.title?.userPreferred}...`)
-                    if (notify && (type === 'Dub' || !settings.value.rssNotifyDubs || !malDubs.isDubMedia(media)) && media.format !== 'MUSIC') {
+                    if (notify && (type === 'Dub' || !settings.value.preferDubs || !malDubs.isDubMedia(media)) && media.format !== 'MUSIC') {
                         const details = {
                             title: anilistClient.title(media),
                             message: `${media.format !== 'MOVIE' ? ` ${media?.episodes === media?.episode?.aired ? `The wait is over! ` : ''}Episode ${media?.episode?.aired}` : `The Movie`} (${type}) is out in ${type === 'Dub' ? 'the United States' : 'Japan'}, ${media.format !== 'MOVIE' && media?.episodes === media?.episode?.aired ? `this season should be available to binge soon!` : `it should be available soon.`}`,
@@ -335,7 +335,7 @@ class AnimeSchedule {
                         }))
                         debug(`Successfully notified for ${media?.id}:${media?.title?.userPreferred}!`)
                     } else {
-                        debug(`Failed to notify for ${media?.id}:${media?.title?.userPreferred}:${notify}:${(type === 'Dub' || !settings.value.rssNotifyDubs || !malDubs.isDubMedia(media))}:${(media.format !== 'MUSIC')}`)
+                        debug(`Failed to notify for ${media?.id}:${media?.title?.userPreferred}:${notify}:${(type === 'Dub' || !settings.value.preferDubs || !malDubs.isDubMedia(media))}:${(media.format !== 'MUSIC')}`)
                     }
                 }
             }

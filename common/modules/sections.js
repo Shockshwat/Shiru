@@ -171,7 +171,7 @@ function createSections () {
           }, []) : res.data.MediaList.filter(({ node }) => (node.my_list_status.status === Helper.statusMap('CURRENT') || node.my_list_status.is_rewatching))
           if (!mediaList) return {}
           return animeSchedule.dubAiringLists.value.then(airing => {
-            if (settings.value.rssNotifyDubs) {
+            if (settings.value.preferDubs) {
               const ids = []
               mediaList.forEach(watchMedia => {
                 const media = watchMedia?.media || watchMedia?.node
