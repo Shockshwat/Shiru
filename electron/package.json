@@ -95,10 +95,10 @@
     "linux": {
       "artifactName": "${os}-${name}-${version}.${ext}",
       "category": "AudioVideo;Video",
-      "description": "Bittorrent streaming software for cats",
+      "description": "BitTorrent streaming software with no paws in the way",
       "desktop": {
         "Name": "Shiru",
-        "Comment": "Bittorrent streaming software for cats",
+        "Comment": "BitTorrent streaming software with no paws in the way",
         "Keywords": "anime",
         "Type": "Application",
         "MimeType": "x-scheme-handler/shiru;"

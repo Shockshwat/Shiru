@@ -86,7 +86,7 @@
     if (hidden) {
       setDiscordRPC(media, video?.currentTime)
     } else {
-      setDiscordRPC(media, (paused && miniplayer))
+      setDiscordRPC(media, (paused && (page !== 'player')))
     }
   }
 
@@ -279,7 +279,7 @@
     filler = fillerEpisode?.filler && 'Filler'
     recap = fillerEpisode?.recap && 'Recap'
     skipPrompt = filler || recap
-    if (!miniplayer && !filler && !recap) {
+    if ((page === 'player') && !filler && !recap) {
       video.play()
       setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
     } else {
@@ -1144,8 +1144,8 @@
         assets: {
           large_text: np.title,
           large_image: np.thumbnail,
-          small_image: !paused ? 'logo' : 'https://i.imgur.com/3RuaavC.png', // probably should upload the 'paused' image to the discord assets for the bot.
-          small_text: (!paused ? '(Playing)' : '(Paused)') + ' https://github.com/RockinChaos/Shiru'
+          small_image: !paused ? 'playing' : 'paused',
+          small_text: !paused ? 'Playing' : 'Paused'
         },
         instance: true,
         type: 3
@@ -1160,29 +1160,29 @@
       } else {
         activity.buttons = [
           {
-            label: 'Download app',
-            url: 'https://github.com/RockinChaos/Shiru/releases/latest'
-          },
-          {
             label: 'Watch on Shiru',
             url: `shiru://anime/${np.media?.id}`
+          },
+          {
+            label: 'Download Shiru',
+            url: 'https://github.com/RockinChaos/Shiru/releases/latest'
           }
         ]
       }
     } else {
       activity = {
         timestamps: { start: Date.now() },
-        details: 'Stream anime torrents',
-        state: 'Browsing for anime',
+        details: 'Streaming anime instantly',
+        state: 'Exploring the anime library...',
         assets: {
-          large_image: 'logo',
+          large_image: 'en_logo',
           large_text: 'https://github.com/RockinChaos/Shiru',
-          small_image: 'https://i.imgur.com/GiDlvVA.png', // probably should upload the 'search' image to the discord assets for the bot.
-          small_text: 'Browsing for anime',
+          small_image: 'searching',
+          small_text: 'Browsing anime on Shiru',
         },
         buttons: [
           {
-            label: 'Download app',
+            label: 'Download Shiru',
             url: 'https://github.com/RockinChaos/Shiru/releases/latest'
           }
         ],

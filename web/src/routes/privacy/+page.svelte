@@ -38,8 +38,6 @@ This exposure is inherent to the functionality of the BitTorrent protocol and is
 <h3 class='text-white font-weight-bold'>Updates to Privacy Policy</h3>This Privacy Policy may be updated periodically to reflect changes in operational practices.
 
 Users are encouraged to review the policy for any modifications. Continued use of the application implies acceptance of the updated policy.
-
-<h3 class='text-white font-weight-bold'>Contact Information</h3>For inquiries regarding this Privacy Policy or concerns related to data management, please contact us at [<a class='hyperlink-underline' href={'mailto:' + atob('Y2FzaXN0YWtlbkBnbWFpbC5jb20=')}>{atob('Y2FzaXN0YWtlbkBnbWFpbC5jb20=')}</a>].
 </div>
 </div>
 

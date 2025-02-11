@@ -36,7 +36,7 @@
     <div class='col-12 col-sm-4 col-md-2 pt-20 d-flex justify-content-md-end'>
       <div>
         <div class='font-weight-semi-bold mb-10 text-white'>Social</div>
-        <a href={atob('aHR0cHM6Ly9kaXNjb3JkLmdnL1o4N05oN2M0QWM=')} target='_blank'><DiscordSVG class='icon mr-10' /></a>
+        <a href='https://discord.gg/D5FnJ7C' target='_blank'><DiscordSVG class='icon mr-10' /></a>
         <a href='https://github.com/RockinChaos/Shiru' target='_blank'><GithubSVG class='icon' /></a>
       </div>
     </div>

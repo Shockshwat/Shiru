@@ -6,15 +6,17 @@ export default class Discord {
   defaultStatus = {
     activity: {
       timestamps: { start: Date.now() },
-      details: 'Stream anime torrents',
-      state: 'Watching anime',
+      details: 'Streaming anime instantly',
+      state: 'Enjoying an anime episode...',
       assets: {
-        small_image: 'logo',
-        small_text: 'https://github.com/RockinChaos/Shiru'
+        large_image: 'en_logo',
+        large_text: 'https://github.com/RockinChaos/Shiru',
+        small_image: 'sail',
+        small_text: 'Watching anime on Shiru'
       },
       buttons: [
         {
-          label: 'Download app',
+          label: 'Download Shiru',
           url: 'https://github.com/RockinChaos/Shiru/releases/latest'
         }
       ],
