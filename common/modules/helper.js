@@ -110,7 +110,15 @@ export default class Helper {
     let res
     if (!variables.token) {
       res = await this.getClient().entry(variables)
-      if (res?.data?.SaveMediaListEntry) mediaCache.update((currentCache) => ({ ...currentCache, [media.id]: { ...currentCache[media.id], mediaListEntry: res?.data?.SaveMediaListEntry } }))
+      if (res?.data?.SaveMediaListEntry) {
+        mediaCache.update((currentCache) => ({ ...currentCache, [media.id]: { ...currentCache[media.id], mediaListEntry: res?.data?.SaveMediaListEntry } }))
+        window.dispatchEvent(new CustomEvent('notification-read', {
+          detail: {
+            id: media.id,
+            episode: res?.data?.SaveMediaListEntry?.progress
+          }
+        }))
+      }
     } else {
       if (variables.anilist) {
         res = await anilistClient.entry(variables)
@@ -191,6 +199,14 @@ export default class Helper {
           res = await anilistClient.alEntry(lists, variables)
         } else if (this.isMalAuth()) {
           res = await malClient.malEntry(cachedMedia, variables)
+        }
+        if (res?.data?.mediaListEntry || res?.data?.SaveMediaListEntry) {
+          window.dispatchEvent(new CustomEvent('notification-read', {
+            detail: {
+              id: media.id,
+              episode: res?.data?.mediaListEntry?.progress || res?.data?.SaveMediaListEntry?.progress
+            }
+          }))
         }
         this.listToast(res, description, false)
 

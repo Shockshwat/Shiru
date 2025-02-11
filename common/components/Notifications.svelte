@@ -38,14 +38,6 @@
   function checkClose ({ keyCode }) {
     if (keyCode === 27) close()
   }
-  $: { // MAKE SURE TO REMOVE THIS
-    $notifyView
-    const oldNotifications = localStorage.getItem(`notify_${cache.cacheID}`)
-    if (oldNotifications) {
-      notifications.value = notifications.value.concat(JSON.parse(oldNotifications).notifications)
-      localStorage.removeItem(`notify_${cache.cacheID}`)
-    }
-  }
   $: $notifyView && (modal?.focus(), setOverlay())
   $: !$notifyView && close()
   $: init($notifyView)
@@ -59,6 +51,7 @@
 
   window.addEventListener('overlay-check', () => { if ($notifyView) close() })
   window.addEventListener('notification-app', (event) => addNotification(event.detail))
+  window.addEventListener('notification-read', (event) => markRead(event.detail))
   window.addEventListener('notification-reset', () => notifications.set([]))
 
   function addNotification(notification) {
@@ -90,6 +83,15 @@
 
   function markAll(read) {
     notifications.update(items => items.map(notification => ({ ...notification, read: read })))
+  }
+
+  function markRead(media) {
+    notifications.update((n) => {
+      return n.map((existing) => {
+        if (existing.id === media.id && ((media.episode >= existing.episode) || (existing.season && (media.episode >= mediaCache.value[media?.id]?.episodes)))) existing.read = true
+        return existing
+      })
+    })
   }
 
   function onclick(notification, view) {
