@@ -6,6 +6,7 @@ import { settings } from '@/modules/settings.js'
 import { cache, caches, mediaCache } from '@/modules/cache.js'
 import { getEpisodeMetadataForMedia } from '@/modules/anime.js'
 import { hasNextPage } from '@/modules/sections.js'
+import { getRandomInt } from '@/modules/util.js'
 import Helper from '@/modules/helper.js'
 import IPC from '@/modules/ipc.js'
 import Debug from 'debug'
@@ -187,33 +188,42 @@ class AnimeSchedule {
     }
 
     async getFeed(feed) {
-        let res = {}
         try {
-            res = await fetch(`https://raw.githubusercontent.com/RockinChaos/AniSchedule/master/raw/${feed}.json?timestamp=${new Date().getTime()}`, {
-                method: 'GET'
-            })
-        } catch (e) {
-            if (!res || res.status !== 404) throw e
-        }
-        if (!res.ok && (res.status === 429 || res.status === 500)) {
-            throw res
-        }
-        let json = null
-        try {
-            json = await res.json()
-        } catch (error) {
-            if (res.ok) this.printError(error)
-        }
-        if (!res.ok) {
-            if (json) {
-                for (const error of json?.errors || []) {
-                    this.printError(error)
-                }
-            } else {
-                this.printError(res)
+            let res = {}
+            try {
+                res = await fetch(`https://raw.githubusercontent.com/RockinChaos/AniSchedule/master/raw/${feed}.json?timestamp=${new Date().getTime()}`, {
+                    method: 'GET'
+                })
+            } catch (e) {
+                if (!res || res.status !== 404) throw e
             }
+            if (!res.ok && (res.status === 429 || res.status === 500)) {
+                throw res
+            }
+            let json = null
+            try {
+                json = await res.json()
+            } catch (error) {
+                if (res.ok) this.printError(error)
+            }
+            if (!res.ok) {
+                if (json) {
+                    for (const error of json?.errors || []) {
+                        this.printError(error)
+                    }
+                } else {
+                    this.printError(res)
+                }
+            }
+            return cache.cacheEntry(caches.RSS, `${feed}`, { mappings: true }, json, Date.now() + getRandomInt(10, 15) * 60 * 1000)
+        } catch (e) {
+            const cachedEntry = cache.cachedEntry(caches.RSS, `${feed}`, true)
+            if (cachedEntry) {
+                debug(`Failed to request RSS schedule for ${feed}, this is likely due to an outage... falling back to cached data.`)
+                return cachedEntry
+            }
+            else throw e
         }
-        return json
     }
 
     async feedChanged(type) {

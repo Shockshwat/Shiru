@@ -372,8 +372,9 @@ export const historyDefaults = {
  * @property {Record<string, any>} following
  * @property {Record<string, any>} episodes
  * @property {Record<string, any>} search
- * @property {Record<string, any>} compound
  * @property {Record<string, any>} searchIDS
+ * @property {Record<string, any>} compound
+ * @property {Record<string, any>} rss
  */
 export const queryDefaults = {
   recommendations: {},
@@ -381,8 +382,9 @@ export const queryDefaults = {
   following: {},
   episodes: {},
   search: {},
+  searchIDS: {},
   compound: {},
-  searchIDS: {}
+  rss: {}
 }
 
 /**

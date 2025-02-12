@@ -1,4 +1,4 @@
-import { DOMPARSER } from '@/modules/util.js'
+import { getRandomInt, DOMPARSER } from '@/modules/util.js'
 import { settings } from '@/modules/settings.js'
 import { cache, caches } from '@/modules/cache.js'
 import { toast } from 'svelte-sonner'
@@ -42,12 +42,26 @@ export function getReleasesRSSurl (val) {
 
 export async function getRSSContent (url) {
   if (!url) return null
-  const res = await fetch(url)
-  if (!res.ok) {
-    debug(`Failed to fetch RSS feed: ${res.statusText}`)
-    throw new Error(res.statusText)
+  try {
+    let res = {}
+    try {
+      res = await fetch(url)
+    } catch (e) {
+      if (!res || res.status !== 404) throw e
+    }
+    if (!res.ok) {
+      debug(`Failed to fetch RSS feed: ${res.statusText}`)
+      throw new Error(res.statusText)
+    }
+    return DOMPARSER((await cache.cacheEntry(caches.RSS, `${btoa(url)}`, { mappings: true }, (await res)?.text(), Date.now() + getRandomInt(10, 15) * 60 * 1000)), 'text/xml')
+  } catch (e) {
+    const cachedEntry = cache.cachedEntry(caches.RSS, `${btoa(url)}`, true)
+    if (cachedEntry) {
+      debug(`Failed to request RSS feed for ${url}, this is likely due to an outage... falling back to cached data.`)
+      return DOMPARSER(cachedEntry, 'text/xml')
+    }
+    else throw e
   }
-  return DOMPARSER(await res.text(), 'text/xml')
 }
 
 class RSSMediaManager {

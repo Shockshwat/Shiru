@@ -26,7 +26,8 @@ export const caches = Object.freeze({
     FOLLOWING: { key: 'following'},
     RECOMMENDATIONS: { key: 'recommendations' },
     SEARCH_IDS: { key: 'searchIDS'},
-    SEARCH: { key: 'search'}
+    SEARCH: { key: 'search'},
+    RSS: { key: 'rss'}
 })
 
 /**
@@ -528,7 +529,7 @@ class Cache {
             }
             return null
         } else { // its mappings...
-            const cachedEntry = this.#mappings[key]
+            const cachedEntry = this.#mappings.value[key]
             if (cachedEntry && cachedEntry.data && ((Date.now() < cachedEntry.expiry) || ignoreExpiry)) {
                 const data = structuredClone(cachedEntry.data)
                 return Promise.resolve(data)

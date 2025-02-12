@@ -1,5 +1,6 @@
 import { toast } from 'svelte-sonner'
-import { matchPhrase } from '@/modules/util.js'
+import { getRandomInt, matchPhrase } from '@/modules/util.js'
+import { cache, caches } from '@/modules/cache.js'
 import { writable } from 'simple-store-svelte'
 import { codes } from '@/modules/anilist.js'
 import { settings } from '@/modules/settings.js'
@@ -39,32 +40,42 @@ class MALDubs {
 
     async getMALDubs() {
         debug('Getting MyAnimeList Dubs IDs')
-        let res = {}
         try {
-            res = await fetch(`https://raw.githubusercontent.com/MAL-Dubs/MAL-Dubs/main/data/dubInfo.json?timestamp=${new Date().getTime()}`)
-        } catch (e) {
-            if (!res || res.status !== 404) throw e
-        }
-        if (!res.ok && (res.status === 429 || res.status === 500)) {
-            throw res
-        }
-        let json = null
-        try {
-            json = await res.json()
-        } catch (error) {
-            if (res.ok) this.printError(error)
-        }
-        if (!res.ok) {
-            if (json) {
-                for (const error of json?.errors || []) {
-                    this.printError(error)
-                }
-            } else {
-                this.printError(res)
+            let res = {}
+            try {
+                res = await fetch(`https://raw.githubusercontent.com/MAL-Dubs/MAL-Dubs/main/data/dubInfo.json?timestamp=${new Date().getTime()}`)
+            } catch (e) {
+                if (!res || res.status !== 404) throw e
             }
+            if (!res.ok && (res.status === 429 || res.status === 500)) {
+                throw res
+            }
+            let json = null
+            try {
+                json = await res.json()
+            } catch (error) {
+                if (res.ok) this.printError(error)
+            }
+            if (!res.ok) {
+                if (json) {
+                    for (const error of json?.errors || []) {
+                        this.printError(error)
+                    }
+                } else {
+                    this.printError(res)
+                }
+            }
+            const result = cache.cacheEntry(caches.RSS, 'MALDubs', { mappings: true }, json, Date.now() + getRandomInt(100, 200) * 60 * 1000)
+            this.dubLists.value = await result
+            return result
+        } catch (e) {
+            const cachedEntry = cache.cachedEntry(caches.RSS, 'MALDubs', true)
+            if (cachedEntry) {
+                debug(`Failed to request MALDubs RSS, this is likely due to an outage... falling back to cached data.`)
+                return cachedEntry
+            }
+            else throw e
         }
-        this.dubLists.value = await json
-        return json
     }
 
     printError(error) {

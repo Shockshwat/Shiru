@@ -602,7 +602,6 @@ export function nextAiring(nodes, variables) {
   return nodes?.filter(node => new Date(variables?.hideSubs ? node.airingAt : (node.airingAt * 1000)) > currentTime)?.sort((a, b) => a.airingAt - b.airingAt)?.shift()
 }
 
-
 const concurrentRequests = new Map()
 export async function getKitsuMappings(anilistID) {
   if (!anilistID) return
@@ -610,31 +609,40 @@ export async function getKitsuMappings(anilistID) {
   if (cachedEntry) return cachedEntry
   if (concurrentRequests.has(`kitsu-${anilistID}`)) return concurrentRequests.get(`kitsu-${anilistID}`)
   const requestPromise = (async () => {
-    let res = {}
     try {
-      res = await fetch(`https://kitsu.io/api/edge/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${anilistID}&include=item`)
-    } catch (e) {
-      if (!res || res.status !== 404) throw e
-    }
-    if (!res.ok && (res.status === 429 || res.status === 500)) {
-      throw res
-    }
-    let json = null
-    try {
-      json = await res.json()
-    } catch (error) {
-      if (res.ok) printError(error)
-    }
-    if (!res.ok) {
-      if (json) {
-        for (const error of json?.errors || []) {
-          printError(error)
-        }
-      } else {
-        printError(res)
+      let res = {}
+      try {
+        res = await fetch(`https://kitsu.io/api/edge/mappings?filter[externalSite]=anilist/anime&filter[externalId]=${anilistID}&include=item`)
+      } catch (e) {
+        if (!res || res.status !== 404) throw e
       }
+      if (!res.ok && (res.status === 429 || res.status === 500)) {
+        throw res
+      }
+      let json = null
+      try {
+        json = await res.json()
+      } catch (error) {
+        if (res.ok) printError(error)
+      }
+      if (!res.ok) {
+        if (json) {
+          for (const error of json?.errors || []) {
+            printError(error)
+          }
+        } else {
+          printError(res)
+        }
+      }
+      return cache.cacheEntry(caches.MAPPINGS, `kitsu-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
+    } catch (e) {
+      const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `kitsu-${anilistID}`, true)
+      if (cachedEntry) {
+        debug(`Failed to request Kitsu Mappings for ${anilistID}, this is likely due to an outage... falling back to cached data.`)
+        return cachedEntry
+      }
+      else throw e
     }
-    return cache.cacheEntry(caches.MAPPINGS, `kitsu-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
   })().finally(() => {
     concurrentRequests.delete(`kitsu-${anilistID}`)
   })
@@ -648,31 +656,40 @@ export async function getAniMappings(anilistID) {
   if (cachedEntry) return cachedEntry
   if (concurrentRequests.has(`ani-${anilistID}`)) return concurrentRequests.get(`ani-${anilistID}`)
   const requestPromise = (async () => {
-    let res = {}
     try {
-      res = await fetch(`https://api.ani.zip/mappings?anilist_id=${anilistID}`)
-    } catch (e) {
-      if (!res || res.status !== 404) throw e
-    }
-    if (!res.ok && (res.status === 429 || res.status === 500)) {
-      throw res
-    }
-    let json = null
-    try {
-      json = await res.json()
-    } catch (error) {
-      if (res.ok) printError(error)
-    }
-    if (!res.ok) {
-      if (json) {
-        for (const error of json?.errors || []) {
-          printError(error)
-        }
-      } else {
-        printError(res)
+      let res = {}
+      try {
+        res = await fetch(`https://api.ani.zip/mappings?anilist_id=${anilistID}`)
+      } catch (e) {
+        if (!res || res.status !== 404) throw e
       }
+      if (!res.ok && (res.status === 429 || res.status === 500)) {
+        throw res
+      }
+      let json = null
+      try {
+        json = await res.json()
+      } catch (error) {
+        if (res.ok) printError(error)
+      }
+      if (!res.ok) {
+        if (json) {
+          for (const error of json?.errors || []) {
+            printError(error)
+          }
+        } else {
+          printError(res)
+        }
+      }
+      return cache.cacheEntry(caches.MAPPINGS, `ani-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
+    } catch (e) {
+      const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `ani-${anilistID}`, true)
+      if (cachedEntry) {
+        debug(`Failed to request Anilist Mappings for ${anilistID}, this is likely due to an outage... falling back to cached data.`)
+        return cachedEntry
+      }
+      else throw e
     }
-    return cache.cacheEntry(caches.MAPPINGS, `ani-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
   })().finally(() => {
     concurrentRequests.delete(`ani-${anilistID}`)
   })
