@@ -4,7 +4,7 @@
 
 {#await promise then res}
   {#if !res || res?.errors}
-    <div class='p-20 d-flex align-items-center justify-content-center w-full' style='height:35rem;'>
+    <div class='p-20 d-flex align-items-center justify-content-center w-full h-410'>
       <div>
         <h1 class='mb-5 text-white font-weight-bold text-center'>
           Ooops!
@@ -25,7 +25,7 @@
     </div>
   {/if}
 {:catch error}
-  <div class='p-20 d-flex align-items-center justify-content-center w-full' style='height:35rem;'>
+  <div class='p-20 d-flex align-items-center justify-content-center w-full h-410'>
     <div>
       <h1 class='mb-5 text-white font-weight-bold text-center'>
         Ooops!
@@ -39,3 +39,9 @@
     </div>
   </div>
 {/await}
+
+<style>
+  .h-410 {
+    height: 41rem;
+  }
+</style>

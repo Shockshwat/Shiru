@@ -2,6 +2,7 @@
   import { anilistClient, codes } from '@/modules/anilist.js'
   import { profiles, settings, sync } from '@/modules/settings.js'
   import { getMediaMaxEp } from '@/modules/anime.js'
+  import { createListener } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
   import { writable } from 'svelte/store'
   import { toast } from 'svelte-sonner'
@@ -162,29 +163,26 @@
       const maxEpisodes = getMediaMaxEp(media)
       if (parseInt(enteredValue) > maxEpisodes) {
         episode = maxEpisodes
+        event.currentTarget.value = episode
       } else {
         episode = parseInt(enteredValue)
+        event.currentTarget.value = episode
       }
     } else {
       episode = 0
     }
   }
 
-  async function handleClick({target}) {
-    if (modal && !modal.contains(target) && !target.closest('.scoring-btn')) {
-      showModal.set(false)
-      document.removeEventListener('mousedown', handleClick, true)
-      document.removeEventListener('touchstart', handleClick, true)
-    }
-  }
-
   $: {
     if ($showModal) {
-      document.addEventListener('mousedown', handleClick, true)
-      document.addEventListener('touchstart', handleClick, true) //maybe replace with utils.addlisteners()?
-    } else {
-      document.removeEventListener('mousedown', handleClick, true)
-      document.removeEventListener('touchstart', handleClick, true)
+      const { reactive, init } = createListener([`scoring`, `scoring-btn`])
+      init(true, true)
+      reactive.subscribe(value => {
+        if (!value) {
+          showModal.set(false)
+          init(false, true)
+        }
+      })
     }
   }
 </script>

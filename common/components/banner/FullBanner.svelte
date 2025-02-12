@@ -2,6 +2,7 @@
   import { formatMap, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { settings } from '@/modules/settings.js'
+  import { mediaCache } from '@/modules/cache.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
@@ -12,7 +13,7 @@
 
   export let mediaList
 
-  let current = mediaList[0]
+  $: current = $mediaCache[mediaList[0]?.id]
 
   const view = getContext('view')
   function viewMedia () {
@@ -30,7 +31,7 @@
 
   function schedule (index) {
     return setTimeout(() => {
-      current = mediaList[index % mediaList.length]
+      current = $mediaCache[mediaList[index % mediaList.length]?.id]
       timeout = schedule(index + 1)
     }, 15000)
   }
@@ -38,9 +39,9 @@
   let timeout = schedule(currentIndex() + 1)
 
   function setCurrent (media) {
-    if (current === media) return
+    if (current === $mediaCache[media?.id]) return
     clearTimeout(timeout)
-    current = media
+    current = $mediaCache[media?.id]
     timeout = schedule(currentIndex() + 1)
   }
 </script>
@@ -117,7 +118,7 @@
   </div>
   <div class='d-flex'>
     {#each mediaList as media}
-      {@const active = current === media}
+      {@const active = current === $mediaCache[media?.id]}
       <div class='pt-10 pb-5 badge-wrapper' class:pointer={!active} use:click={() => setCurrent(media)}>
         <div class='rounded bg-dark-light mr-10 progress-badge overflow-hidden' class:active style='height: 3px;' style:width={active ? '5rem' : '2.7rem'}>
           <div class='progress-content h-full' class:bg-white={active} />

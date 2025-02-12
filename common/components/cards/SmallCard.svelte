@@ -9,7 +9,6 @@
   import { page } from '@/App.svelte'
   import { anilistClient } from '@/modules/anilist.js'
   import { mediaCache } from '@/modules/cache.js'
-  import Helper from '@/modules/helper.js'
   import { CalendarDays, Tv, ThumbsUp, ThumbsDown } from 'lucide-svelte'
 
   /** @type {import('@/modules/al.d.ts').Media} */

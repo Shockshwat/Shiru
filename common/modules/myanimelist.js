@@ -83,8 +83,9 @@ class MALClient {
     if (this.userID?.viewer?.data?.Viewer) {
       this.userLists.value = this.getUserLists({ sort: 'list_updated_at' })
       //  update userLists every 15 mins
-      setInterval(() => {
-        this.userLists.value = this.getUserLists({ sort: 'list_updated_at' })
+      setInterval(async () => {
+        const updatedLists = await this.getUserLists({ sort: 'list_updated_at' })
+        this.userLists.value = Promise.resolve(updatedLists) // no need to have userLists await the entire query process while we already have previous values, (it's awful to wait 15+ seconds for the query to succeed with large lists)
       }, 1000 * 60 * 15)
     }
   }
@@ -281,9 +282,10 @@ class MALClient {
     if (finish_date) {
       updateData.finish_date = finish_date
     }
-
     const res = await this.malRequest(query, updateData)
-    if (!variables.token) this.userLists.value = this.getUserLists({ sort: 'list_updated_at' })
+    setTimeout(async () => {
+      if (!variables.token) this.userLists.value = Promise.resolve(await this.getUserLists({ sort: 'list_updated_at' })) // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
+    })
     return res ? {
       data: {
         SaveMediaListEntry: {
@@ -309,7 +311,9 @@ class MALClient {
       refresh_in: variables.refresh_in
     }
     const res = await this.malRequest(query)
-    if (!variables.token) this.userLists.value = this.getUserLists({ sort: 'list_updated_at' })
+    setTimeout(async () => {
+      if (!variables.token) this.userLists.value = Promise.resolve(await this.getUserLists({sort: 'list_updated_at'})) // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
+    })
     return res
   }
 }
