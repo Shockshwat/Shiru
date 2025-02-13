@@ -13,7 +13,8 @@
 
   export let mediaList
 
-  $: current = $mediaCache[mediaList[0]?.id]
+  $: current = mediaList[0]
+  mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[current?.id]) !== JSON.stringify(current))) current = value[current?.id] })
 
   const view = getContext('view')
   function viewMedia () {
@@ -31,7 +32,7 @@
 
   function schedule (index) {
     return setTimeout(() => {
-      current = $mediaCache[mediaList[index % mediaList.length]?.id]
+      current = mediaCache.value[mediaList[index % mediaList.length]?.id]
       timeout = schedule(index + 1)
     }, 15000)
   }
@@ -39,9 +40,9 @@
   let timeout = schedule(currentIndex() + 1)
 
   function setCurrent (media) {
-    if (current === $mediaCache[media?.id]) return
+    if (current === mediaCache.value[media?.id]) return
     clearTimeout(timeout)
-    current = $mediaCache[media?.id]
+    current = mediaCache.value[media?.id]
     timeout = schedule(currentIndex() + 1)
   }
 </script>
