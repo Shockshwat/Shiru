@@ -1,7 +1,7 @@
 import { settings } from '@/modules/settings.js'
 import { sleep } from '@/modules/util.js'
 import { anilistClient } from '@/modules/anilist.js'
-import { anitomyscript } from '@/modules/anime.js'
+import { anitomyscript, getAniMappings } from '@/modules/anime.js'
 import { client } from '@/modules/torrent.js'
 import { extensionsWorker } from '@/views/Settings/TorrentSettings.svelte'
 import { toast } from 'svelte-sonner'
@@ -111,15 +111,13 @@ async function updatePeerCounts (entries) {
 
 /** @param {import('@/modules/al.js').Media} media */
 async function ALToAniDB (media) {
-  const mappingsResponse = await fetch('https://api.ani.zip/mappings?anilist_id=' + media.id)
-  const json = await mappingsResponse.json()
+  const json = await getAniMappings(media?.id) || {}
   if (json.mappings?.anidb_id) return json
 
   const parentID = getParentForSpecial(media)
   if (!parentID) return
 
-  const parentResponse = await fetch('https://api.ani.zip/mappings?anilist_id=' + parentID)
-  return parentResponse.json()
+  return getAniMappings(parentID)
 }
 
 /** @param {import('@/modules/al.js').Media} media */
@@ -136,9 +134,9 @@ function getRelation (list, type) {
 
 // TODO: https://anilist.co/anime/13055/
 /**
-  * @param {{media: import('@/modules/al.js').Media, episode: number}} param0
-  * @param {{episodes: any, episodeCount: number, specialCount: number}} param1
-  * */
+ * @param {{media: import('@/modules/al.js').Media, episode: number}} param0
+ * @param {{episodes: any, episodeCount: number, specialCount: number}} param1
+ **/
 async function ALtoAniDBEpisode ({ media, episode }, { episodes, episodeCount, specialCount }) {
   debug(`Fetching AniDB episode for ${media?.id}:${media?.title?.userPreferred} ${episode}`)
   if (!episode || !Object.values(episodes).length) return
@@ -188,11 +186,7 @@ export function episodeByAirDate (alDate, episodes, episode) {
 /** @param {import('@/modules/al.js').Media} media */
 function createTitles (media) {
   // group and de-duplicate
-  const grouped = [...new Set(
-    Object.values(media.title)
-      .concat(media.synonyms)
-      .filter(name => name != null && name.length > 3)
-  )]
+  const grouped = [...new Set(Object.values(media.title).concat(media.synonyms).filter(name => name != null && name.length > 3))]
   const titles = []
   /** @param {string} title */
   const appendTitle = title => {
