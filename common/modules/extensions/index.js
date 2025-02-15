@@ -64,10 +64,12 @@ export default async function getResultsFromExtensions ({ media, episode, batch,
   debug(`Found ${results?.length} results`)
 
   for (const error of errors) {
-    debug(`Source Fetch Failed: ${error}`)
-    toast.error('Source Fetch Failed!', {
-      description: error
-    })
+    if (!JSON.stringify(error).toLowerCase().includes('no anidbaid provided') && !JSON.stringify(error).toLowerCase().includes('no anidbeid provided')) {
+      debug(`Source Fetch Failed: ${error}`)
+      toast.error('Source Fetch Failed!', {
+        description: error
+      })
+    }
   }
 
   const deduped = dedupe(results)
