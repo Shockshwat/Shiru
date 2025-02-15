@@ -15,7 +15,7 @@
   <a href="https://github.com/RockinChaos/Shiru/releases/latest/">Download</a>
 </p>
 <p align="center">
-  <!--<img src="./docs/out.gif" alt="showcase"><br>--> <!-- eventually record a new showcase -->
+  <img src="./docs/out.gif" alt="showcase"><br>
   <a href="https://discord.gg/D5FnJ7C">
     <img src="https://img.shields.io/discord/291764091239006208?style=flat-square" alt="chat">
   </a>
@@ -27,11 +27,11 @@
 ## **About**
 **Shiru** is a fork of [Miru](https://github.com/ThaUnknown/miru/) that is focused on providing a better feature rich experience with free mobile support. The overall goal was to implement features and design a similar experience to using a streaming website with functionality akin to MalSync and AniSkip.
 
-This is a pure JS BitTorrent streaming environment, with a built-in list manager. Imagine qBit + Taiga + MPV, all in a single package, but streamed real-time. Completly ad free with no tracking/data collection.
+This is a pure JS BitTorrent streaming environment, with a built-in list manager. Imagine qBit + Taiga + MPV, all in a single package, but streamed real-time. Completely ad free with no tracking/data collection.
 
-This app is meant to feel look, work and perform like a streaming website/app, while providing all the advantages of torrenting, like file downloads, higher download speeds, better video quality and quicker releases.
+This app is meant to feel, look, work and perform like a streaming website/app, while providing all the advantages of torrenting, like file downloads, higher download speeds, better video quality and quicker releases.
 
-Unlike qBit's sequential, seeking into undownloaded data will prioritise downloading that data, instead of flat out closing MPV.
+Unlike qBit's sequential approach, seeking into data that hasn't been downloaded yet will prioritise downloading that data, instead of simply closing MPV.
 ## **Features**
 ### **Anime:**
 - full AniList and MyAnimeList integration
@@ -78,7 +78,7 @@ Unlike qBit's sequential, seeking into undownloaded data will prioritise downloa
 - miniplayer
 - media session display
 - media keys support
-- Discord rich pressence
+- Discord rich presence
 - preview thumbnails
 - pause on lost focus
 - autoplay next episode
