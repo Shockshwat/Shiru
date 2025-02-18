@@ -20,16 +20,26 @@
   /** @type {import('@/modules/al.d.ts').Media | null} */
   $: media = data.media && $mediaCache[data.media.id]
   $: episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
+  let hide = true
 
   const view = getContext('view')
   function viewMedia () {
     $view = media
   }
+  function promptTorrent() {
+    window.dispatchEvent(new CustomEvent('play-anime', {
+      detail: {
+        id: data.media?.id,
+        episode: data.episode,
+        torrentOnly: false
+      }
+    }))
+  }
   function setClickState() {
     if ($prompt === false && media?.mediaListEntry?.progress < (data.episode - 1)) {
       prompt.set(true)
     } else {
-      data.onclick() || viewMedia()
+      (data.onclick && data.onclick === "function") ? data.onclick() : data.episode ? promptTorrent() : viewMedia()
     }
   }
   function setHoverState (state) {
@@ -47,7 +57,16 @@
   {/if}
   <div class='item d-flex flex-column h-full pointer content-visibility-auto' class:opacity-half={completed}>
     <div class='image h-200 w-full position-relative rounded overflow-hidden d-flex justify-content-between align-items-end text-white' class:bg-black={episodeThumbnail === ' '}>
-      <img loading='lazy' src={episodeThumbnail} alt='cover' class='cover-img w-full h-full position-absolute' style:--color={media?.coverImage?.color || '#1890ff'} />
+      <img loading='lazy' src={episodeThumbnail} alt='cover' class='cover-img w-full h-full position-absolute' style:--color={media?.coverImage?.color || '#1890ff'} referrerpolicy="no-referrer"/>
+      {#if data.episodeData?.video}
+        <video src={data.episodeData.video}
+               class="w-full position-absolute left-0"
+               class:d-none={hide}
+               playsinline
+               preload="metadata"
+               muted
+               on:loadeddata={() => { hide = false }} />
+      {/if}
       {#if data.failed}
         <div class='pr-10 pt-10 z-10 position-absolute top-0 right-0 text-danger failed' title='Failed to resolve media'>
           <RefreshCwOff size='3rem' />
@@ -101,7 +120,7 @@
             Movie
           {:else if data.parseObject?.anime_title?.match(/S(\d{2})/)}
             Season {parseInt(data.parseObject.anime_title.match(/S(\d{2})/)[1], 10)}
-          {:else}
+          {:else if (!data.episodeData?.video)}
             Batch
           {/if}
         </div>
@@ -119,11 +138,8 @@
               {since(data.date)}
             </div>
           {:else if data.similarity}
-            <div class='text-muted font-size-12 title ml-5 mr-5 overflow-hidden'>
-              •
-            </div>
             <div class='text-muted font-size-12 title overflow-hidden'>
-              {Math.round(data.similarity * 100)}%
+              Confidence: {Math.round(data.similarity * 100)}%
             </div>
           {/if}
         </div>

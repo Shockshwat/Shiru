@@ -98,7 +98,7 @@
             Movie
           {:else if data.parseObject?.anime_title?.match(/S(\d{2})/)}
             Season {parseInt(data.parseObject.anime_title.match(/S(\d{2})/)[1], 10)}
-          {:else}
+          {:else if (!data.episodeData?.video)}
             Batch
           {/if}
         </div>
@@ -116,11 +116,8 @@
               {since(data.date)}
             </div>
           {:else if data.similarity}
-            <div class='text-muted font-size-12 title ml-5 mr-5 overflow-hidden'>
-              •
-            </div>
             <div class='text-muted font-size-12 title overflow-hidden'>
-              {Math.round(data.similarity * 100)}%
+              Confidence: {Math.round(data.similarity * 100)}%
             </div>
           {/if}
         </div>

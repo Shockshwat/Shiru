@@ -69,6 +69,8 @@ export async function traceAnime (image) { // WAIT lookup logic
     const ids = result.map(({ anilist }) => anilist)
     search.value = {
       clearNext: true,
+      season: "",
+      sort: "",
       load: (page = 1, perPage = 50, variables = {}) => {
         const res = anilistClient.searchIDS({ page, perPage, id: ids, ...SectionsManager.sanitiseObject(variables) }).then(res => {
           for (const index in res.data?.Page?.media) {

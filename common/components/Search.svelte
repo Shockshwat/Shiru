@@ -363,7 +363,7 @@
     {/if}
     <div class='col-auto p-10 d-flex'>
       <div class='align-self-end'>
-        <button class='btn btn-square bg-dark-light d-flex align-items-center justify-content-center px-5 align-self-end border-0' type='button' use:click={searchClear} disabled={sanitisedSearch.length <= 0} class:text-danger={!!sanitisedSearch?.length || search.disableSearch || search.clearNext}>
+        <button class='btn btn-square bg-dark-light d-flex align-items-center justify-content-center px-5 align-self-end border-0' type='button' use:click={searchClear} disabled={(sanitisedSearch.length <= 0) && !search.clearNext} class:text-danger={!!sanitisedSearch?.length || search.disableSearch || search.clearNext}>
           {#if !!sanitisedSearch?.length || search.disableSearch || search.clearNext}
             <FilterX size='1.625rem' />
           {:else}
