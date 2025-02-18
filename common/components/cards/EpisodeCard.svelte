@@ -39,7 +39,7 @@
     if ($prompt === false && media?.mediaListEntry?.progress < (data.episode - 1)) {
       prompt.set(true)
     } else {
-      (data.onclick && data.onclick === 'function') ? data.onclick() : data.episode ? promptTorrent() : viewMedia()
+      data.onclick ? data.onclick() : data.episode ? promptTorrent() : viewMedia()
     }
   }
   function setHoverState (state) {
