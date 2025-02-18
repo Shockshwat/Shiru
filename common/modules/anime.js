@@ -175,14 +175,17 @@ export async function anitomyscript (...args) {
 
   for (const obj of parseObjs) {
     obj.anime_title ??= ''
-    const seasonMatch = obj.anime_title.match(/S(\d{2})E(\d{2})|season-(\d+)/i)
+    const seasonMatch = obj.anime_title.match(/S(\d{2})E(\d{2})|S(\d{2})|season-(\d+)/i)
     if (seasonMatch) {
       if (seasonMatch[1] && seasonMatch[2]) {
         obj.anime_season = seasonMatch[1]
         obj.episode_number = seasonMatch[2]
         obj.anime_title = obj.anime_title.replace(/S(\d{2})E(\d{2})/, '')
       } else if (seasonMatch[3]) {
-        obj.anime_season = seasonMatch[3]
+        obj.anime_season = Number(seasonMatch[3])
+        obj.anime_title = obj.anime_title.replace(/S\d{2}/, '')
+      } else if (seasonMatch[4]) {
+        obj.anime_season = seasonMatch[4]
         obj.anime_title = obj.anime_title.replace(/season-\d+/i, '')
       }
     } else if (Array.isArray(obj.anime_season)) {
@@ -193,6 +196,7 @@ export async function anitomyscript (...args) {
       obj.anime_year = yearMatch[1]
       obj.anime_title = obj.anime_title.replace(/ (19[5-9]\d|20\d{2})/, '')
     }
+    obj.anime_title = obj.anime_title.replace(/\s*-\s*/g, '')
     if (Number(obj.anime_season) > 1) obj.anime_title += ' S' + obj.anime_season
   }
   debug(`AnitoMyScript found titles: ${JSON.stringify(parseObjs)}`)

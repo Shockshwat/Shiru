@@ -196,7 +196,9 @@ export default new class AnimeResolver {
       name = name.replace(/\.(mkv|mp4|avi|mov|wmv|flv|webm|m4v|mpeg|mpg|3gp|ogg|ogv)$/i, '').replace(/\./g, ' ')
 
       // Fix common naming issues
-      name = name.replace('1-2', '1/2').replace('1_2', '1/2') // Ranma 1/2 fix.
+      name = name
+          .replace('1-2', '1/2').replace('1_2', '1/2') // Ranma 1/2 fix.
+          .replace(/new /i, '') // Prince of Tennis fix.
 
       // Restore preserved patterns by converting markers back
       name = name
@@ -210,6 +212,20 @@ export default new class AnimeResolver {
       return name.replace(/\s+/g, ' ').trim()
     }
     return typeof fileName === 'string' ? cleanName(fileName) : fileName?.map(name => cleanName(name))
+  }
+
+  /**
+   * Checks if any of the media titles matches the parsed anime title.
+   *
+   * @param {Object} parseObj - The parsed object containing details about the anime episode (e.g., title, episode number).
+   * @param {Object} media - The media object that contains data about the anime (e.g., title, episodes, format).
+   * @param {string[]} titleKeys - The list of title keys to match against when verifying media (e.g., 'title.english', 'title.userPreferred').
+   * @param {number} threshold - The threshold value to use when comparing titles for similarity (0 to 1 scale).
+   *
+   * @returns {boolean} If any of the media titles matches the parsed anime title.
+   */
+  isVerified(media, parseObj, titleKeys, threshold) {
+    return !(!matchKeys(media, parseObj?.anime_title, titleKeys, threshold) && !matchKeys(media, parseObj?.anime_title?.replace(/S(\d{2})E(\d{2})|S(\d{2})|season-(\d+)/i, ''), titleKeys, threshold) && (parseObj?.anime_season && (Number(parseObj?.anime_season) > 1) && !matchKeys(media, parseObj?.anime_title?.replace(/S(\d{2})E(\d{2})|S(\d{2})|season-(\d+)/i, `Season ${parseObj?.anime_season}`), titleKeys, 0.3)))
   }
 
   // TODO: anidb aka true episodes need to be mapped to anilist episodes a bit better, shit like mushoku offsets caused by episode 0's in between seasons
@@ -229,7 +245,7 @@ export default new class AnimeResolver {
       let media = this.animeNameCache[this.getCacheKeyForTitle(parseObj)]
       const threshold = parseObj?.anime_title?.length > 15 ? 0.3 : parseObj?.anime_title?.length > 9 ? 0.2 : 0.15 // play nice with small anime titles
       const titleKeys = ['title.userPreferred', 'title.english', 'title.romaji', 'title.native', 'synonyms']
-      let needsVerification = !media || !matchKeys(media, parseObj?.anime_title, titleKeys, threshold)
+      let needsVerification = !media || !this.isVerified(media, parseObj, titleKeys, threshold)
       // resolve episode, if movie, dont.
       let maxep = media?.nextAiringEpisode?.episode || media?.episodes
       debug(`Resolving ${parseObj?.anime_title} ${parseObj?.episode_number} ${maxep} ${media?.title?.userPreferred} ${media?.format} verified:${!needsVerification}`)
@@ -240,7 +256,11 @@ export default new class AnimeResolver {
             debug('Range starts at 1')
             // if it starts with #1 and overflows then it includes more than 1 season in a batch, cant fix this cleanly, name is parsed per-file basis so this shouldn't be an issue
             episode = `${Number(parseObj.episode_number[0])} ~ ${Number(parseObj.episode_number[1])}`
-            if (needsVerification) media = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold)).media
+            if (needsVerification) {
+              const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
+              media = mediaSearch.media
+              failed = mediaSearch.failed
+            }
           } else {
             if (maxep && parseInt(parseObj.episode_number[1]) > maxep) {
               const result = await this.findResult(parseObj, maxep, 0, media, titleKeys, threshold)
@@ -251,7 +271,11 @@ export default new class AnimeResolver {
             } else {
               // cant find ep count or range seems fine
               episode = `${Number(parseObj.episode_number[0])} ~ ${Number(parseObj.episode_number[1])}`
-              if (needsVerification) media = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold)).media
+              if (needsVerification) {
+                const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
+                media = mediaSearch.media
+                failed = mediaSearch.failed
+              }
             }
           }
         } else {
@@ -273,10 +297,18 @@ export default new class AnimeResolver {
           } else {
             // cant find ep count or episode seems fine
             episode = Number(parseObj.episode_number)
-            if (needsVerification) media = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold)).media
+            if (needsVerification) {
+              const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
+              media = mediaSearch.media
+              failed = mediaSearch.failed
+            }
           }
         }
-      } else if (needsVerification) media = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold)).media
+      } else if (needsVerification) {
+        const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
+        media = mediaSearch.media
+        failed = mediaSearch.failed
+      }
       debug(`${failed || !(media?.title?.userPreferred) ? `Failed to resolve` : `Resolved`} ${parseObj.anime_title} ${parseObj.episode_number} ${episode} ${media?.id}:${media?.title?.userPreferred}`)
       fileAnimes.push({
         episode: episode || parseObj.episode_number,
@@ -348,7 +380,7 @@ export default new class AnimeResolver {
     debug(`Root ${root?.id}:${root?.title?.userPreferred}`)
     // check that anime_title is similar to the resolved media title, if it's not then we likely already are at the root level... resolves issues with niche series like MF GHOST.
     let isRoot = false
-    if (root && !matchKeys(root, parseObj?.anime_title, titleKeys, threshold)) {
+    if (root && !this.isVerified(root, parseObj, titleKeys, threshold)) {
       debug(`Detect incorrect Root for ${parseObj?.anime_title}, assuming the title is already root from ${media.id}:${media.title?.userPreferred}`)
       isRoot = true
     }
@@ -382,7 +414,7 @@ export default new class AnimeResolver {
       debug(`Detected that the episode number ${episodeNumber} is ${(episodeNumber > maxep) ? `greater than the expect max ${maxep} episode(s)` : `is a negative number`} assuming the actual episode number is in the title for [${parseObj.anime_title}]...`)
       const parseNew = await this.findAndCacheTitle(parseObj.anime_title.replace(/S\d+(E\d+)?/, ''))
       const probeMedia = this.animeNameCache[this.getCacheKeyForTitle(parseNew[0])]
-      if ((parseNew[0]?.episode_number < maxep) && probeMedia && matchKeys(probeMedia, parseNew[0]?.anime_title, titleKeys, threshold)) {
+      if ((parseNew[0]?.episode_number < maxep) && probeMedia && this.isVerified(probeMedia, parseNew[0], titleKeys, threshold)) {
         debug(`Found media and proper episode for ${parseObj.anime_title}: ${probeMedia?.id}:${probeMedia?.title?.userPreferred}:E${parseNew[0]?.episode}, the episode title was likely being weird by starting with a numerical value.`)
         return { media: probeMedia, parseObj: parseNew[0], episode: Number(parseNew[0]?.episode_number) }
       }
@@ -412,12 +444,13 @@ export default new class AnimeResolver {
     }
     titles.add(parseObj.anime_title)
     for (const title of titles) {
-      const search = await anilistClient.search({ search: title + (parseObj.anime_season ? ` Season ${parseObj.anime_season}` : ``), ...(media ? { id_not: media.id } : {}) })
+      const search = await anilistClient.search({ search: title, ...(media ? { id_not: media.id } : {}) })
       if (search.data.Page.media) {
         for (const searchMedia of search.data.Page.media) {
-          if (matchKeys(searchMedia, title, titleKeys, threshold)) {
+          if (this.isVerified(searchMedia, {...parseObj, anime_title: title}, titleKeys, threshold)) {
             debug(`Found media from manual search for ${parseObj.anime_title}: ${searchMedia?.id}:${searchMedia?.title?.userPreferred} while ignoring the original compound ${media?.id}:${media?.title?.userPreferred}, this is likely correct...`)
-            return { media: searchMedia }
+            if (parseObj.anime_season) return { media: await this.resolveBySeason(searchMedia, parseObj) }
+            else return { media: searchMedia }
           }
         }
       }
@@ -481,5 +514,26 @@ export default new class AnimeResolver {
     }
 
     return this.resolveSeason({ media, episode, increment, offset, rootMedia, force })
+  }
+
+  /**
+   * Attempts to get the ROOT of a series, then fetches the prequels until the desired anime season is reached.
+   * This isn't great but there really isn't any other options to do this without eating up our limited queries, the manual search is a last resort so this shouldn't happen regularly.
+   *
+   * @param media - The current media that is being handled.
+   * @param parseObj - The parsed object containing details about the anime episode (e.g., title, episode number).
+   * @param sequelNumber - How far from root we are.
+   * @param root - If we are calculating FROM root.
+   * @returns {Promise<{media: import('./al.js').Media}>}
+   */
+  async resolveBySeason(media, parseObj, sequelNumber = 0, root = false) {
+    if (!parseObj?.anime_season) return media
+    if (root) {
+      const sequel = this.findEdge(media, 'SEQUEL')?.node
+      return sequel && (Number(parseObj.anime_season) !== sequelNumber) ? await this.resolveBySeason(await this.getAnimeById(sequel.id), parseObj, sequelNumber + 1, true) : media
+    } else {
+      const prequel = this.findEdge(media, 'PREQUEL')?.node
+      return prequel ? await this.resolveBySeason(await this.getAnimeById(prequel.id), parseObj, 0, false) : await this.resolveBySeason(media, parseObj, 1, true)
+    }
   }
 }()
