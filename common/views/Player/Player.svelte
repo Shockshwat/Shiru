@@ -249,6 +249,7 @@
       const tracks = subs.headers.filter(header => header)
       const index = tracks.indexOf(subs.headers[subs.current]) + 1
       subs.selectCaptions(index >= tracks.length ? -1 : subs.headers.indexOf(tracks[index]))
+      setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
     }
   }
 
