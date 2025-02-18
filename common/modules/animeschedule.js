@@ -32,8 +32,10 @@ class AnimeSchedule {
     constructor() {
         this.subAiringLists.value = this.getFeed('sub-schedule')
         this.dubAiringLists.value = this.getFeed('dub-schedule')
-        this.findNewNotifications()
-        this.findNewDelayedEpisodes()
+        setTimeout(() => {
+            this.findNewNotifications()
+            this.findNewDelayedEpisodes()
+        }, 3000)
 
         //  update airingLists every 30 mins
         setInterval(async () => {
@@ -67,8 +69,8 @@ class AnimeSchedule {
 
     async findNewDelayedEpisodes() { // currently only dubs are handled as they typically get delayed...
         debug(`Checking for delayed dub episodes...`)
-        const delayedEpisodes = (await this.dubAiringLists.value).filter(entry => new Date(entry.delayedFrom) <= new Date() && new Date(entry.delayedUntil) > new Date()).filter(entry => !cache.getEntry(caches.NOTIFICATIONS, 'delayedDubs').includes(`${entry?.media?.media?.id}:${entry.episodeNumber}:${entry.delayedUntil}`))
-        debug(`Found ${delayedEpisodes.length} delayed episodes${delayedEpisodes.length > 0 ? '.. notifying!' : ''}`)
+        const delayedEpisodes = (await this.dubAiringLists.value).filter(entry => new Date(entry.delayedFrom) <= new Date() && new Date(entry.delayedUntil) > new Date()).flatMap(entry => Array.from({ length: entry.episodeNumber - (entry.subtractedEpisodeNumber || entry.episodeNumber) + 1 }, (_, i) => (entry.subtractedEpisodeNumber || entry.episodeNumber) + i).filter(episode => !cache.getEntry(caches.NOTIFICATIONS, 'delayedDubs').includes(`${entry?.media?.media?.id}:${episode}:${entry.delayedUntil}`)).map(episode => ({ ...entry, episodeNumber: episode, subtractedEpisodeNumber: undefined })))
+        debug(`Found ${delayedEpisodes.length} new delayed episodes${delayedEpisodes.length > 0 ? '.. notifying!' : ''}`)
         if (delayedEpisodes.length === 0) return
         await anilistClient.searchAllIDS({id: delayedEpisodes.map(entry => entry?.media?.media.id)})
         for (const entry of delayedEpisodes) {
