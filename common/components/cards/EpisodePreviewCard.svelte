@@ -29,7 +29,7 @@
 
 <div class='position-absolute w-400 mh-400 absolute-container top-0 m-auto bg-dark-light z-30 rounded overflow-hidden pointer d-flex flex-column'>
   <div class='image h-200 w-full position-relative d-flex justify-content-between align-items-end text-white' class:bg-black={episodeThumbnail === ' '}>
-    <img loading='lazy' src={episodeThumbnail} alt='cover' class='img-cover w-full h-full position-absolute rounded' style:--color={media?.coverImage.color || '#1890ff'} />
+    <img loading='lazy' src={episodeThumbnail} alt='cover' class='img-cover w-full h-full position-absolute rounded' style:--color={media?.coverImage.color || '#1890ff'} referrerpolicy='no-referrer' />
     {#if data.episodeData?.video}
       <video src={data.episodeData.video}
         class='w-full position-absolute left-0'
@@ -146,7 +146,7 @@
       </div>
     {/if}
   </div>
-  <div class='overlay position-absolute w-full h-200 z-40 d-flex flex-column justify-content-center align-items-center {prompt ? "visible" : "invisible"}'>
+  <div class='overlay position-absolute w-full h-200 z-40 d-flex flex-column justify-content-center align-items-center' class:visible={prompt} class:invisible={!prompt}>
     <p class='ml-20 mr-20 font-size-24 text-white text-center'>Your Current Progress Is At <b>Episode {media?.mediaListEntry?.progress}</b></p>
     <button class='btn btn-lg btn-secondary w-250 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center mt-10'
             use:click={() => {

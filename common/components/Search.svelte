@@ -398,8 +398,10 @@
         {/if}
       </div>
     </form>
-    <span class='mr-10 filled ml-auto text-dark-light pointer' class:text-muted={$settings.cards === 'small'} use:click={() => changeCardMode('small')}><Grid3X3 size='2.25rem' /></span>
-    <span class='text-dark-light pointer' class:text-muted={$settings.cards === 'full'} use:click={() => changeCardMode('full')}><Grid2X2 size='2.25rem' /></span>
+    {#if !search.disableSearch && !search.clearNext}
+      <span class='mr-10 filled ml-auto text-dark-light pointer' title='Small Cards' class:text-muted={$settings.cards === 'small'} use:click={() => changeCardMode('small')}><Grid3X3 size='2.25rem' /></span>
+      <span class='text-dark-light pointer' title='Large Cards' class:text-muted={$settings.cards === 'full'} use:click={() => changeCardMode('full')}><Grid2X2 size='2.25rem' /></span>
+    {/if}
   </div>
 </form>
 

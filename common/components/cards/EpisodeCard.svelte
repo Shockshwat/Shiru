@@ -39,7 +39,7 @@
     if ($prompt === false && media?.mediaListEntry?.progress < (data.episode - 1)) {
       prompt.set(true)
     } else {
-      (data.onclick && data.onclick === "function") ? data.onclick() : data.episode ? promptTorrent() : viewMedia()
+      (data.onclick && data.onclick === 'function') ? data.onclick() : data.episode ? promptTorrent() : viewMedia()
     }
   }
   function setHoverState (state) {
@@ -57,13 +57,13 @@
   {/if}
   <div class='item d-flex flex-column h-full pointer content-visibility-auto' class:opacity-half={completed}>
     <div class='image h-200 w-full position-relative rounded overflow-hidden d-flex justify-content-between align-items-end text-white' class:bg-black={episodeThumbnail === ' '}>
-      <img loading='lazy' src={episodeThumbnail} alt='cover' class='cover-img w-full h-full position-absolute' style:--color={media?.coverImage?.color || '#1890ff'} referrerpolicy="no-referrer"/>
+      <img loading='lazy' src={episodeThumbnail} alt='cover' class='cover-img w-full h-full position-absolute' style:--color={media?.coverImage?.color || '#1890ff'} referrerpolicy='no-referrer' />
       {#if data.episodeData?.video}
         <video src={data.episodeData.video}
-               class="w-full position-absolute left-0"
+               class='w-full position-absolute left-0'
                class:d-none={hide}
                playsinline
-               preload="metadata"
+               preload='metadata'
                muted
                on:loadeddata={() => { hide = false }} />
       {/if}
