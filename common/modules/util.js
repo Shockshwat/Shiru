@@ -1,4 +1,4 @@
-import { SUPPORTS } from './support.js'
+import { SUPPORTS } from '@/modules/support.js'
 import levenshtein from 'js-levenshtein'
 import { writable } from 'svelte/store'
 import Fuse from 'fuse.js'
@@ -164,7 +164,7 @@ export function matchKeys(nest, phrase, keys, threshold = 0.4) {
   const cleanedNest = { ...nest }
   keys.forEach((key) => {
     const value = getNestedValue(nest, key)
-    if (typeof value === "string") setNestedValue(cleanedNest, key, value.replace(/[^\p{L}\p{N}\p{Zs}\p{Pd}]/gu, ""))
+    if (typeof value === "string") setNestedValue(cleanedNest, key, value.replace(!SUPPORTS.isAndroid ? new RegExp("[^\\p{L}\\p{N}\\p{Zs}\\p{Pd}]", "gu") : /[^a-zA-Z0-9\s\-\u00C0-\u024F\u0400-\u04FF\u0370-\u03FF\u0600-\u06FF\u0900-\u097F\u4E00-\u9FFF]/g, ""))
   })
   if (new Fuse([cleanedNest], { includeScore: true, threshold, keys: keys }).search(phrase).length > 0) return true
   const fuse = new Fuse([phrase], { includeScore: true, threshold, })
