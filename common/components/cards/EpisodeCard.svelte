@@ -18,7 +18,11 @@
   let prompt = writable(false)
 
   /** @type {import('@/modules/al.d.ts').Media | null} */
-  $: media = data.media && $mediaCache[data.media.id]
+  let media
+  $: if (data.media && !media) {
+    media = mediaCache.value[data.media.id]
+  }
+  mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[media?.id]) !== JSON.stringify(media))) media = value[media?.id] })
   $: episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
   let hide = true
 

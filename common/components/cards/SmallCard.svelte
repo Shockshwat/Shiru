@@ -17,7 +17,11 @@
   export let variables = null
   let _variables = variables
 
-  $: media = data && $mediaCache[data?.id]
+  let media
+  $: if (data && !media) {
+    media = mediaCache.value[data?.id]
+  }
+  mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[media?.id]) !== JSON.stringify(media))) media = value[media?.id] })
   const view = getContext('view')
   function viewMedia () {
     $view = media

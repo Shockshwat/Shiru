@@ -8,13 +8,16 @@
   import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import { anilistClient } from '@/modules/anilist.js'
   import { mediaCache } from '@/modules/cache.js'
-  import Helper from '@/modules/helper.js'
   /** @type {import('@/modules/al.d.ts').Media} */
   export let data
   export let variables = null
   let _variables = variables
 
-  $: media = data && $mediaCache[data?.id]
+  let media
+  $: if (data && !media) {
+    media = mediaCache.value[data?.id]
+  }
+  mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[media?.id]) !== JSON.stringify(media))) media = value[media?.id] })
   $: maxEp = getMediaMaxEp(media)
 
   const view = getContext('view')

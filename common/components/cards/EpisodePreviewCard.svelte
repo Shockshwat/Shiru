@@ -13,7 +13,7 @@
   export let data
   export let prompt
   /** @type {import('@/modules/al.d.ts').Media | null} */
-  const media = data.media && $mediaCache[data.media.id]
+  const media = data.media && mediaCache.value[data.media.id]
   const episodeThumbnail = ((!media?.mediaListEntry?.status || !(['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry.status) && media.mediaListEntry.progress < data.episode)) && data.episodeData?.image) || media?.bannerImage || media?.coverImage.extraLarge || ' '
   let hide = true
 

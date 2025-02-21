@@ -189,7 +189,7 @@
 
 
 <button type='button' id='list-btn' class='btn scoring-btn { viewAnime ? "bg-dark btn-lg font-size-20" : (previewAnime ? "btn-square" : "bg-dark-light") + " font-size-16" } btn-square ml-10 shadow-none border-0 d-flex align-items-center justify-content-center' use:click={() => toggleModal({ toggle: !$showModal })} disabled={!Helper.isAuthorized()}>
-  {#if media.mediaListEntry}
+  {#if media?.mediaListEntry}
     <PencilLine size='1.7rem' />
   {:else}
     <Bookmark size='1.7rem' />
@@ -236,7 +236,7 @@
       </div>
     </div>
     <div class='d-flex justify-content-center'>
-      {#if !status.includes('NOT IN LIST') && media.mediaListEntry}
+      {#if !status.includes('NOT IN LIST') && media?.mediaListEntry}
         <button type='button' class='btn btn-delete btn-secondary text-dark mr-20 font-weight-bold shadow-none d-flex align-items-center justify-content-center' use:click={() => toggleModal({ delete: true })}><span>Delete</span></button>
       {/if}
       <button type='button' class='btn btn-save btn-secondary text-dark font-weight-bold shadow-none d-flex align-items-center justify-content-center' use:click={() => toggleModal({ save: true })}><span>Save</span></button>
