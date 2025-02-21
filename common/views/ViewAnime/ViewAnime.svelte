@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount } from 'svelte'
-  import { getMediaMaxEp, formatMap, playMedia, genreIcons, getKitsuMappings } from '@/modules/anime.js'
+  import { formatMap, genreIcons, getKitsuMappings, getMediaMaxEp, playMedia } from '@/modules/anime.js'
   import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
   import { settings } from '@/modules/settings.js'
   import { mediaCache } from '@/modules/cache.js'
@@ -309,33 +309,39 @@
                   if (typeComparison !== 0) return typeComparison
                   return (a.node.seasonYear || 0) - (b.node.seasonYear || 0)
                 }) } promise={searchIDS} let:item let:promise title='Relations'>
-              <div class='small-card'>
-                {#await promise}
+              {#await promise}
+                <div class='small-card'>
                   <SkeletonCard />
-                {:then res }
-                  {#if res}
-                    {#if $mediaCache[item.node.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                </div>
+              {:then res }
+                {#if res}
+                  {@const foundMedia = $mediaCache[item.node.id]}
+                  {#if foundMedia && !(settings.value.adult === 'none' && foundMedia.isAdult) && !(settings.value.adult !== 'hentai' && foundMedia.genres?.includes('Hentai'))} <!-- sometimes anilist query just doesn't return the requested ids, and sometimes includes adult media and hentai that should be filtered out based on user settings -->
+                    <div class='small-card'>
                       <SmallCard data={item.node} type={item.relationType.replace(/_/g, ' ').toLowerCase()} />
-                    {/if}
+                    </div>
                   {/if}
-                {/await}
-              </div>
+                {/if}
+              {/await}
             </ToggleList>
             {#await recommendations then res}
               {@const media = res?.data?.Media}
               {#if media}
                 <ToggleList list={ media.recommendations?.edges?.filter(({ node }) => node.mediaRecommendation).sort((a, b) => b.node.rating - a.node.rating) } promise={searchIDS} let:item let:promise title='Recommendations'>
-                  <div class='small-card'>
-                    {#await promise}
+                  {#await promise}
+                    <div class='small-card'>
                       <SkeletonCard />
-                    {:then res}
-                      {#if res}
-                        {#if $mediaCache[item.node.mediaRecommendation.id]} <!-- sometimes anilist query just doesn't return the requested ids -->
+                    </div>
+                  {:then res}
+                    {#if res}
+                      {@const foundMedia = $mediaCache[item.node.mediaRecommendation.id]}
+                      {#if foundMedia && !(settings.value.adult === 'none' && foundMedia.isAdult) && !(settings.value.adult !== 'hentai' && foundMedia.genres?.includes('Hentai'))} <!-- sometimes anilist query just doesn't return the requested ids, and sometimes includes adult media and hentai that should be filtered out based on user settings -->
+                        <div class='small-card'>
                           <SmallCard data={item.node.mediaRecommendation} type={item.node.rating} />
-                        {/if}
+                        </div>
                       {/if}
-                    {/await}
-                  </div>
+                    {/if}
+                  {/await}
                 </ToggleList>
               {/if}
             {/await}
