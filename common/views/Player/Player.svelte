@@ -1597,9 +1597,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     height: 100%;
   }
   .stats {
