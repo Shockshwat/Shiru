@@ -151,6 +151,35 @@ function setNestedValue(obj, path, value) {
   current[keys[0]] = value
 }
 
+function replaceSeasonWithWords(text) {
+  const numberWords = {
+    1: 'One',
+    2: 'Two',
+    3: 'Three',
+    4: 'Four',
+    5: 'Five',
+    6: 'Six',
+    7: 'Seven',
+    8: 'Eight',
+    9: 'Nine',
+    10: 'Ten',
+    11: 'Eleven',
+    12: 'Twelve',
+    13: 'Thirteen',
+    14: 'Fourteen',
+    15: 'Fifteen',
+    16: 'Sixteen',
+    17: 'Seventeen',
+    18: 'Eighteen',
+    19: 'Nineteen',
+    20: 'Twenty'
+  }
+  return text.replace(/Season (\d{1,2})/gi, (match, num) => {
+    const word = numberWords[Number(num)]
+    return word ? `Season ${word}` : match
+  })
+}
+
 /**
  * @param {Object} nest The nested Object to use for looking up the keys.
  * @param {String} phrase The key phrase to look for.
@@ -161,13 +190,14 @@ function setNestedValue(obj, path, value) {
 export function matchKeys(nest, phrase, keys, threshold = 0.4) {
   if (!phrase) return true
   if (!nest) return false
+  const cleanedPhrase = replaceSeasonWithWords(phrase)
   const cleanedNest = structuredClone(nest)
   keys.forEach((key) => {
     const value = getNestedValue(cleanedNest, key)
-    if (typeof value === 'string') setNestedValue(cleanedNest, key, value.replace(!SUPPORTS.isAndroid ? new RegExp('[^\\p{L}\\p{N}\\p{Zs}\\p{Pd}]', 'gu') : /[^a-zA-Z0-9\s\-\u00C0-\u024F\u0400-\u04FF\u0370-\u03FF\u0600-\u06FF\u0900-\u097F\u4E00-\u9FFF]/g, ''))
+    if (typeof value === 'string') setNestedValue(cleanedNest, key, replaceSeasonWithWords(value.replace(!SUPPORTS.isAndroid ? new RegExp('[^\\p{L}\\p{N}\\p{Zs}\\p{Pd}]', 'gu') : /[^a-zA-Z0-9\s\-\u00C0-\u024F\u0400-\u04FF\u0370-\u03FF\u0600-\u06FF\u0900-\u097F\u4E00-\u9FFF]/g, '')))
   })
-  if (new Fuse([cleanedNest], { includeScore: true, threshold, keys: keys }).search(phrase).length > 0) return true
-  const fuse = new Fuse([phrase], { includeScore: true, threshold, })
+  if (new Fuse([cleanedNest], { includeScore: true, threshold, keys: keys }).search(cleanedPhrase).length > 0) return true
+  const fuse = new Fuse([cleanedPhrase], { includeScore: true, threshold })
   return keys.some((key) => {
     const valueToMatch = cleanedNest[key]
     if (valueToMatch) return fuse.search(valueToMatch).length > 0
