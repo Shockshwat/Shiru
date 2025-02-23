@@ -96,7 +96,7 @@ window.addEventListener('paste', ({ clipboardData }) => {
           if (anilistMatch) {
             protocol = `shiru://anime/${anilistMatch[1]}`
           } else if (malMatch) {
-            protocol = `shiru://anime/${malMatch[1]}`
+            protocol = `shiru://malanime/${malMatch[1]}`
           }
           IPC.emit('handle-protocol', protocol)
         }

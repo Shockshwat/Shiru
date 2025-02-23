@@ -8,13 +8,13 @@
   export const page = writable('home')
   export const overlay = writable([])
   export const view = writable(null)
-  export async function handleAnime (anime) {
+  export async function handleAnime (detail) {
     IPC.emit('window-show')
     view.set(null)
-    view.set((await anilistClient.searchIDSingle({ id: anime })).data.Media)
+    view.set((await anilistClient.searchIDSingle(!detail.mal ? { id: detail.id } : { idMal: detail.id })).data.Media)
   }
   IPC.on('open-anime', handleAnime)
-  window.addEventListener('open-anime', (event) => handleAnime(event.detail.id))
+  window.addEventListener('open-anime', (event) => handleAnime(event.detail))
   IPC.on('schedule', () => {
     page.set('schedule')
   })

@@ -659,12 +659,12 @@ class AnilistClient {
 
   searchIDSingle(variables) {
     variables.sort = variables.sort || 'OMIT'
-    debug(`Searching for ID: ${variables?.id}`)
+    debug(`Searching for ID: ${variables?.id || variables?.idMal}`)
     const cachedEntry = cache.cachedEntry(caches.SEARCH_IDS, JSON.stringify(variables))
     if (cachedEntry) return cachedEntry
     const query = /* js */` 
-    query($id: Int) { 
-      Media(id: $id, type: ANIME) {
+    query($id: Int, $idMal: Int) { 
+      Media(id: $id, idMal: $idMal, type: ANIME) {
         ${queryObjects}${settings.value.queryComplexity === 'Complex' ? `, ${queryComplexObjects}` : ``}
       }
     }`

@@ -15,7 +15,8 @@ export default class Protocol {
   protocolMap = {
     alauth: token => this.sendToken(token),
     malauth: token => this.sendMalToken(token),
-    anime: id => this.window.webContents.send('open-anime', id),
+    anime: id => this.window.webContents.send('open-anime', { id }),
+    malanime: id => this.window.webContents.send('open-anime', { id, mal: true }),
     torrent: magnet => this.add(magnet),
     search: id => this.play(id),
     w2g: link => this.window.webContents.send('w2glink', link),
