@@ -640,7 +640,7 @@ export async function getKitsuMappings(anilistID) {
           printError(res)
         }
       }
-      return cache.cacheEntry(caches.MAPPINGS, `kitsu-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
+      return cache.cacheEntry(caches.MAPPINGS, `kitsu-${anilistID}`, {}, json, Date.now() + getRandomInt(480, 1440) * 60 * 1000)
     } catch (e) {
       const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `kitsu-${anilistID}`, true)
       if (cachedEntry) {
@@ -687,7 +687,7 @@ export async function getAniMappings(anilistID) {
           printError(res)
         }
       }
-      return cache.cacheEntry(caches.MAPPINGS, `ani-${anilistID}`, {}, json, Date.now() + getRandomInt(1440, 2160) * 60 * 1000)
+      return cache.cacheEntry(caches.MAPPINGS, `ani-${anilistID}`, {}, json, Date.now() + getRandomInt(480, 1440) * 60 * 1000)
     } catch (e) {
       const cachedEntry = cache.cachedEntry(caches.MAPPINGS, `ani-${anilistID}`, true)
       if (cachedEntry) {
