@@ -181,8 +181,8 @@ importers:
         specifier: ^4.4.1
         version: 4.4.1
       jassub:
-        specifier: ^1.7.17
-        version: 1.7.17
+        specifier: ^1.7.18
+        version: 1.7.18
       js-levenshtein:
         specifier: ^1.1.6
         version: 1.1.6
@@ -3582,8 +3582,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  jassub@1.7.17:
-    resolution: {integrity: sha512-573efPTIYLh9YaauuSX2mgPrrYedqdeu6KYNNjsJXbLbBsxPijcUHrMK4zpXCeBv955VTUlMX6l0Afa8AXf33A==}
+  jassub@1.7.18:
+    resolution: {integrity: sha512-8cYnJlWuUP7xsdvoYyLVIcvXVa+0NvP1H1//yPck/LOHdnzY4KRwELNVx0khEd5BLN3bfWnMrcqFiHyTINObhA==}
 
   jest-worker@27.5.1:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
@@ -10113,7 +10113,7 @@ snapshots:
       filelist: 1.0.4
       minimatch: 3.1.2
 
-  jassub@1.7.17:
+  jassub@1.7.18:
     dependencies:
       rvfc-polyfill: 1.0.7
 
