@@ -72,18 +72,21 @@
    * An episode range is displayed visually in the player, but for auto-completion, the highest episode number is used when the full video file is watched.
    * @param {number} duration - The duration of the video in seconds.
    */
-  function handleRanged({ detail: duration }) {
-      if (duration && (duration > 120) && nowPlaying.value?.media?.duration) {
-          debug(`Duration of the current media has changed, checking for multiple episodes in the video file for: ${JSON.stringify(nowPlaying.value)}`)
-          const mediaDuration = nowPlaying.value?.media?.duration * 60
+  async function handleRanged({ detail: duration }) {
+      if (duration && (duration > 120) && nowPlaying.value?.episode && nowPlaying.value?.media?.duration) {
+          // We need check the mappings to verify that the episode isn't actually an ultra-long premiere episode like "Oshi No Ko", Anilist doesn't differentiate these so we need to manually check.
+          const mappings = (!nowPlaying.value.media.episodes || !nowPlaying.value.media.episodes <= 100) && (await getAniMappings(nowPlaying.value.media.id) || {})?.episodes
+          const episode = Object.values(mappings)?.find(episode => (episode.episodeNumber && Number(episode.episodeNumber)) === Number(nowPlaying.value.episode) && episode.length > 1)
+          debug(`Duration of the current media has changed, checking for multiple episodes in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
+          const mediaDuration = (episode?.length && episode.length * 60) || (nowPlaying.value.media.duration * 60)
           if (duration > (mediaDuration + 120)) { // Add 2 minutes (120 second) buffer
-              debug(`Multiple episodes have been detected in the video file for: ${JSON.stringify(nowPlaying.value)}`)
+              debug(`Multiple episodes have been detected in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
               const episodeMultiplier = Math.round(duration / mediaDuration) // Round to nearest whole number
               handleMedia({
-                  media: nowPlaying.value?.media,
-                  episode: nowPlaying.value?.episode * episodeMultiplier,
-                  episodeRange: `${(nowPlaying.value?.episode * episodeMultiplier) - (episodeMultiplier - 1)} ~ ${(nowPlaying.value?.episode * episodeMultiplier)}`,
-                  parseObject: nowPlaying.value?.details?.parseObject
+                  media: nowPlaying.value.media,
+                  episode: nowPlaying.value.episode * episodeMultiplier,
+                  episodeRange: `${(nowPlaying.value.episode * episodeMultiplier) - (episodeMultiplier - 1)} ~ ${(nowPlaying.value.episode * episodeMultiplier)}`,
+                  parseObject: nowPlaying.value.parseObject
               })
           }
       }
