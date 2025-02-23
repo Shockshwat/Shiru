@@ -5,7 +5,7 @@ import Bottleneck from 'bottleneck'
 import { alToken, settings } from '@/modules/settings.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { toast } from 'svelte-sonner'
-import { getRandomInt, sleep } from '@/modules/util.js'
+import { getRandomInt, sleep, matchKeys } from '@/modules/util.js'
 import { cache, caches, mediaCache } from '@/modules/cache.js'
 import { malClient } from '@/modules/myanimelist.js'
 import Helper from '@/modules/helper.js'
@@ -602,7 +602,8 @@ class AnilistClient {
       title {
         romaji,
         english,
-        native
+        native,
+        userPreferred
       },
       synonyms
     }`
@@ -620,7 +621,13 @@ class AnilistClient {
       if (!media.length) continue
       const titleObject = flattenedTitles[Number(variableName.slice(1))]
       if (searchResults[titleObject.key]) continue
-      searchResults[titleObject.key] = media.map(media => getDistanceFromTitle(media, titleObject.title)).reduce((prev, curr) => prev.lavenshtein <= curr.lavenshtein ? prev : curr).id
+      for (const mediaItem of media) {
+        if (matchKeys(mediaItem, titleObject.title, ['title.userPreferred', 'title.english', 'title.romaji', 'title.native', 'synonyms'], titleObject.title.length > 15 ? 0.2 : titleObject.title.length > 9 ? 0.15 : 0.1)) {
+          searchResults[titleObject.key] = mediaItem.id
+          break
+        }
+      }
+      searchResults[titleObject.key] = !searchResults[titleObject.key] ? media.map(media => getDistanceFromTitle(media, titleObject.title)).reduce((prev, curr) => prev.lavenshtein <= curr.lavenshtein ? prev : curr).id : searchResults[titleObject.key]
     }
 
     const ids = Object.values(searchResults)

@@ -245,7 +245,7 @@ export default new class AnimeResolver {
       let failed = false
       let episode
       let media = this.animeNameCache[this.getCacheKeyForTitle(parseObj)]
-      const threshold = parseObj?.anime_title?.length > 15 ? 0.25 : parseObj?.anime_title?.length > 9 ? 0.15 : 0.1 // play nice with small anime titles
+      const threshold = parseObj?.anime_title?.length > 15 ? 0.2 : parseObj?.anime_title?.length > 9 ? 0.15 : 0.1 // play nice with small anime titles
       const titleKeys = ['title.userPreferred', 'title.english', 'title.romaji', 'title.native', 'synonyms']
       let needsVerification = !media || !this.isVerified(media, parseObj, titleKeys, threshold)
       // resolve episode, if movie, dont.
