@@ -8,7 +8,7 @@ import Debug from 'debug'
 
 const debug = Debug('ui:animedubs')
 
-/*
+/**
  * MAL (MyAnimeList) Dubs (Mal-Dubs)
  * Dub information is returned as MyAnimeList ids.
  */

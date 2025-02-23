@@ -13,7 +13,7 @@ import Debug from 'debug'
 
 const debug = Debug('ui:animeschedule')
 
-/*
+/**
  * AnimeSchedule.net (Dub Schedule) and AniChart (Sub/Hentai Schedule)
  * Handles periodic fetching of the dub airing schedule which is based on timetables from animeschedule.net tokenized api access and the sub/hentai schedule from AniChart.
  */
