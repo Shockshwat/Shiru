@@ -17,7 +17,7 @@ body:
           required: true
         - label: >-
             I have searched the [frequently asked
-            questions](https://github.com/RockinChaos/Shiru/blob/master/docs/faq.md)
+            questions](https://github.com/RockinChaos/Shiru/wiki/faq)
             for a solution that fixes this problem, without success.
           required: true
         - label: >-

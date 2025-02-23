@@ -8,7 +8,7 @@
 <h4 align="center"><b>Stream anime torrents, real-time with no waiting for downloads</b></h4>
 
 <p align="center">
-  <a href="https://github.com/RockinChaos/Shiru/wiki/about">About</a> •
+  <a href="https://github.com/RockinChaos/Shiru/wiki/">Wiki</a> •
   <a href="https://github.com/RockinChaos/Shiru/wiki/features/">Features</a> •
   <a href="https://github.com/RockinChaos/Shiru/wiki/faq/">Frequently Asked Questions</a> •
   <a href="#building-and-development">Building and Development</a> •
