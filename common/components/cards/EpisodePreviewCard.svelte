@@ -92,7 +92,7 @@
             {#if episodes?.length > 0 && ((Number(episodes[0]) || episodes[0]) < (Number(episodes[1]) || episodes[1]))}
               Episodes {Number(episodes[0]) || episodes[0]} ~ {Number(episodes[1]) || episodes[1]}
             {:else}
-              Episode {Number(data.episode) || data.episode}
+              Episode {Number(data.episode) || data.episode?.replace(/\D/g, '')}
             {/if}
           {:else if media?.format === 'MOVIE' }
             Movie
