@@ -182,7 +182,7 @@
                 </div>
               </div>
               <div class='col-sm-9 pre-wrap text-muted'>
-                <h2 class='mt-0 font-weight-bold text-white'>{version}</h2>{body.replaceAll('- ', '')}</div>
+                <h2 class='mt-0 font-weight-bold text-white'>{version}</h2>{body.replace(/<[^>]+>.*?<\/[^>]+>/gs, '').replace(/<[^>]+>/gs, '').replace('## Preview:', '').replace('# Preview:', '').replace(/\r\n\s*\r\n+/g, '\r\n\r\n').replaceAll('- ', '').trim()}</div>
             </div>
           {/each}
         {:catch}
