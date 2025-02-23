@@ -276,6 +276,7 @@
   }
 
   async function autoPlay () {
+    emit('duration', duration)
     const fillerEpisode = await episodesList.getSingleEpisode(media?.media?.idMal, media?.episode)
     filler = fillerEpisode?.filler && 'Filler'
     recap = fillerEpisode?.recap && 'Recap'
@@ -1288,8 +1289,8 @@
         {/if}
       </div>
       <div class='font-weight-normal overflow-hidden text-truncate font-size-16 text-muted d-none d-md-block'>
-        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (!media?.episodeTitle || !media.episodeTitle.includes(media.episode))}Episode {media.episode}{/if}
-        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (media?.episodeTitle && !media.episodeTitle.includes(media.episode))}{' - '}{/if}
+        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (!media?.episodeTitle || !media.episodeTitle.includes(media.episode))}Episode {media.episodeRange || media.episode}{/if}
+        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (media?.episodeTitle && !media.episodeTitle.includes(media.episodeRange || media.episode))}{' - '}{/if}
         {#if media?.episodeTitle}{media.episodeTitle}{/if}
       </div>
     </div>

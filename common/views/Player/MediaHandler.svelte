@@ -65,7 +65,31 @@
     return promiseData
   }
 
-  async function handleMedia ({ media, episode, parseObject }, newPlaying) {
+  /**
+   * Dynamically detects the number of episodes combined into a single video file.
+   * This is useful for series like "I'm Living With a Otaku NEET Kunoichi?!", where two or more episodes are merged into one file.
+   *
+   * An episode range is displayed visually in the player, but for auto-completion, the highest episode number is used when the full video file is watched.
+   * @param {number} duration - The duration of the video in seconds.
+   */
+  function handleRanged({ detail: duration }) {
+      if (duration && (duration > 120) && nowPlaying.value?.media?.duration) {
+          debug(`Duration of the current media has changed, checking for multiple episodes in the video file for: ${JSON.stringify(nowPlaying.value)}`)
+          const mediaDuration = nowPlaying.value?.media?.duration * 60
+          if (duration > (mediaDuration + 120)) { // Add 2 minutes (120 second) buffer
+              debug(`Multiple episodes have been detected in the video file for: ${JSON.stringify(nowPlaying.value)}`)
+              const episodeMultiplier = Math.round(duration / mediaDuration) // Round to nearest whole number
+              handleMedia({
+                  media: nowPlaying.value?.media,
+                  episode: nowPlaying.value?.episode * episodeMultiplier,
+                  episodeRange: `${(nowPlaying.value?.episode * episodeMultiplier) - (episodeMultiplier - 1)} ~ ${(nowPlaying.value?.episode * episodeMultiplier)}`,
+                  parseObject: nowPlaying.value?.details?.parseObject
+              })
+          }
+      }
+  }
+
+  async function handleMedia ({ media, episode, episodeRange, parseObject }, newPlaying) {
     if (media || episode || parseObject) {
       const zeroEpisode = media && await checkForZero(media)
       const ep = (Number(episode || parseObject?.episode_number) === 0) || (zeroEpisode && !episode) ? 0 : (Number(episode || parseObject?.episode_number) || null)
@@ -94,6 +118,7 @@
       const details = {
         title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
         episode: ep,
+        episodeRange,
         episodeTitle: streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title)),
         thumbnail: media?.coverImage.extraLarge
       }
@@ -101,6 +126,7 @@
       nowPlaying.set({
           ...(newPlaying ? newPlaying : {}),
           media,
+          parseObject,
           ...details
       })
       if (!newPlaying) {
@@ -219,7 +245,6 @@
     result = remapByTitle(result)
     result.sort((a, b) => a.media.episode - b.media.episode)
     result.sort((a, b) => (b.media.parseObject.anime_season ?? 1) - (a.media.parseObject.anime_season ?? 1))
-
     debug(`Sorted ${result.length} files`, fileListToDebug(result))
 
     processed.set([...result, ...otherFiles])
@@ -290,4 +315,4 @@
   export let overlay = []
 </script>
 
-<Player files={$processed} {miniplayer} media={$nowPlaying} bind:playFile bind:page bind:overlay on:current={handleCurrent} />
+<Player files={$processed} {miniplayer} media={$nowPlaying} bind:playFile bind:page bind:overlay on:current={handleCurrent} on:duration={handleRanged} />
