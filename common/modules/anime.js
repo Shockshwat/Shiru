@@ -153,6 +153,7 @@ export async function getChaptersAniSkip (file, duration) {
   const jsonRough = await resRough.json()
 
   const map = {}
+  if (jsonAccurate?.statusCode === 500 || jsonRough?.statusCode === 500) return []
   for (const result of [...jsonAccurate.results, ...jsonRough.results]) {
     map[result.skipType] ||= result
   }
