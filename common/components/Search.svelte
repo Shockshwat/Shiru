@@ -274,7 +274,7 @@
         <Tv class='mr-10' size='3rem' />
         <div>Format</div>
       </div>
-      <div class='input-group'>
+      <div class='input-group z-5'>
         <CustomDropdown id={`format-input`} bind:form options={{ TV: 'TV Show', MOVIE: 'Movie', TV_SHORT: 'TV Short', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA' }} bind:value={search.format} bind:altValue={search.format_not} bind:disabled={search.disableSearch}/>
       </div>
     </div>
@@ -284,7 +284,7 @@
           <MonitorPlay class='mr-10' size='3rem' />
           <div>Status</div>
         </div>
-        <div class='input-group'>
+        <div class='input-group z-5'>
           <CustomDropdown id={`status-input`} bind:form options={{ RELEASING: 'Releasing', FINISHED: 'Finished', NOT_YET_RELEASED: 'Not Yet Released', CANCELLED: 'Cancelled' }} bind:value={search.status} bind:altValue={search.status_not} bind:disabled={search.disableSearch}/>
         </div>
       </div>
@@ -408,6 +408,9 @@
 <style>
   .bg-danger-dark {
     background-color: #631420;
+  }
+  .z-5 {
+    z-index: 5;
   }
 
   .input-group,
