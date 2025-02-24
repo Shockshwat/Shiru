@@ -1289,7 +1289,11 @@
         {/if}
       </div>
       <div class='font-weight-normal overflow-hidden text-truncate font-size-16 text-muted d-none d-md-block'>
-        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (!media?.episodeTitle || !media.episodeTitle.includes(media.episode))}Episode {media.episodeRange || media.episode}{/if}
+        {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (!media?.episodeTitle || !media.episodeTitle.includes(media.episode))}
+          {@const maxEpisodes = getMediaMaxEp(media.media)}
+          Episode {media.episodeRange || media.episode}
+          {#if maxEpisodes && (Number(maxEpisodes) > 1)} of {maxEpisodes}{:else if !maxEpisodes && videos && (videos.length > 1)} of {videos.length}{/if} <!-- for when the media fails to resolve, we can predict that the file length is likely the episode count. -->
+        {/if}
         {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (media?.episodeTitle && !media.episodeTitle.includes(media.episodeRange || media.episode))}{' - '}{/if}
         {#if media?.episodeTitle}{media.episodeTitle}{/if}
       </div>
