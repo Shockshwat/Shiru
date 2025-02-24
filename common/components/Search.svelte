@@ -275,7 +275,7 @@
         <div>Format</div>
       </div>
       <div class='input-group'>
-        <CustomDropdown id={`status-input`} bind:form options={{ TV: 'TV Show', MOVIE: 'Movie', TV_SHORT: 'TV Short', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA' }} bind:value={search.format} bind:altValue={search.format_not} bind:disabled={search.disableSearch}/>
+        <CustomDropdown id={`format-input`} bind:form options={{ TV: 'TV Show', MOVIE: 'Movie', TV_SHORT: 'TV Short', SPECIAL: 'Special', OVA: 'OVA', ONA: 'ONA' }} bind:value={search.format} bind:altValue={search.format_not} bind:disabled={search.disableSearch}/>
       </div>
     </div>
     {#if !search.scheduleList}
