@@ -1,20 +1,14 @@
 import { autoUpdater } from 'electron-updater'
 import { ipcMain, shell } from 'electron'
 
-let notified = false
-ipcMain.on('update', () => {
-  if (!notified) {
-    autoUpdater.checkForUpdatesAndNotify()
-  } else {
-    autoUpdater.checkForUpdates()
-  }
-})
-
-autoUpdater.checkForUpdatesAndNotify()
 export default class Updater {
   hasUpdate = false
+  downloading = false
+
   window
   torrentWindow
+  destroyed
+
   /**
    * @param {import('electron').BrowserWindow} window
    * @param {import('electron').BrowserWindow} torrentWindow
@@ -22,15 +16,23 @@ export default class Updater {
   constructor (window, torrentWindow) {
     this.window = window
     this.torrentWindow = torrentWindow
+    ipcMain.on('update', () => {
+      if (!this.downloading && !this.hasUpdate) autoUpdater.checkForUpdatesAndNotify()
+      else autoUpdater.checkForUpdates()
+    })
     autoUpdater.on('update-available', () => {
-      notified = true
-      window.webContents.send('update-available', true)
+      if (!this.downloading) {
+        this.downloading = true
+        setInterval(() => { if (!this.hasUpdate && !this.destroyed) this.window.webContents.send('update-available', true) }, 1000)
+      }
     })
     autoUpdater.on('update-downloaded', () => {
-      this.hasUpdate = true
-      notified = true
-      window.webContents.send('update-downloaded', true)
+      if (!this.hasUpdate) {
+        this.hasUpdate = true
+        setInterval(() => { if (!this.destroyed) this.window.webContents.send('update-downloaded', true) }, 1000)
+      }
     })
+    autoUpdater.checkForUpdatesAndNotify()
   }
 
   install (forceRunAfter = false) {

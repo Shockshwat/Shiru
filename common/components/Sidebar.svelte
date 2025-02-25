@@ -58,7 +58,7 @@
       </SidebarLink>
     {/if}
     {#if updateState === 'downloading'}
-      <SidebarLink click={() => { toast('Update is downloading...') }} icon='download' text='Update Downloading...' css='{!$settings.donate ? `mt-auto` : ``}' {page} let:active>
+      <SidebarLink click={() => { toast('Update is downloading...', { description: 'This may take a moment, the update will be ready shortly.' }) }} icon='download' text='Update Downloading...' css='{!$settings.donate ? `mt-auto` : ``}' {page} let:active>
         <Download size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
       </SidebarLink>
     {:else if updateState === 'ready'}

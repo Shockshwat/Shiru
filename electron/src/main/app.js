@@ -184,11 +184,13 @@ export default class App {
 
   async destroy(forceRunAfter = false) {
     if (this.destroyed) return
+    this.updater.destroyed = true
     this.webtorrentWindow.webContents.postMessage('destroy', null)
     await new Promise(resolve => {
       ipcMain.once('destroyed', resolve)
       setTimeout(resolve, 5000).unref?.()
     })
+    this.close = true
     this.destroyed = true
     if (!this.updater.install(forceRunAfter)) app.quit()
   }
