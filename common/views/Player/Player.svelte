@@ -1425,7 +1425,7 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Audio Tracks'>
             <ListMusic size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto mh-40 text-nowrap'>
+          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto overflow-x-hidden mh-40 text-nowrap'>
             {#each video.audioTracks as track}
               <input name='audio-radio-set' type='radio' id='audio-{track.id}-radio' value={track.id} checked={track.enabled} />
               <label for='audio-{track.id}-radio' use:click={() => selectAudio(track.id)} class='pb-5'>
@@ -1440,7 +1440,7 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Video Tracks'>
             <ListVideo size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto mh-40 text-nowrap'>
+          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto overflow-x-hidden mh-40 text-nowrap'>
             {#each video.videoTracks as track}
               <input name='video-radio-set' type='radio' id='video-{track.id}-radio' value={track.id} checked={track.selected} />
               <label for='video-{track.id}-radio' use:click={() => selectVideo(track.id)} class='pb-5'>
@@ -1455,7 +1455,7 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Subtitles [C]'>
             <Captions size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto mh-40 text-nowrap'>
+          <div class='dropdown-menu dropdown-menu-right ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto overflow-x-hidden mh-40 text-nowrap'>
             <input name='subtitle-radio-set' type='radio' id='subtitle-off-radio' value='off' checked={subHeaders && subs?.current === -1} />
             <label for='subtitle-off-radio' use:click={() => { subs.selectCaptions(-1); setTimeout(() => subs?.renderer?.resize(), 200) }} class='pb-5'> OFF </label> <!-- stupid fix (resize) because video metadata doesn't update for multiple frames -->
             {#each subHeaders as track}
