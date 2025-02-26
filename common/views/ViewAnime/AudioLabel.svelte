@@ -34,7 +34,7 @@
 </script>
 {#if settings.value.cardAudio}
     {#if !banner && !viewAnime}
-        {@const dubEpisodes = String(($isDubbed || $isPartial) && animeSchedule.dubAiredLists?.value?.filter(episode => episode.id === media.id)?.reduce((max, ep) => Math.max(max, ep.episode.aired), 0) || (!$isPartial && media.status !== 'RELEASING' && media.status !== 'NOT_YET_RELEASED' && Number(media.seasonYear || 0) < 2025 && getMediaMaxEp(media)) || '')}
+        {@const dubEpisodes = String(($isDubbed || $isPartial) && animeSchedule.dubAiredLists?.value?.filter(episode => episode.id === media.id)?.reduce((max, ep) => Math.max(max, ep.episode.aired), 0) || (animeSchedule.dubAiring.value?.find(entry => entry.media?.media?.id === media.id)?.episodeNumber && '0') || (!$isPartial && media.status !== 'RELEASING' && media.status !== 'NOT_YET_RELEASED' && Number(media.seasonYear || 0) < 2025 && getMediaMaxEp(media)) || '')}
         {@const subEpisodes = String(media.status !== 'NOT_YET_RELEASED' && media.status !== 'CANCELLED' && getMediaMaxEp(media, true) || dubEpisodes || '')}
         <div class='position-absolute bottom-0 right-0 d-flex h-2' class:mb-4={smallCard} class:mb-3={!smallCard}>
             {#if media.isAdult}
@@ -43,9 +43,9 @@
                 </div>
             {/if}
             {#if $isDubbed || $isPartial}
-                <div class='pl-10 pr-20 text-dark font-weight-bold d-flex align-items-center h-full slant' class:w-icon={!dubEpisodes || dubEpisodes.length === 0} class:w-text={dubEpisodes && dubEpisodes.length > 0} class:dubbed={$isDubbed} class:incomplete={$isPartial}>
+                <div class='pl-10 pr-20 text-dark font-weight-bold d-flex align-items-center h-full slant' class:w-icon={!dubEpisodes || dubEpisodes.length === 0 || Number(dubEpisodes) === 0} class:w-text={dubEpisodes && dubEpisodes.length > 0 && Number(dubEpisodes) > 0} class:dubbed={$isDubbed} class:incomplete={$isPartial}>
                     <svelte:component this={$isDubbed ? Mic : MicOff} size='1.8rem' strokeWidth='2' />
-                    <span class='d-flex align-items-center line-height-1 ml-2'><div class='line-height-1 mt-2'>{dubEpisodes}</div></span>
+                    <span class='d-flex align-items-center line-height-1 ml-2'><div class='line-height-1 mt-2'>{#if Number(dubEpisodes) > 0}{Number(dubEpisodes)}{/if}</div></span>
                 </div>
             {/if}
             <div class='px-10 z-10 text-dark rounded-right font-weight-bold d-flex align-items-center h-full subbed slant mrl-1'>
@@ -53,7 +53,6 @@
                 <span class='d-flex align-items-center line-height-1' class:ml-3={subEpisodes && subEpisodes.length > 0}><div class='line-height-1 mt-2'>{subEpisodes}</div></span>
             </div>
         </div>
-
     {:else if !viewAnime}
         {$isDubbed ? 'Dub' : $isPartial ? 'Partial Dub' : 'Sub'}
     {:else if viewAnime}
