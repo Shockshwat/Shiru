@@ -1293,6 +1293,8 @@
           {@const maxEpisodes = getMediaMaxEp(media.media)}
           Episode {media.episodeRange || media.episode}
           {#if maxEpisodes && (Number(maxEpisodes) > 1)} of {maxEpisodes}{:else if !maxEpisodes && videos && (videos.length > 1)} of {videos.length}{/if} <!-- for when the media fails to resolve, we can predict that the file length is likely the episode count. -->
+        {:else if current && (videos?.length > 1)}
+          Episode {videos.indexOf(current) + 1} of {videos.length} <!-- fallback for when the media fails to resolve and we also fail to resolve the episode numbers, best to indicate what file we are currently on. -->
         {/if}
         {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (media?.episodeTitle && !media.episodeTitle.includes(media.episodeRange || media.episode))}{' - '}{/if}
         {#if media?.episodeTitle}{media.episodeTitle}{/if}
