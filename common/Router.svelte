@@ -23,7 +23,7 @@
 
   $: minwidth = $isMobile ? '200px' : '35rem'
   $: maxwidth = $isMobile ? '200px' : '60rem'
-  $: $search = page === 'search' && $search.scheduleList ? { format: [], format_not: [], status: [], status_not: [] } : $search
+  $: $search = page === 'search' && $search.scheduleList ? { format: [], format_not: [], status: [], status_not: [] } : { format: [], format_not: [], status: [], status_not: [], ...$search }
   $: visible = !overlay.includes('torrent') && !overlay.includes('notifications') && !overlay.includes('profiles') && !overlay.includes('minimizetray')
 </script>
 

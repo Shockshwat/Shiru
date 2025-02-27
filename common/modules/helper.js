@@ -268,6 +268,7 @@ export default class Helper {
           (!variables.season || variables.season === media.season) &&
           (!variables.year || variables.year === media.seasonYear) &&
           (!variables.format || (Array.isArray(variables.format) && variables.format.includes(media.format)) || variables.format === media.format) &&
+          (!variables.format_not || (Array.isArray(variables.format_not) && !variables.format_not.includes(media.format)) || variables.format_not !== media.format) &&
           (!variables.status || (typeof variables.status === 'string' && variables.status === media.status) || (Array.isArray(variables.status) && variables.status.includes(media.status))) &&
           (!variables.status_not || (typeof variables.status_not === 'string' && variables.status_not !== media.status) || (Array.isArray(variables.status_not) && !variables.status_not.includes(media.status))) &&
           (!variables.continueWatching || (media.status === 'FINISHED' || media.mediaListEntry?.progress < media.nextAiringEpisode?.episode - 1))) {
@@ -278,7 +279,8 @@ export default class Helper {
           matchKeys(node, variables.search, ['title', 'alternative_titles.en', 'alternative_titles.ja']) &&
           (!variables.season || variables.season.toLowerCase() === node.start_season?.season.toLowerCase()) &&
           (!variables.year || variables.year === node.start_season?.year) &&
-          (!variables.format || ((Array.isArray(variables.format) ? !variables.format.includes(node.media_type.toUpperCase()) && node.media_type.toUpperCase() !== 'TV_SHORT' : variables.format !== 'TV_SHORT' && variables.format === node.media_type.toUpperCase()) || ((Array.isArray(variables.format) ? variables.format.includes('TV_SHORT') : variables.format === 'TV_SHORT') && node.average_episode_duration < 1200))) &&
+          (!variables.format || (Array.isArray(variables.format) ? (variables.format.includes(node.media_type.toUpperCase()) || (variables.format.includes('TV_SHORT') && (node.media_type.toUpperCase() === 'TV') && (node.average_episode_duration < 1200))) && (!variables.format.includes('TV') || variables.format.includes('TV_SHORT') || (node.average_episode_duration >= 1200)) : ((variables.format === node.media_type.toUpperCase()) || ((variables.format === 'TV_SHORT') && (node.media_type.toUpperCase() === 'TV') && (node.average_episode_duration < 1200))) && ((variables.format !== 'TV') || (variables.format === 'TV_SHORT') || (node.average_episode_duration >= 1200)))) &&
+          (!variables.format_not || (Array.isArray(variables.format_not) ? !((variables.format_not.includes(node.media_type.toUpperCase()) || (variables.format_not.includes('TV_SHORT') && (node.media_type.toUpperCase() === 'TV') && (node.average_episode_duration < 1200))) && (!variables.format_not.includes('TV') || variables.format_not.includes('TV_SHORT') || (node.average_episode_duration >= 1200))) : !(((variables.format_not === node.media_type.toUpperCase()) || ((variables.format_not === 'TV_SHORT') && (node.media_type.toUpperCase() === 'TV') && (node.average_episode_duration < 1200))) && ((variables.format_not !== 'TV') || (variables.format_not === 'TV_SHORT') || (node.average_episode_duration >= 1200))))) &&
           (!variables.status || (typeof variables.status === 'string' && variables.status === this.airingMap(node.status)) || (Array.isArray(variables.status) && variables.status.includes(this.airingMap(node.status)))) &&
           (!variables.status_not || (typeof variables.status_not === 'string' && variables.status_not !== this.airingMap(node.status)) || (Array.isArray(variables.status_not) && !variables.status_not.includes(this.airingMap(node.status))))) {
           // api does not provide airing episode or tags, additionally genres are inaccurate and tags do not exist.
@@ -290,6 +292,7 @@ export default class Helper {
       debug(`Handling page media list with user specific sorting ${variables.sort}`)
       const updatedVariables = { ...variables }
       delete updatedVariables.sort // delete user sort as you can't sort by user specific sorting on AniList when logged into MyAnimeList.
+      if (!this.isAniAuth()) delete updatedVariables.format // MyAnimeList series format can be different from Anilist, we don't need to include this since we just filtered what is needed above.
       const startIndex = (perPage * (page - 1))
       const endIndex = startIndex + perPage
       const paginatedIds = ids.slice(startIndex, endIndex)
