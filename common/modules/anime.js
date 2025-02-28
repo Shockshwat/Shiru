@@ -199,7 +199,7 @@ export async function anitomyscript (...args) {
       obj.anime_year = yearMatch[1]
       obj.anime_title = obj.anime_title.replace(/ (19[5-9]\d|20\d{2})/, '')
     }
-    obj.anime_title = obj.anime_title.replace(/\s*-\s*/g, '')
+    obj.anime_title = obj.anime_title.replace(/(?<=\s)-\s*|\s*-(?=\s)/g, '')
     if (Number(obj.anime_season) > 1) obj.anime_title += ' S' + Number(obj.anime_season)
   }
   debug(`AnitoMyScript found titles: ${JSON.stringify(parseObjs)}`)
