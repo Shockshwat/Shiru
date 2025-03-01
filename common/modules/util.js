@@ -400,11 +400,13 @@ export const generalDefaults = {
 /**
  * @typedef {Object} HistoryDefaults
  * @property {any} [lastMagnet]
+ * @property {any} [lastBoosted]
  * @property {any} [lastSubtitle]
  * @property {any} [animeEpisodeProgress]
  */
 export const historyDefaults = {
   lastMagnet: undefined,
+  lastBoosted: undefined,
   lastSubtitle: undefined,
   animeEpisodeProgress: []
 }

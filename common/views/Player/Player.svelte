@@ -22,7 +22,7 @@
   import { SUPPORTS } from '@/modules/support.js'
   import 'rvfc-polyfill'
   import IPC from '@/modules/ipc.js'
-  import { ArrowDown, ArrowUp, Captions, Cast, CircleHelp, Contrast, FastForward, Keyboard, List, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX } from 'lucide-svelte'
+  import { ArrowDown, ArrowUp, Captions, Cast, CircleHelp, Contrast, FastForward, Keyboard, List, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX, SlidersVertical } from 'lucide-svelte'
   import Debug from 'debug'
 
   const debug = Debug('ui:player')
@@ -77,7 +77,12 @@
   const canCast = false
   let isFullscreen = false
   let ended = false
+  let gain = 0
   let volume = Number(cache.getEntry(caches.GENERAL, 'volume')) || 1
+  let volumeBoosted = false
+  let audioCtx = null
+  let source = null
+  let gainNode = null
   let playbackRate = 1
   let externalPlayerReady = false
   $: cache.setEntry(caches.GENERAL, 'volume', String(volume || 0))
@@ -90,7 +95,26 @@
     }
   }
 
+  function setupAudio() {
+    if (!audioCtx) {
+      audioCtx = new AudioContext()
+      source = audioCtx.createMediaElementSource(video)
+      gainNode = audioCtx.createGain()
+      source.connect(gainNode)
+      gainNode.connect(audioCtx.destination)
+    }
+  }
+
   function checkAudio () {
+    volumeBoosted = cache.getEntry(caches.HISTORY, 'lastBoosted')?.[`${media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name}`]?.boosted || false
+    if (volumeBoosted) {
+      setupAudio()
+      gain = cache.getEntry(caches.HISTORY, 'lastBoosted')?.[`${media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name}`]?.gain || 0
+      gainNode.gain.value = gain
+    } else {
+      if (gainNode?.gain) gainNode.gain.value = volume
+      gain = 0
+    }
     if ('audioTracks' in HTMLVideoElement.prototype) {
       if (!video.audioTracks.length) {
         toast.error('Audio Codec Unsupported', {
@@ -312,9 +336,6 @@
     resetImmerse()
     setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
   }
-  function toggleMute () {
-    muted = !muted
-  }
   const handleVisibility = visibility => {
     if ($settings.playerPause && !pip) {
       hidden = (visibility === 'hidden')
@@ -358,6 +379,31 @@
         playAnime(media.media, media.episode - 1)
       }
     }
+  }
+  function setGain(event) {
+    let value = parseFloat(event.target.value)
+    if (value <= 1) {
+      gainNode.gain.value = 1
+      volume = value
+    } else {
+      volume = 1
+      gainNode.gain.value = value
+    }
+    gain = value
+    cache.setEntry(caches.HISTORY, 'lastBoosted', { ...(cache.getEntry(caches.HISTORY, 'lastBoosted') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: { boosted: volumeBoosted, gain } })
+  }
+  function toggleGain () {
+    setupAudio()
+    if (volumeBoosted) {
+      volume = gain <= 1 ? gain : 1
+      gain = 1
+      if (audioCtx) gainNode.gain.value = 1
+    } else setGain({ target: { value: volume } })
+    volumeBoosted = !volumeBoosted
+    cache.setEntry(caches.HISTORY, 'lastBoosted', { ...(cache.getEntry(caches.HISTORY, 'lastBoosted') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: { boosted: volumeBoosted, gain } })
+  }
+  function toggleMute () {
+    muted = !muted
   }
   function toggleFullscreen () {
     document.fullscreenElement ? document.exitFullscreen() : document.querySelector('.content-wrapper').requestFullscreen()
@@ -602,6 +648,13 @@
       type: 'icon',
       desc: 'Cycle Subtitles'
     },
+    KeyV: {
+      fn: () => toggleGain(),
+      id: 'toggle_gain',
+      icon: SlidersVertical,
+      type: 'icon',
+      desc: 'Toggle Volume Limit Increase'
+    },
     ArrowLeft: {
       fn: e => {
         e.stopImmediatePropagation()
@@ -628,7 +681,8 @@
       fn: e => {
         e.stopImmediatePropagation()
         e.preventDefault()
-        volume = Math.min(1, volume + 0.05)
+        if (volumeBoosted) setGain({ target: { value: Math.min(3, gain + 0.05) } })
+        else volume = Math.min(1, volume + 0.05)
       },
       id: 'volume_up',
       icon: Volume2,
@@ -639,7 +693,8 @@
       fn: e => {
         e.stopImmediatePropagation()
         e.preventDefault()
-        volume = Math.max(0, volume - 0.05)
+        if (volumeBoosted) setGain({ target: { value: Math.max(0, gain - 0.05) } })
+        else volume = Math.max(0, volume - 0.05)
       },
       id: 'volume_down',
       icon: Volume1,
@@ -1433,7 +1488,16 @@
             <Volume2 size='2rem' fill='white' />
           {/if}
         </span>
-        <input class='ctrl h-full custom-range' type='range' min='0' max='1' step='any' data-name='setVolume' bind:value={volume} />
+        {#if !volumeBoosted}
+          <input class='ctrl h-full custom-range' type='range' min='0' max='1' step='any' data-name='setVolume' bind:value={volume} />
+        {:else}
+          <input class='ctrl h-full custom-range' class:boost-color={gain > 1} type='range' min='0' max='3' step='any' data-name='setVolume' bind:value={gain} on:input={setGain}/>
+        {/if}
+        {#if (volume === 1) || volumeBoosted}
+          <span class='icon ctrl boost p-0 mt-15 d-flex align-items-center justify-content-center' class:boost-color={volumeBoosted} title='Increase Volume Limit [V]' data-name='toggleGain' use:click={toggleGain}>
+            <SlidersVertical size='1.4rem' fill='white' />
+          </span>
+        {/if}
       </div>
       <div class='ts' class:mr-auto={playbackRate === 1}>{toTS(targetTime, safeduration > 3600 ? 2 : 3)} / {toTS(safeduration - targetTime, safeduration > 3600 ? 2 : 3)}</div>
       {#if playbackRate !== 1}
@@ -1800,6 +1864,22 @@
   .ctrl {
     cursor: pointer;
   }
+
+  .boost-color {
+    color: #FF7F00 !important;
+  }
+
+  .bottom .volume:hover .boost {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .bottom .volume .boost {
+    width: 0;
+    height: 0;
+    transition: width 0.1s ease, height 0.1s ease;
+  }
+
   .bottom .volume:hover .custom-range {
     width: 5vw;
     display: inline-block;
