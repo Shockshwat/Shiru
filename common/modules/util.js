@@ -205,19 +205,31 @@ export function matchKeys(nest, phrase, keys, threshold = 0.4) {
   })
 }
 
-export function matchPhrase(search, phrase, threshold) {
+/**
+ * Matches a search phrase against a given phrase or list of phrases using exact matching,
+ * substring inclusion, and Levenshtein distance for fuzzy matching.
+ *
+ * @param {string} search - The input string to search within.
+ * @param {string | string[]} phrase - The phrase or array of phrases to match against.
+ * @param {number} threshold - The maximum Levenshtein distance allowed for a match.
+ * @param {boolean} [strict=false] - If true, only considers whole phrase similarity instead of checking individual words or inclusion.
+ * @returns {boolean} - Returns true if a match is found, otherwise false.
+ */
+export function matchPhrase(search, phrase, threshold, strict = false) {
   if (!search || !phrase) return false
   const normalizedSearch = search.toLowerCase().replace(/[^\w\s]/g, '')
   phrase = Array.isArray(phrase) ? phrase : [phrase]
-
   for (let p of phrase) {
     if (p) {
       const normalizedPhrase = p.toLowerCase().replace(/[^\w\s]/g, '')
-      if (normalizedSearch.includes(normalizedPhrase)) return true
-
-      const wordsInFileName = normalizedSearch.split(/\s+/)
-      for (let word of wordsInFileName) {
-        if (levenshtein(word, normalizedPhrase) <= threshold) return true
+      if (strict) {
+        if (levenshtein(normalizedSearch, normalizedPhrase) <= threshold) return true
+      } else {
+        if (normalizedSearch.includes(normalizedPhrase)) return true
+        const wordsInFileName = normalizedSearch.split(/\s+/)
+        for (let word of wordsInFileName) {
+          if (levenshtein(word, normalizedPhrase) <= threshold) return true
+        }
       }
     }
   }
@@ -388,10 +400,12 @@ export const generalDefaults = {
 /**
  * @typedef {Object} HistoryDefaults
  * @property {any} [lastMagnet]
+ * @property {any} [lastSubtitle]
  * @property {any} [animeEpisodeProgress]
  */
 export const historyDefaults = {
   lastMagnet: undefined,
+  lastSubtitle: undefined,
   animeEpisodeProgress: []
 }
 
