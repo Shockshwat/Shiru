@@ -60,6 +60,7 @@
 <script>
   import { nowPlaying as currentMedia } from '../Player/MediaHandler.svelte'
   import { cache, caches } from '@/modules/cache.js'
+  import { getMediaMaxEp } from '@/modules/anime.js'
   import TorrentCard from './TorrentCard.svelte'
   import { add } from '@/modules/torrent.js'
   import TorrentSkeletonCard from './TorrentSkeletonCard.svelte'
@@ -108,7 +109,8 @@
 
   $: lookup.catch(err => {
     debug(`Error fetching torrents for ${search.media?.title?.userPreferred} Episode ${search.episode}, ${err.stack}`)
-    toast.error(`No torrent found for ${anilistClient.title(search.media)} Episode ${search.episode}!`, { description: err.message })
+    if (err.message?.toLowerCase()?.includes("no results found") && getMediaMaxEp(search?.media, true) < search?.episode) toast.error(`No torrent found for ${anilistClient.title(search.media)} Episode ${search.episode}!`, {description: `This episode hasn't released yet! ${search?.media?.nextAiringEpisode?.timeUntilAiring ? `\nEpisode ${search.media.nextAiringEpisode.episode} will be released on ${new Date(Date.now() + search.media.nextAiringEpisode.timeUntilAiring * 1000).toDateString()}` : ''}`})
+    else toast.error(`No torrent found for ${anilistClient.title(search.media)} Episode ${search.episode}!`, {description: err.message})
   })
 
   const lastMagnet = cache.getEntry(caches.HISTORY, 'lastMagnet')?.[`${search?.media?.id}`]?.[`${search?.episode}`] || cache.getEntry(caches.HISTORY, 'lastMagnet')?.[`${search?.media?.id}`]?.batch
