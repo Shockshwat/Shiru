@@ -552,6 +552,8 @@ class AnilistClient {
         }
       }
     })
+    cache.cacheEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer.id }), { sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer.id }, res, (await cache.cachedEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer.id })))?.expiry || (Date.now() + 14 * 60 * 1000))
+    this.userLists.value = res
   }
 
   async deleteListEntry(mediaId) {
@@ -565,6 +567,7 @@ class AnilistClient {
         }
       }
     })
+    cache.cacheEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer.id }), { sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer.id }, res, (await cache.cachedEntry(caches.USER_LISTS, JSON.stringify({ sort: 'UPDATED_TIME_DESC', id: this.userID?.viewer?.data?.Viewer.id })))?.expiry || (Date.now() + 14 * 60 * 1000))
     this.userLists.value = res
   }
 
