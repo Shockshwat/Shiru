@@ -17,24 +17,28 @@
     let isDubbed = writable(false)
     let isPartial = writable(false)
 
-    $: {
-        if (media) {
-            setLabel()
+    $: dubEpisodes = null
+    animeSchedule.dubAiredLists.subscribe(value => getDubEpisodes(value))
+    function getDubEpisodes(dubAiredLists) {
+        if (!banner && !viewAnime) {
+            const episodes = String(($isDubbed || $isPartial) && dubAiredLists?.filter(episode => episode.id === media.id)?.reduce((max, ep) => Math.max(max, ep.episode.aired), 0) || (dubAiredLists?.find(entry => entry.media?.media?.id === media.id)?.episodeNumber && '0') || (!$isPartial && media.status !== 'RELEASING' && media.status !== 'NOT_YET_RELEASED' && Number(media.seasonYear || 0) < 2025 && getMediaMaxEp(media)) || '')
+            if (dubEpisodes !== episodes) dubEpisodes = episodes
         }
     }
 
+    $: if (media) setLabel()
     function setLabel() {
         const dubLists = malDubs.dubLists.value
         if (media?.idMal && dubLists?.dubbed) {
             const episodeOrMedia = !episode || malDubs.isDubMedia(data?.parseObject)
             isDubbed.set(episodeOrMedia && dubLists.dubbed.includes(media.idMal))
             isPartial.set(episodeOrMedia && dubLists.incomplete.includes(media.idMal))
+            getDubEpisodes(animeSchedule.dubAiredLists.value)
         }
     }
 </script>
 {#if settings.value.cardAudio}
     {#if !banner && !viewAnime}
-        {@const dubEpisodes = String(($isDubbed || $isPartial) && animeSchedule.dubAiredLists?.value?.filter(episode => episode.id === media.id)?.reduce((max, ep) => Math.max(max, ep.episode.aired), 0) || (animeSchedule.dubAiring.value?.find(entry => entry.media?.media?.id === media.id)?.episodeNumber && '0') || (!$isPartial && media.status !== 'RELEASING' && media.status !== 'NOT_YET_RELEASED' && Number(media.seasonYear || 0) < 2025 && getMediaMaxEp(media)) || '')}
         {@const subEpisodes = String(media.status !== 'NOT_YET_RELEASED' && media.status !== 'CANCELLED' && getMediaMaxEp(media, true) || dubEpisodes || '')}
         <div class='position-absolute bottom-0 right-0 d-flex h-2' class:mb-4={smallCard} class:mb-3={!smallCard}>
             {#if media.isAdult}
