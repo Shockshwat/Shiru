@@ -114,7 +114,7 @@
       <div class='col-auto d-flex flex-column align-items-end text-right'>
         <div class='text-white font-weight-bold'>
           {#if data.episode}
-            {@const episodes = (data.parseObject?.file_name?.match(/\b\d+\s*[-~]\s*\d+\b/) || []).map(m => m.split(/[-~]/).map(n => +n.trim()))[0] || []}
+            {@const episodes = (data.parseObject?.file_name?.match(/\b\d+\s*[-~]\s*\d+\b/) || []).map(m => m.split(/[-~]/).map(n => +n.trim()))[0] || Array.isArray(data.episode) ? data.episode : []}
             {#if episodes?.length > 0 && ((Number(episodes[0]) || episodes[0]) < (Number(episodes[1]) || episodes[1]))}
               Episodes {Number(episodes[0]) || episodes[0]} ~ {Number(episodes[1]) || episodes[1]}
             {:else}
@@ -142,6 +142,11 @@
               {since(data.date)}
             </div>
           {:else if data.similarity}
+            {#if settings.value.cardAudio}
+              <div class='text-muted font-size-12 title ml-5 mr-5 overflow-hidden'>
+                •
+              </div>
+            {/if}
             <div class='text-muted font-size-12 title overflow-hidden'>
               Confidence: {Math.round(data.similarity * 100)}%
             </div>
