@@ -71,6 +71,9 @@ export function hoverExit (node, hoverUpdate = noop) {
 /**
  * Adds hover and click event listeners to the specified node.
  * @param {HTMLElement} node - The node to attach the event listeners to.
+ * @param {Function} [cb=noop] - The callback function to be executed on click.
+ * @param {Function} [hoverUpdate=noop] - The callback function to be executed on hover.
+ * @param {Function} [rcb=noop] - The callback function to be executed on right-click (alt click).
  */
 export function hoverClick (node, [cb = noop, hoverUpdate = noop, rcb = noop]) {
   let pointerType = 'touch'
@@ -126,6 +129,44 @@ export function hoverClick (node, [cb = noop, hoverUpdate = noop, rcb = noop]) {
   node.addEventListener('pointerleave', e => {
     lastHoverElement = hoverUpdate
     if (e.pointerType === 'mouse') hoverUpdate(false)
+  })
+}
+
+/**
+ * Adds drag event listener to the specified node.
+ * @param {HTMLElement} node - The node to attach the click event listener to.
+ * @param {Function} [dp=noop] - The callback function to be executed on drag.
+ */
+export function drag (node, dp = noop) {
+  let startX = 0
+  let endX = 0
+  let isDragging = false
+  let hasMoved = false
+  node.role = 'presentation'
+  node.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX
+    hasMoved = false
+  })
+  node.addEventListener('touchmove', e => {
+    endX = e.touches[0].clientX
+    if (Math.abs(endX - startX) > 50) hasMoved = true
+  })
+  node.addEventListener('touchend', () => {
+    if (hasMoved) dp(endX - startX)
+  })
+  node.addEventListener('mousedown', e => {
+    isDragging = true
+    startX = e.clientX
+    hasMoved = false
+  })
+  node.addEventListener('mousemove', e => {
+    if (!isDragging) return
+    endX = e.clientX
+    if (Math.abs(endX - startX) > 50) hasMoved = true
+  })
+  node.addEventListener('mouseup', () => {
+    if (isDragging && hasMoved) dp(endX - startX)
+    isDragging = false
   })
 }
 
