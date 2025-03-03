@@ -1354,16 +1354,16 @@
       Name: {current.name || ''}
     </div>
   {/if}
-  <div class='top z-40 row'>
-    <div class='stats col-4 pl-20'>
-      <div class='font-weight-bold overflow-hidden text-truncate d-none d-md-block'>
+  <div class='top z-40 row d-title'>
+    <div class='stats pl-20 col-4 d-title'>
+      <div class='font-weight-bold overflow-hidden text-truncate' class:font-size-20={SUPPORTS.isAndroid}>
         {#if media?.title}
           {media?.title}
         {:else if media?.media?.title} <!-- useful when a torrent is EXTREMELY slow at loading... -->
           {anilistClient.title(media?.media)}
         {/if}
       </div>
-      <div class='font-weight-normal overflow-hidden text-truncate font-size-16 text-muted d-none d-md-block'>
+      <div class='font-weight-normal overflow-hidden text-truncate text-muted' class:font-size-16={!SUPPORTS.isAndroid} class:font-size-14={SUPPORTS.isAndroid}>
         {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (!media?.episodeTitle || !media.episodeTitle.includes(media.episode))}
           {@const maxEpisodes = getMediaMaxEp(media.media)}
           Episode {media.episodeRange || media.episode}
@@ -1375,15 +1375,17 @@
         {#if media?.episodeTitle}{media.episodeTitle}{/if}
       </div>
     </div>
-    <div class='d-flex col-4 justify-content-center'>
-      <span class='icon'><Users size='3rem' class='pt-5' strokeWidth={3} /> </span>
-      <span class='stats'>{torrent.peers || 0}</span>
-      <span class='icon'><ArrowDown size='3rem' /></span>
-      <span class='stats'>{fastPrettyBytes(torrent.down)}/s</span>
-      <span class='icon'><ArrowUp size='3rem' /></span>
-      <span class='stats'>{fastPrettyBytes(torrent.up)}/s</span>
+    <div class='d-flex justify-content-center bottom-0 col-4 d-title d-filler'>
+      <div class='d-none d-primary-stats'>
+        <span class='icon'><Users size='3rem' class='pt-5' strokeWidth={3} /> </span>
+        <span class='stats'>{torrent.peers || 0}</span>
+        <span class='icon'><ArrowDown size='3rem' /></span>
+        <span class='stats'>{fastPrettyBytes(torrent.down)}/s</span>
+        <span class='icon'><ArrowUp size='3rem' /></span>
+        <span class='stats'>{fastPrettyBytes(torrent.up)}/s</span>
+      </div>
       {#if skipPrompt}
-        <div class='position-absolute top-0 text-monospace rounded skipPrompt d-flex flex-column align-items-center text-center bg-dark-light p-20 z-50' class:w-500={SUPPORTS.isAndroid}>
+        <div class='position-absolute text-monospace rounded skipPrompt d-flex flex-column align-items-center text-center bg-dark-light p-20 z-50 mt-60' class:w-500={SUPPORTS.isAndroid}>
           <div class='skipFont'>
             This episode has been marked as a <b>{filler || recap}</b>, do you want to skip?
           </div>
@@ -1398,7 +1400,6 @@
         </div>
       {/if}
     </div>
-    <div class='col-4' />
   </div>
   <div class='middle d-flex align-items-center justify-content-center flex-grow-1 position-relative'>
     <!-- eslint-disable-next-line svelte/valid-compile -->
@@ -1446,6 +1447,14 @@
     {/if}
   </div>
   <div class='bottom d-flex z-40 flex-column px-20'>
+    <div class='d-none d-secondary-stats justify-content-center'>
+      <span class='icon'><Users size='3rem' class='pt-5' strokeWidth={3} /> </span>
+      <span class='stats'>{torrent.peers || 0}</span>
+      <span class='icon'><ArrowDown size='3rem' /></span>
+      <span class='stats'>{fastPrettyBytes(torrent.down)}/s</span>
+      <span class='icon'><ArrowUp size='3rem' /></span>
+      <span class='stats'>{fastPrettyBytes(torrent.up)}/s</span>
+    </div>
     <div class='w-full d-flex align-items-center h-20 mb-5 seekbar' tabindex='0' role='button' on:keydown={handleSeekbarKey}>
       <Seekbar
         accentColor='var(--accent-color)'
@@ -1893,7 +1902,7 @@
   }
 
   .h-20 {
-    height: 2rem
+    height: 2rem;
   }
   .rounded-10 {
     border-radius: 1rem;
@@ -1917,6 +1926,29 @@
   }
   .miniplayer .mobile-focus-target:focus-visible {
     background: hsla(209, 100%, 55%, 0.3);
+  }
+
+  @media (max-width: 60rem) {
+    .d-title {
+      display: block !important;
+      max-width: none !important;
+      grid-row: unset !important;
+      grid-column: unset !important;
+    }
+    .d-filler {
+      display: flex !important;
+    }
+    .mt-60 {
+      margin-top: 6rem !important;
+    }
+    .d-secondary-stats {
+      display: flex !important;
+    }
+  }
+  @media (min-width: 60rem) {
+    .d-primary-stats {
+      display: flex !important;
+    }
   }
 
   @media (pointer: none), (pointer: coarse) {
