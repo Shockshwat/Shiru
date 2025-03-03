@@ -19,8 +19,6 @@
 
   const showModal = writable(false)
 
-  let modal
-
   let score = 0
   let status = 'NOT IN LIST'
   let episode = 0
@@ -66,7 +64,6 @@
       const description = `${anilistClient.title(media)} has been deleted from your list.`
       printToast(res, description, false, false)
       if (sync.value.length > 0) { // handle profile syncing
-        const media = media
         for (const profile of profiles.value) {
           if (sync.value.includes(profile?.viewer?.data?.Viewer?.id)) {
             const anilist = profile.viewer?.data?.Viewer?.avatar
@@ -196,7 +193,7 @@
   {/if}
 </button>
 {#if Helper.isAuthorized()}
-  <div bind:this={modal} class='modal scoring position-absolute bg-dark shadow-lg rounded-3 p-20 z-30 {$showModal ? "visible" : "invisible"} {!previewAnime && !viewAnime ? "banner w-auto h-auto" : (!previewAnime ? "viewAnime w-auto h-auto" : "previewAnime")}' use:click={() => {}}>
+  <div class='modal scoring position-absolute bg-dark shadow-lg rounded-3 p-20 z-30 {$showModal ? "visible" : "invisible"} {!previewAnime && !viewAnime ? "banner w-auto h-auto" : (!previewAnime ? "viewAnime w-auto h-auto" : "previewAnime")}' use:click={() => {}}>
     <div class='d-flex justify-content-between align-items-center mb-2'>
       <h5 class='font-weight-bold'>List Editor</h5>
       <button type='button' class='btn btn-square d-flex align-items-center justify-content-center' use:click={() => toggleModal({ toggle: false })}><X size='1.7rem' strokeWidth='3'/></button>

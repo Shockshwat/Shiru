@@ -128,6 +128,7 @@ mediaListEntry {
   status,
   customLists(asArray: true),
   score(format: POINT_10),
+  updatedAt,
   startedAt {
     year,
     month,
@@ -472,6 +473,8 @@ class AnilistClient {
           return mediaListEntry?.progress || 0
         case 'USER_SCORE_DESC': // doesn't exist, AniList uses SCORE_DESC for both MediaSort and MediaListSort.
           return mediaListEntry?.score || 0
+        case 'UPDATED_TIME_DESC':
+          return mediaListEntry?.updatedAt || 0;
         default:
           return 0
       }
@@ -502,6 +505,7 @@ class AnilistClient {
           progress,
           score,
           repeat,
+          updatedAt,
           startedAt {
             year,
             month,
@@ -541,7 +545,7 @@ class AnilistClient {
     }
     await cache.updateMedia([{ ...mediaCache.value[mediaId], mediaListEntry: listEntry }])
     targetList.entries.unshift({ media: mediaCache.value[mediaId] })
-    this.userLists.value = Promise.resolve({
+    const res = Promise.resolve({
       data: {
         MediaListCollection: {
           lists: lists
@@ -552,7 +556,7 @@ class AnilistClient {
 
   async deleteListEntry(mediaId) {
     await cache.updateMedia([{ ...mediaCache.value[mediaId], mediaListEntry: null }])
-    this.userLists.value = Promise.resolve({
+    const res = Promise.resolve({
       data: {
         MediaListCollection: {
           lists: (await this.userLists.value)?.data?.MediaListCollection?.lists?.map(list => {
@@ -561,6 +565,7 @@ class AnilistClient {
         }
       }
     })
+    this.userLists.value = res
   }
 
   /**

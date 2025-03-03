@@ -57,6 +57,7 @@ export type Media = {
     status?: string
     customLists?: { name: string; enabled: boolean }[]
     score?: number
+    updatedAt?: number
     startedAt?: {
       year: number
       month: number

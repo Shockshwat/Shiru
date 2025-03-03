@@ -274,7 +274,26 @@ export default class Helper {
           (!variables.continueWatching || (media.status === 'FINISHED' || media.mediaListEntry?.progress < media.nextAiringEpisode?.episode - 1))) {
           return true
         }
-      }).map(({ media }) => (this.isUserSort(variables) ? media : media.id)) : mediaList.filter(({ node }) => {
+      }).sort((a, b) => {
+        if (this.isUserSort(variables)) {
+          switch (variables.sort) {
+            case 'STARTED_ON_DESC':
+              return ((b.media?.mediaListEntry?.startedAt?.year || 0) * 10000 + (b.media?.mediaListEntry?.startedAt?.month || 0) * 100 + (b.media?.mediaListEntry?.startedAt?.day || 0))
+                  - ((a.media?.mediaListEntry?.startedAt?.year || 0) * 10000 + (a.media?.mediaListEntry?.startedAt?.month || 0) * 100 + (a.media?.mediaListEntry?.startedAt?.day || 0))
+            case 'FINISHED_ON_DESC':
+              return ((b.media?.mediaListEntry?.completedAt?.year || 0) * 10000 + (b.media?.mediaListEntry?.completedAt?.month || 0) * 100 + (b.media?.mediaListEntry?.completedAt?.day || 0))
+                  - ((a.media?.mediaListEntry?.completedAt?.year || 0) * 10000 + (a.media?.mediaListEntry?.completedAt?.month || 0) * 100 + (a.media?.mediaListEntry?.completedAt?.day || 0))
+            case 'PROGRESS_DESC':
+              return (b.media?.mediaListEntry?.progress || 0) - (a.media?.mediaListEntry?.progress || 0)
+            case 'USER_SCORE_DESC': // doesn't exist, AniList uses SCORE_DESC for both MediaSort and MediaListSort.
+              return (b.media?.mediaListEntry?.score || 0) - (a.media?.mediaListEntry?.score || 0)
+            case 'UPDATED_TIME_DESC':
+              return (b.media?.mediaListEntry?.updatedAt || 0) - (a.media?.mediaListEntry?.updatedAt || 0)
+          }
+        }
+        return 0
+      }) // no need to handle sorting for this, we implemented sorting (above) for Anilist because Watching and Rewatching are separate lists. This is not the case for MyAnimeList, it uses "is_rewatching" boolean as an indicator instead.
+        .map(({ media }) => (this.isUserSort(variables) ? media : media.id)) : mediaList.filter(({ node }) => {
         if ((!variables.hideSubs || malDubs.dubLists.value.dubbed.includes(node.id)) &&
           matchKeys(node, variables.search, ['title', 'alternative_titles.en', 'alternative_titles.ja']) &&
           (!variables.season || variables.season.toLowerCase() === node.start_season?.season.toLowerCase()) &&
