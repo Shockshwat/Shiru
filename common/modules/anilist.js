@@ -53,7 +53,8 @@ function printError(error) {
 }
 
 const date = new Date()
-export const currentSeason = ['WINTER', 'SPRING', 'SUMMER', 'FALL'][Math.floor((date.getMonth() / 12) * 4) % 4]
+export const seasons = ['WINTER', 'SPRING', 'SUMMER', 'FALL']
+export const currentSeason = seasons[Math.floor((date.getMonth() / 12) * 4) % 4]
 export const currentYear = date.getFullYear()
 
 /**

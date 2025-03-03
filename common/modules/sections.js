@@ -1,4 +1,4 @@
-import { anilistClient, currentSeason, currentYear } from '@/modules/anilist.js'
+import { anilistClient, seasons, currentSeason, currentYear } from '@/modules/anilist.js'
 import { animeSchedule } from '@/modules/animeschedule.js'
 import { malDubs } from '@/modules/animedubs.js'
 import { writable } from 'simple-store-svelte'
@@ -272,6 +272,7 @@ function createSections () {
     }, { userList: true, droppedList: true, disableHide: true, status_not }),
     // common, non-user specific sections
     createSection({ title: 'Popular This Season', sort: 'POPULARITY_DESC', format }, { season: currentSeason, year: currentYear, hideMyAnime, hideStatus, status_not }, true),
+    createSection({ title: 'Upcoming Next Season', sort: 'POPULARITY_DESC', format }, { season: seasons[(seasons.indexOf(currentSeason) + 1) % seasons.length], year: (currentYear + (currentSeason === 'FALL' ? 1 : 0)), hideMyAnime, hideStatus, status: ['NOT_YET_RELEASED'], status_not: ['CANCELLED'] }),
     createSection({ title: 'Trending Now', sort: 'TRENDING_DESC', format }, { hideMyAnime, hideStatus, status_not }, true),
     createSection({ title: 'All Time Popular', sort: 'POPULARITY_DESC', format }, { hideMyAnime, hideStatus, status_not }, true),
     ...settings.value.customSections.map(([title, genres, tags, genre_not, tags_not]) => createSection({ title, sort: 'TRENDING_DESC', format }, { ...(genres?.length > 0 ? { genre: genres } : {}), ...(tags?.length > 0 ? { tag: tags } : {}), hideMyAnime, hideStatus, status_not }))
