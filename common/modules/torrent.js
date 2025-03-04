@@ -2,6 +2,7 @@ import { files, nowPlaying as media } from '../views/Player/MediaHandler.svelte'
 import { page } from '@/App.svelte'
 import { settings } from '@/modules/settings.js'
 import { cache, caches } from '@/modules/cache.js'
+import { SUPPORTS } from '@/modules/support.js'
 import { toast } from 'svelte-sonner'
 import clipboard from './clipboard.js'
 import IPC from '@/modules/ipc.js'
@@ -92,6 +93,7 @@ export async function add (torrentID, hide) {
     if (!hide) {
       page.set('player')
       window.dispatchEvent(new Event('overlay-check'))
+      if (SUPPORTS.isAndroid) document.querySelector('.content-wrapper').requestFullscreen() // this WILL not work with auto-select torrents due to permissions check.
     }
     client.send(`torrent`, torrentID)
   }
