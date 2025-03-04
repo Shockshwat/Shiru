@@ -28,26 +28,32 @@
     history.pushState({ type, value }, '', location.origin + location.pathname + '?id=' + Math.trunc(Math.random() * Number.MAX_SAFE_INTEGER).toString())
   }
   page.subscribe((value) => {
-    addPage(value, 'page')
+    if (value !== null) addPage(value, 'page')
   })
   view.subscribe((value) => {
-    addPage(value, 'view')
+    if (value !== null) addPage(value, 'view')
   })
 
-  addPage('home', 'page')
-
+  let minimizeApp
   window.addEventListener('popstate', e => {
     const { state } = e
-    if (!state) return
+    if (!state) {
+      addPage('home', 'page')
+      if (minimizeApp) {
+        minimizeApp = false
+        window.Capacitor.Plugins.App.minimizeApp() // any type of force exit of the app causes WebView to crash... this IS a CHROME bug! So the next time the user tries to open the app, it will close requiring them to open it again... #minimizeApp is a paused state so this is preferred instead.
+      } else {
+        minimizeApp = true
+        setTimeout(() => minimizeApp = false, 1000)
+      }
+      return
+    }
     ignoreNext = true
     view.set(null)
     rss.set(null)
     if (document.fullscreenElement) document.exitFullscreen()
-    if (state.type === 'page') {
-      page.set(state.value)
-    } else {
-      view.set(state.value)
-    }
+    if (state.type === 'page') page.set(state.value)
+    else view.set(state.value)
   })
 </script>
 

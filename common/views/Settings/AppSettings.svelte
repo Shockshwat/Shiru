@@ -50,8 +50,8 @@
   import { click } from '@/modules/click.js'
   import { toast } from 'svelte-sonner'
   import { cache, caches } from '@/modules/cache.js'
-  import IPC from '@/modules/ipc.js'
   import { SUPPORTS } from '@/modules/support.js'
+  import IPC from '@/modules/ipc.js'
 
   async function importSettings () {
     try {
@@ -133,15 +133,17 @@
 </SettingCard>
 
 <h4 class='mb-10 font-weight-bold'>App Settings</h4>
-<SettingCard title='Close Action' description='Choose the functionality of the close button for the app. You can choose to receive a Prompt to Minimize or Close, default to Minimize, or default to Closing the app.'>
-  <div>
-    <select class='form-control bg-dark w-300 mw-full' bind:value={settings.closeAction}>
-      <option value='Prompt'>Prompt</option>
-      <option value='Minimize'>Minimize</option>
-      <option value='Close'>Close</option>
-    </select>
-  </div>
-</SettingCard>
+{#if !SUPPORTS.isAndroid}
+  <SettingCard title='Close Action' description='Choose the functionality of the close button for the app. You can choose to receive a Prompt to Minimize or Close, default to Minimize, or default to Closing the app.'>
+    <div>
+      <select class='form-control bg-dark w-300 mw-full' bind:value={settings.closeAction}>
+        <option value='Prompt'>Prompt</option>
+        <option value='Minimize'>Minimize</option>
+        <option value='Close'>Close</option>
+      </select>
+    </div>
+  </SettingCard>
+{/if}
 
 <SettingCard title='Query Complexity' description="Complex queries result in slower loading times but help in reducing the chances of hitting AniList's rate limit. Simple queries split up the requests into multiple queries which are requested as needed.">
   <div>

@@ -167,8 +167,7 @@
   document.addEventListener('fullscreenchange', () => {
     isFullscreen = !!document.fullscreenElement
     if (document.fullscreenElement && orientationLockable) {
-      screen.orientation.lock('landscape').then(success => debug(success), failure => { if (!failure?.toString()?.includes('NotSupportedError')) { debug(failure) } else { orientationLockable = false } }
-      )
+      screen.orientation.lock('landscape').then(success => debug(success), failure => { if (!failure?.toString()?.includes('NotSupportedError')) { debug(failure) } else { orientationLockable = false } })
     } else if (orientationLockable) {
       screen.orientation.unlock()
     }

@@ -184,7 +184,7 @@
 <div class='modal modal-full z-50' class:show={staticMedia} on:keydown={checkClose} tabindex='-1' role='button' bind:this={modal}>
   <div class='h-full modal-content bg-very-dark p-0 overflow-y-auto position-relative' bind:this={container} use:smoothScroll={{ prevent: 'episode-list' }}>
     {#if staticMedia}
-      {#if mediaList.length > 1}
+      {#if (mediaList.length > 1) && !SUPPORTS.isAndroid}
         <button class='close back pointer z-30 bg-dark top-20 left-0 position-fixed' use:click={back}>
           <ArrowLeft size='1.8rem' />
         </button>

@@ -24,6 +24,9 @@ document.addEventListener('pointercancel', (e) => {
   lastHoverElement = null
 })
 
+if (SUPPORTS.isAndroid) {
+  document.addEventListener('touchstart', (e) => window.Capacitor.Plugins.StatusBar.hide())
+}
 /** @typedef {{element: Element, x: number, y: number, inViewport: boolean}} ElementPosition  */
 
 /**

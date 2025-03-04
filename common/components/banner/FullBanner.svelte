@@ -59,6 +59,9 @@
 {/key}
 <div class='gradient-bottom h-full position-absolute top-0 w-full' />
 <div class='gradient-left h-full position-absolute top-0 w-800' />
+{#if SUPPORTS.isAndroid}
+  <img src='./logo_filled.png' class='right-0 mr-20 m-10 position-absolute' style='width: 8rem; height: 8rem' alt='ico' />
+{/if}
 <div class='pl-20 pb-20 justify-content-end d-flex flex-column h-full banner mw-full grab' use:drag={swipeMedia}>
   <div class='text-white font-weight-bold font-size-40' class:font-size-40={!SUPPORTS.isAndroid} class:font-size-24={SUPPORTS.isAndroid}>
     <div class='default-cursor title overflow-hidden d-inline-block'>{anilistClient.title(currentStatic)}</div>

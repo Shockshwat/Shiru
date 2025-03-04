@@ -1,5 +1,6 @@
 <script>
   import { click } from '@/modules/click.js'
+  import { SUPPORTS } from '@/modules/support.js'
 
   let _click = () => {}
   export { _click as click }
@@ -13,11 +14,11 @@
   export let overlay = ''
 </script>
 
-<div class='sidebar-link sidebar-link-with-icon pointer overflow-hidden {css}' use:click={() => { if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) } _click() } }>
+<div class='sidebar-link sidebar-link-with-icon pointer overflow-hidden {css}' class:my-auto={SUPPORTS.isAndroid} use:click={() => { if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) } _click() } }>
   <span class='text-nowrap d-flex align-items-center w-full h-full'>
     {#if image}
       <span class='rounded d-flex'>
-        <img src={image} class='h-30 rounded' alt='logo' />
+        <img src={image} class='h-30 rounded' style='height: 3.4rem !important; width: 3.4rem !important' alt='logo' />
       </span>
       <span class='text ml-20 {overlay === "profile" ? "font-weight-bolder font-size-18" : ""}'>{text}</span>
     {:else}
@@ -25,7 +26,7 @@
       <span class='rounded d-flex'>
         <slot active={active}>{icon}</slot>
       </span>
-      <span class='text ml-20 {active ? "font-weight-bolder font-size-18" : ""}'>{text}</span>
+      <span class='text ml-20' class:font-weight-bolder={active} class:font-size-16={active}>{text}</span>
     {/if}
   </span>
 </div>

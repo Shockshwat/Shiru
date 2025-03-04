@@ -5,54 +5,61 @@
   import { profileView } from './Profiles.svelte'
   import { notifyView, hasUnreadNotifications } from './Notifications.svelte'
   import { actionPrompt } from './MinimizeTray.svelte'
-  import { settings } from '@/modules/settings.js'
-  import { click } from '@/modules/click.js'
-  import IPC from '@/modules/ipc.js'
+  import { SUPPORTS } from '@/modules/support.js'
   import NavbarLink from './NavbarLink.svelte'
   import { MagnifyingGlass } from 'svelte-radix'
-  import { Users, Clock, Settings, Heart, Bell, BellDot, ListVideo } from 'lucide-svelte'
+  import { onDestroy, onMount } from 'svelte'
+  import { Home, Users, Clock, Settings, Bell, BellDot, ListVideo } from 'lucide-svelte'
   const view = getContext('view')
   export let page
-  function close () {
-    $view = null
-    window.dispatchEvent(new Event('overlay-check'))
-    page = 'home'
-  }
+  onMount(() => {
+    if (SUPPORTS.isAndroid) {
+      window.Capacitor.Plugins.App.addListener('backButton', () => {
+        if (!($profileView || $notifyView || $actionPrompt || $rss)) window.history.back()
+        else {
+          $profileView = false
+          $notifyView = false
+          $actionPrompt = false
+          $rss = null
+        }
+      })
+    }
+  })
+  onDestroy(() => {
+    if (SUPPORTS.isAndroid) window.Capacitor.Plugins.App.removeAllListeners()
+  })
 </script>
 
-<nav class='navbar navbar-fixed-bottom d-block d-md-none border-0 bg-dark'>
+<nav class='navbar navbar-fixed-bottom d-block d-md-none border-0 bg-dark bt-10'>
   <div class='navbar-menu h-full d-flex flex-row justify-content-center align-items-center m-0 pb-5 animate'>
-    <img src='./logo_filled.png' class='w-50 h-50 m-10 pointer p-5' alt='ico' use:click={close} />
-    <NavbarLink click={() => { page = 'search'; if ($view) $view = null }} _page='search' css='ml-auto' icon='search' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <MagnifyingGlass size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' stroke-width={active ? '1' : '0'} stroke='currentColor' />
+    <NavbarLink click={() => { page = 'home'; if ($view) $view = null }} _page='home' text='Home' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
+      <Home size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+    </NavbarLink>
+    <NavbarLink click={() => { page = 'search'; if ($view) $view = null }} _page='search' icon='search' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
+      <MagnifyingGlass size='3.4rem' class='flex-shrink-0 m-5 rounded' stroke-width={active ? '1' : '0.6'} stroke='currentColor' style='padding: 0.3rem !important; color: {page===`search` && !($view || $profileView || $notifyView || $actionPrompt || $rss) ? `currentColor`:`#888b8d`}' />
     </NavbarLink>
     <NavbarLink click={() => { page = 'schedule' }} _page='schedule' icon='schedule' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <Clock size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
+      <Clock size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
     </NavbarLink>
     {#if $media?.media}
       {@const currentMedia = $view}
       {@const active = $view && !$notifyView && !$profileView && !$actionPrompt && 'active'}
       <NavbarLink click={() => { $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media) }} icon='queue_music' {page} overlay={active} nowPlaying={$view === $media?.media} let:active>
-        <ListVideo size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
+        <ListVideo size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
       </NavbarLink>
     {/if}
     <NavbarLink click={() => { page = 'watchtogether' }} _page='watchtogether' icon='groups' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <Users size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
+      <Users size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
     </NavbarLink>
-    {#if $settings.donate}
-      <NavbarLink click={() => { IPC.emit('open', 'https://github.com/sponsors/RockinChaos/') }} icon='favorite' css='ml-auto donate' {page} let:active>
-        <Heart size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded donate' strokeWidth={active ? '3' : '2'} fill='currentColor' />
-      </NavbarLink>
-    {/if}
-    <NavbarLink click={() => { $notifyView = !$notifyView }} icon='bell' css='{!$settings.donate ? `ml-auto` : ``}' {page} overlay={$notifyView && 'notify'} nowPlaying={$view === $media?.media} let:active>
+    <NavbarLink click={() => { $notifyView = !$notifyView }} icon='bell' {page} overlay={$notifyView && 'notify'} nowPlaying={$view} let:active>
       {#if $hasUnreadNotifications &&  $hasUnreadNotifications > 0}
-        <BellDot size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded notify' strokeWidth={active ? '3' : '2'} />
+        <BellDot size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded notify' strokeWidth='2.5' color={$notifyView ? 'white' : 'currentColor'} />
       {:else}
-        <Bell size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
+        <Bell size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={$notifyView ? 'currentColor' : '#888b8d'}/>
       {/if}
     </NavbarLink>
     <NavbarLink click={() => { page = 'settings' }} _page='settings' icon='settings' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <Settings size='2rem' class='flex-shrink-0 p-5 w-30 h-30 m-5 rounded' strokeWidth={active ? '3' : '2'} />
+      <Settings size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
     </NavbarLink>
   </div>
 </nav>
@@ -112,5 +119,8 @@
     6% {
       transform: rotate(10deg);
     }
+  }
+  .bt-10 {
+    border-top: .10rem rgba(182, 182, 182, 0.13) solid !important;
   }
 </style>

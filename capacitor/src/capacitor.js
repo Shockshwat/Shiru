@@ -235,8 +235,6 @@ StatusBar.hide()
 StatusBar.setStyle({ style: Style.Dark })
 StatusBar.setOverlaysWebView({ overlay: true })
 
-navigationbar.setUp(true)
-
 // cordova screen orientation plugin is also used, and it patches global screen.orientation.lock
 
 // hook into pip request, and use our own pip implementation, then instantly report exit pip
