@@ -27,7 +27,7 @@
   $: visible = !overlay.includes('torrent') && !overlay.includes('notifications') && !overlay.includes('profiles') && !overlay.includes('minimizetray')
 </script>
 
-<div class='w-full h-full position-absolute overflow-hidden'>
+<div class='w-full h-full position-absolute overflow-hidden' class:invisible={!(($media && (Object.keys($media).length > 0)) && ((page === 'player') || ((overlay.includes('viewanime') || (page !== 'player')) && visible)))}>
   <Miniplayer active={($media && (Object.keys($media).length > 0)) && ((page !== 'player' && visible) || (overlay.includes('viewanime') && visible))} class='bg-dark-light z-100 {(page === `player` && !overlay.includes(`viewanime`)) ? `h-full` : ``}' {minwidth} {maxwidth} width='300px' padding='2rem' resize={!$isMobile}>
     <MediaHandler miniplayer={page !== 'player' || overlay.includes('viewanime')} bind:page bind:overlay />
   </Miniplayer>

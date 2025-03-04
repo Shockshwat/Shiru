@@ -1275,7 +1275,7 @@
   }
 </script>
 
-<!-- <svelte:window bind:innerWidth bind:innerHeight /> --> <!-- class:hideLayers={overlay.includes('torrent') || overlay.includes('notifications') || overlay.includes('profiles') || overlay.includes('minimizetray')} ==> hack to prevent player from visibly appearing behind torrent modal -->
+<!-- <svelte:window bind:innerWidth bind:innerHeight /> -->
 <div
   class='player w-full h-full d-flex flex-column overflow-hidden position-relative'
   class:pointer={miniplayer}
@@ -1284,7 +1284,6 @@
   class:immersed={immersed}
   class:buffering={src && buffering}
   class:fitWidth
-  class:hideLayers={overlay.includes('torrent') || overlay.includes('notifications') || overlay.includes('profiles') || overlay.includes('minimizetray')}
   bind:this={container}
   role='none'
   on:pointermove={resetImmerse}
@@ -1691,10 +1690,6 @@
 
   .custom-range:focus {
     outline: none;
-  }
-
-  .hideLayers {
-    display: none !important;
   }
 
   .bind {
