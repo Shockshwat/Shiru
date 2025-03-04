@@ -1,4 +1,4 @@
-/* globals navigationbar, PictureInPicture */
+/* globals AndroidFullScreen, PictureInPicture */
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { SafeArea } from 'capacitor-plugin-safe-area'
 import { App } from '@capacitor/app'

@@ -30,7 +30,7 @@
 
 <div class='sidebar z-30 d-md-block' class:animated={$settings.expandingSidebar}>
   <div class='sidebar-overlay pointer-events-none h-full position-absolute' />
-  <div class='sidebar-menu h-full d-flex flex-column justify-content-center align-items-center m-0 pb-5 animate'>
+  <div class='sidebar-menu h-full d-flex flex-column justify-content-center align-items-center m-0 pb-5 animate' class:br-10={!$settings.expandingSidebar}>
     {#if !SUPPORTS.isAndroid}
       <SidebarLink click={() => { $profileView = !$profileView }} icon='login' text={Helper.getUser() ? 'Profiles' : 'Login'} css='{!SUPPORTS.isAndroid ? `mt-auto` : ``}' {page} overlay={!$notifyView && !$actionPrompt && $profileView && 'profile'} nowPlaying={$view} image={Helper.getUserAvatar()}>
         <LogIn size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' />
@@ -165,5 +165,8 @@
   }
   .sidebar.animated:hover .sidebar-overlay {
     width: 63rem
+  }
+  .br-10 {
+    border-right: .10rem rgba(182, 182, 182, 0.13) solid !important;
   }
 </style>

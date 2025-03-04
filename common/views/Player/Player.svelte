@@ -167,8 +167,14 @@
   document.addEventListener('fullscreenchange', () => {
     isFullscreen = !!document.fullscreenElement
     if (document.fullscreenElement && orientationLockable) {
+      if (SUPPORTS.isAndroid) window.AndroidFullScreen?.immersiveMode()
       screen.orientation.lock('landscape').then(success => debug(success), failure => { if (!failure?.toString()?.includes('NotSupportedError')) { debug(failure) } else { orientationLockable = false } })
     } else if (orientationLockable) {
+      if (SUPPORTS.isAndroid) {
+        window.AndroidFullScreen?.showSystemUI()
+        window.Capacitor.Plugins.StatusBar.setOverlaysWebView({overlay: true})
+        window.Capacitor.Plugins.StatusBar.hide()
+      }
       screen.orientation.unlock()
     }
   })
