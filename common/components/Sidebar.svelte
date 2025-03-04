@@ -24,60 +24,61 @@
   })
 
   const view = getContext('view')
+  const btnSize = !SUPPORTS.isAndroid ? '3.1rem' : '3.4rem'
 
   export let page
 </script>
 
 <div class='sidebar z-30 d-md-block' class:animated={$settings.expandingSidebar}>
   <div class='sidebar-overlay pointer-events-none h-full position-absolute' />
-  <div class='sidebar-menu h-full d-flex flex-column justify-content-center align-items-center m-0 pb-5 animate' class:br-10={!$settings.expandingSidebar}>
+  <div class='sidebar-menu h-full d-flex flex-column justify-content-center align-items-center m-0 pb-5 animate' class:br-10={!$settings.expandingSidebar} class:pt-100={!SUPPORTS.isAndroid}>
     {#if !SUPPORTS.isAndroid}
       <SidebarLink click={() => { $profileView = !$profileView }} icon='login' text={Helper.getUser() ? 'Profiles' : 'Login'} css='{!SUPPORTS.isAndroid ? `mt-auto` : ``}' {page} overlay={!$notifyView && !$actionPrompt && $profileView && 'profile'} nowPlaying={$view} image={Helper.getUserAvatar()}>
-        <LogIn size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' />
+        <LogIn size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' />
       </SidebarLink>
     {/if}
     <SidebarLink click={() => { page = 'home'; if ($view) $view = null }} _page='home' text='Home' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <Home size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+      <Home size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
     </SidebarLink>
     <SidebarLink click={() => { page = 'search'; if ($view) $view = null }} _page='search' text='Search' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <MagnifyingGlass size='3.4rem' class='flex-shrink-0 m-5 rounded' stroke-width={active ? '1' : '0.6'} stroke='currentColor' style='padding: 0.3rem !important; color: {page===`search` && !($view || $profileView || $notifyView || $actionPrompt || $rss) ? `currentColor`:`#888b8d`}' />
+      <MagnifyingGlass size={btnSize} class='flex-shrink-0 m-5 rounded' stroke-width='0.5' stroke='currentColor' style='padding: 0.3rem !important; color: {page===`search` && !($view || $profileView || $notifyView || $actionPrompt || $rss) ? `currentColor`:`#5e6061`}' />
     </SidebarLink>
     <SidebarLink click={() => { page = 'schedule' }} _page='schedule' icon='schedule' text='Schedule' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <Clock size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+      <Clock size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
     </SidebarLink>
     {#if $media?.media}
       {@const currentMedia = $view}
       {@const active = $view && !$notifyView && !$profileView && !$actionPrompt && 'active'}
       <SidebarLink click={() => { $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media) }} icon='queue_music' text='Now Playing' {page} overlay={active} nowPlaying={$view === $media?.media} let:active>
-        <ListVideo size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+        <ListVideo size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
       </SidebarLink>
     {/if}
     <SidebarLink click={() => { page = 'watchtogether' }} _page='watchtogether' icon='groups' text='Watch Together' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <Users size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+      <Users size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
     </SidebarLink>
     {#if $settings.donate && !SUPPORTS.isAndroid}
       <SidebarLink click={() => { IPC.emit('open', 'https://github.com/sponsors/RockinChaos/') }} icon='favorite' text='Support This App' css='{!SUPPORTS.isAndroid ? `mt-auto` : ``}' {page} let:active>
-        <Heart size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded donate' strokeWidth='2.5' fill='currentColor' />
+        <Heart size={btnSize} class='flex-shrink-0 p-5 m-5 rounded donate' strokeWidth='2.5' fill='currentColor' />
       </SidebarLink>
     {/if}
     {#if updateState === 'downloading'}
       <SidebarLink click={() => { toast('Update is downloading...', { description: 'This may take a moment, the update will be ready shortly.' }) }} icon='download' text='Update Downloading...' css='{!$settings.donate && !SUPPORTS.isAndroid ? `mt-auto` : ``}' {page} let:active>
-        <Download size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+        <Download size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
       </SidebarLink>
     {:else if updateState === 'ready'}
       <SidebarLink click={() => { IPC.emit('quit-and-install') }} icon='download' text='Update Ready!' css='{!$settings.donate && !SUPPORTS.isAndroid ? `mt-auto` : ``}' {page} let:active>
-        <Download size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded update' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+        <Download size={btnSize} class='flex-shrink-0 p-5 m-5 rounded update' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
       </SidebarLink>
     {/if}
     <SidebarLink click={() => { $notifyView = !$notifyView }} icon='bell' text='Notifications' css='{!$settings.donate && !SUPPORTS.isAndroid && updateState !== `downloading` && updateState !== `ready` ? `mt-auto` : ``}' {page} overlay={!$actionPrompt && $notifyView && 'notify'} nowPlaying={$view} let:active>
       {#if $hasUnreadNotifications && $hasUnreadNotifications > 0}
-        <BellDot size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded notify' strokeWidth='2.5' color={$notifyView ? 'white' : 'currentColor'} />
+        <BellDot size={btnSize} class='flex-shrink-0 p-5 m-5 rounded notify' strokeWidth='2.5' color={$notifyView ? 'white' : 'currentColor'} />
       {:else}
-        <Bell size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+        <Bell size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
       {/if}
     </SidebarLink>
     <SidebarLink click={() => { page = 'settings' }} _page='settings' icon='settings' text='Settings' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>
-      <Settings size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#888b8d'} />
+      <Settings size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
     </SidebarLink>
   </div>
 </div>
@@ -141,6 +142,9 @@
     6% {
       transform: rotate(10deg);
     }
+  }
+  .pt-100 {
+    padding-top: 10rem;
   }
 
   .sidebar {

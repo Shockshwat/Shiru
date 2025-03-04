@@ -12,13 +12,15 @@
   export let icon = ''
   export let nowPlaying = false
   export let overlay = ''
+
+  const btnSize = !SUPPORTS.isAndroid ? '3.1rem' : '3.4rem'
 </script>
 
 <div class='sidebar-link sidebar-link-with-icon pointer overflow-hidden {css}' class:my-auto={SUPPORTS.isAndroid} use:click={() => { if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) } _click() } }>
   <span class='text-nowrap d-flex align-items-center w-full h-full'>
     {#if image}
       <span class='rounded d-flex'>
-        <img src={image} class='h-30 rounded' style='height: 3.4rem !important; width: 3.4rem !important' alt='logo' />
+        <img src={image} class='h-30 rounded' style='height: {btnSize} !important; width: {btnSize} !important' alt='logo' />
       </span>
       <span class='text ml-20 {overlay === "profile" ? "font-weight-bolder font-size-18" : ""}'>{text}</span>
     {:else}
