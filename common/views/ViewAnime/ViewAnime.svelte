@@ -28,7 +28,7 @@
     $view = null
     mediaList = []
     setTimeout(() => {
-      if (overlay.includes('viewanime')) overlay = overlay.filter(item => item !== 'viewanime')
+      if (overlay.includes('viewanime') && !$view) overlay = overlay.filter(item => item !== 'viewanime')
     })
   }
   function back () {
