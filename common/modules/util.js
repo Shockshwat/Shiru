@@ -344,6 +344,7 @@ export const defaults = {
   torrentPersist: false,
   torrentDHT: false,
   torrentPeX: false,
+  disableStartupTorrent: SUPPORTS.isAndroid,
   torrentPort: 0,
   torrentStreamedDownload: true,
   torrentVerify: false,

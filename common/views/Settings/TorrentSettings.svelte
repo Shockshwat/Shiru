@@ -200,3 +200,9 @@
     <label for='torrent-pex'>{settings.torrentPeX ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+<SettingCard title='Disable Auto-Load' description='Disables loading the previously downloaded torrent on startup. Allowing the previous torrent to auto-load can increase your bandwidth usage, its recommended to keep this disabled on Android.'>
+  <div class='custom-switch'>
+    <input type='checkbox' id='disable-torrent-autoload' bind:checked={settings.disableStartupTorrent} />
+    <label for='disable-torrent-autoload'>{settings.disableStartupTorrent ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>

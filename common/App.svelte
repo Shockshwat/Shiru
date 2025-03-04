@@ -102,9 +102,4 @@
   .page-wrapper {
     height: calc(100% - var(--navbar-height)) !important;
   }
-  @media (min-width: 769px) {
-    .page-wrapper  {
-      padding-left: max(var(--safe-area-left), env(safe-area-inset-left, 0)) !important;
-    }
-  }
 </style>

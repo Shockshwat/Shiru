@@ -55,7 +55,7 @@ class TorrentWorker extends EventTarget {
 
 export const client = new TorrentWorker()
 
-client.send('load', await cache.read(caches.GENERAL, 'loadedTorrent'))
+client.send('load', !settings.value.disableStartupTorrent ? await cache.read(caches.GENERAL, 'loadedTorrent') : null)
 
 client.on('files', ({ detail }) => {
   files.set(detail)
