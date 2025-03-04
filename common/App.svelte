@@ -4,6 +4,7 @@
   import { anilistClient } from '@/modules/anilist.js'
   import IPC from '@/modules/ipc.js'
   import { rss } from './views/TorrentSearch/TorrentModal.svelte'
+  import { SUPPORTS } from '@/modules/support.js'
 
   export const page = writable('home')
   export const overlay = writable([])
@@ -41,7 +42,7 @@
       addPage('home', 'page')
       if (minimizeApp) {
         minimizeApp = false
-        window.Capacitor.Plugins.App.minimizeApp() // any type of force exit of the app causes WebView to crash... this IS a CHROME bug! So the next time the user tries to open the app, it will close requiring them to open it again... #minimizeApp is a paused state so this is preferred instead.
+        if (SUPPORTS.isAndroid) window.Capacitor.Plugins.App.minimizeApp() // any type of force exit of the app causes WebView to crash... this IS a CHROME bug! So the next time the user tries to open the app, it will close requiring them to open it again... #minimizeApp is a paused state so this is preferred instead.
       } else {
         minimizeApp = true
         setTimeout(() => minimizeApp = false, 1000)
