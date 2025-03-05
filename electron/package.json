@@ -1,6 +1,5 @@
 {
   "name": "shiru",
-  "appName": "Shiru",
   "version": "6.0.4",
   "license": "GPL-3.0-or-later",
   "private": true,
@@ -65,13 +64,13 @@
       }
     ],
     "appId": "com.github.rockinchaos.shiru",
-    "productName": "${appName}",
+    "productName": "Shiru",
     "files": [
       "build/**/*",
       "!node_modules/**/*.{mk,a,o,h}"
     ],
     "mac": {
-      "artifactName": "${os}-${appName}-${version}-mac.${ext}",
+      "artifactName": "${os}-${productName}-${version}-mac.${ext}",
       "defaultArch": "universal",
       "singleArchFiles": "node_modules/+(register-scheme|utp-native|fs-native-extensions)/**",
       "category": "public.app-category.video",
@@ -88,19 +87,19 @@
       ]
     },
     "win": {
-      "artifactName": "${os}-${appName}-${version}.${ext}",
+      "artifactName": "${os}-${productName}-${version}.${ext}",
       "target": [
         "nsis",
         "portable"
       ]
     },
     "linux": {
-      "artifactName": "${os}-${appName}-${version}.${ext}",
+      "artifactName": "${os}-${productName}-${version}.${ext}",
       "category": "AudioVideo;Video",
       "description": "BitTorrent streaming software with no paws in the way—watch anime in real-time, no waiting for downloads!",
       "maintainer": "RockinChaos <RockinChaos@users.noreply.github.com>",
       "desktop": {
-        "Name": "${appName}",
+        "Name": "${productName}",
         "Comment": "BitTorrent streaming software with no paws in the way—watch anime in real-time, no waiting for downloads!",
         "Keywords": "anime",
         "Type": "Application",
@@ -118,12 +117,12 @@
       ]
     },
     "portable": {
-      "artifactName": "${os}-${appName}-${version}-portable.${ext}"
+      "artifactName": "${os}-${productName}-${version}-portable.${ext}"
     },
     "nsis": {
       "allowToChangeInstallationDirectory": true,
       "oneClick": false,
-      "artifactName": "${os}-${appName}-${version}-installer.${ext}"
+      "artifactName": "${os}-${productName}-${version}-installer.${ext}"
     }
   }
 }
