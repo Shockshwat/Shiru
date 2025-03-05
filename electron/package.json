@@ -99,7 +99,6 @@
       "category": "AudioVideo;Video",
       "description": "BitTorrent streaming software with no paws in the way—watch anime in real-time, no waiting for downloads!",
       "maintainer": "RockinChaos <RockinChaos@users.noreply.github.com>",
-      "license": "GPL-3.0-or-later",
       "desktop": {
         "Name": "${appName}",
         "Comment": "BitTorrent streaming software with no paws in the way—watch anime in real-time, no waiting for downloads!",
