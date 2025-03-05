@@ -6,6 +6,7 @@ on:
     workflows: ["Electron Build and Release"]
     types:
       - completed
+    status: success
 
 jobs:
   release:
