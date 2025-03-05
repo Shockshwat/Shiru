@@ -5,7 +5,7 @@
 </p>
 <h1 align="center"><b>Shiru</b></h1>
 
-<h4 align="center"><b>Stream anime torrents, real-time with no waiting for downloads</b></h4>
+<h4 align="center"><b>BitTorrent streaming software with no paws in the way—watch anime in real-time, no waiting for downloads!</b></h4>
 
 <p align="center">
   <a href="https://github.com/RockinChaos/Shiru/wiki/">Wiki</a> •

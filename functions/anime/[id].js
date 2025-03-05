@@ -11,7 +11,7 @@ export function onRequest ({ params }) {
   <head>
     <meta http-equiv=refresh content="5; url=https://shiru.watch">
     <meta property="og:title" content="Anime">
-    <meta property="og:description" content="Stream anime torrents, real-time with no waiting for downloads">
+    <meta property="og:description" content="BitTorrent streaming software with no paws in the way—watch anime in real-time, no waiting for downloads!">
     <meta property="og:site_name" content="Shiru">
     <meta property="og:image" content=https://shiru.watch/app_original.png>
     <meta property="og:url" content=shiru://anime/${id}>
