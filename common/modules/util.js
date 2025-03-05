@@ -374,6 +374,7 @@ export const defaults = {
   toshoURL: SUPPORTS.extensions ? decodeURIComponent(atob('aHR0cHM6Ly9mZWVkLmFuaW1ldG9zaG8ub3JnLw==')) : '',
   extensions: SUPPORTS.extensions ? ['anisearch'] : [],
   sources: {},
+  disableMiniplayer: false,
   enableExternal: false,
   playerPath: '',
   playerSeek: 2,

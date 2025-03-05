@@ -7,7 +7,7 @@
   import { episodesList } from '@/modules/episodes.js'
   import { getMediaMaxEp } from '@/modules/anime.js'
   import { client } from '@/modules/torrent.js'
-  import { createEventDispatcher } from 'svelte'
+  import { getContext, createEventDispatcher } from 'svelte'
   import Subtitles from '@/modules/subtitles.js'
   import { toTS, fastPrettyBytes, matchPhrase, videoRx } from '@/modules/util.js'
   import { toast } from 'svelte-sonner'
@@ -22,10 +22,12 @@
   import { SUPPORTS } from '@/modules/support.js'
   import 'rvfc-polyfill'
   import IPC from '@/modules/ipc.js'
-  import { ArrowDown, ArrowUp, Captions, Cast, CircleHelp, Contrast, FastForward, Keyboard, List, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX, SlidersVertical } from 'lucide-svelte'
+  import { X, Minus, ArrowDown, ArrowUp, Captions, Cast, CircleHelp, Contrast, FastForward, Keyboard, List, Eye, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX, SlidersVertical } from 'lucide-svelte'
   import Debug from 'debug'
 
   const debug = Debug('ui:player')
+
+  const view = getContext('view')
 
   const emit = createEventDispatcher()
 
@@ -51,9 +53,10 @@
   }
 
   export let miniplayer = false
-  $condition = () => !miniplayer && SUPPORTS.keybinds && !document.querySelector('.modal.show')
+  $condition = () => SUPPORTS.keybinds && ((!miniplayer && !document.querySelector('.modal.show')) || overlay.includes('viewanime'))
   export let page
   export let overlay
+  export let playPage
   export let files = []
   $: updateFiles(files)
   let src = null
@@ -139,7 +142,7 @@
       } else {
         for (const track of subHeaders) {
           const trackName = (track?.language || (!Object.values(subs?.headers).some(header => header?.language === 'eng' || header?.language === 'en') ? 'eng' : track?.type)) + (track?.name ? ' - ' + track?.name : '')
-          if (matchPhrase(lastSubtitle, trackName, trackName?.length > 10 ? 3 : 2, true)) {
+          if (matchPhrase(lastSubtitle, trackName, trackName?.length > 10 ? 3 : 2, true) && track?.number) {
             subs.selectCaptions(track.number)
             setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix (resize) because video metadata doesn't update for multiple frames
             break
@@ -195,6 +198,10 @@
       src = ''
       currentTime = 0
       targetTime = 0
+      if (subs) {
+        subs.destroy()
+        subs = null
+      }
     }
   }
 
@@ -569,6 +576,13 @@
       type: 'icon',
       desc: 'Toggle Stats'
     },
+    KeyO: {
+      fn: () => ($view = $view ? null : media?.media),
+      icon: Eye,
+      id: 'eye',
+      type: 'icon',
+      desc: 'Toggle "Now Playing"'
+    },
     Backquote: {
       fn: () => (showKeybinds = !showKeybinds),
       id: 'help_outline',
@@ -876,6 +890,7 @@
         stats = {}
         handleStats(a, b, b)
       })
+      seek(-0.001) // stupid hack because the initial request doesn't trigger canvas to re-render, stats won't appear unless the current time changes.
     }
   }
   async function handleStats (now, metadata, lastmeta) {
@@ -1380,14 +1395,12 @@
       </div>
     </div>
     <div class='d-flex justify-content-center bottom-0 col-4 d-title d-filler'>
-      <div class='d-none d-primary-stats'>
-        <span class='icon'><Users size='3rem' class='pt-5' strokeWidth={3} /> </span>
-        <span class='stats'>{torrent.peers || 0}</span>
-        <span class='icon'><ArrowDown size='3rem' /></span>
-        <span class='stats'>{fastPrettyBytes(torrent.down)}/s</span>
-        <span class='icon'><ArrowUp size='3rem' /></span>
-        <span class='stats'>{fastPrettyBytes(torrent.up)}/s</span>
-      </div>
+      <span class='icon'><Users size={SUPPORTS.isAndroid ? '2.5rem' : '3rem'} class='pt-5' strokeWidth={3} /> </span>
+      <span class='stats' class:font-size-16={SUPPORTS.isAndroid}>{torrent.peers || 0}</span>
+      <span class='icon'><ArrowDown size={SUPPORTS.isAndroid ? '2.5rem' : '3rem'} /></span>
+      <span class='stats' class:font-size-16={SUPPORTS.isAndroid}>{fastPrettyBytes(torrent.down)}/s</span>
+      <span class='icon'><ArrowUp size={SUPPORTS.isAndroid ? '2.5rem' : '3rem'} /></span>
+      <span class='stats' class:font-size-16={SUPPORTS.isAndroid}>{fastPrettyBytes(torrent.up)}/s</span>
       {#if skipPrompt}
         <div class='position-absolute text-monospace rounded skipPrompt d-flex flex-column align-items-center text-center bg-dark-light p-20 z-50 mt-60' class:w-500={SUPPORTS.isAndroid}>
           <div class='skipFont'>
@@ -1412,35 +1425,43 @@
     <div class='w-full h-full position-absolute toggle-immerse d-none' on:dblclick={toggleFullscreen} on:click|self={toggleImmerse} />
     <div class='w-full h-full position-absolute mobile-focus-target d-none' use:click={() => { page = 'player'; window.dispatchEvent(new Event('overlay-check')) }} />
     <!-- eslint-disable-next-line svelte/valid-compile -->
-    <span class='icon ctrl h-full align-items-center justify-content-end w-150 mw-full mr-auto' on:click={rewind}>
+    <span class='icon ctrl h-full align-items-center justify-content-end w-150 mw-full mr-auto' class:mb-50={!miniplayer} on:click={rewind}>
       <Rewind size='3rem' />
     </span>
     <!-- miniplayer buttons -->
-    <div class='d-flex align-items-center position-relative' style='width: 100%'>
+    {#if miniplayer}
+      <span class='position-absolute rounded-10 top-0 right-0 m-5 btn-shadow' class:ctrl={!SUPPORTS.isAndroid} class:mr-40={!SUPPORTS.isAndroid} class:mr-50={SUPPORTS.isAndroid} title='Minimize' data-name='playPause' use:click={() => (playPage = !playPage)}>
+        <Minus size='1.9rem' strokeWidth='3'/>
+      </span>
+      <span class='position-absolute rounded-10 top-0 right-0 m-5 btn-shadow' class:ctrl={!SUPPORTS.isAndroid} title='Exit' data-name='playPause' use:click={() => { window.dispatchEvent(new CustomEvent('torrent-unload')); if (page === 'player') page = 'home'}}>
+        <X size='1.9rem' strokeWidth='3'/>
+      </span>
+    {/if}
+    <div class='d-flex align-items-center position-relative' class:mb-50={!miniplayer} style='width: 100%;' title='Play/Pause'>
       {#if hasLast}
-        <span class='icon ctrl position-absolute rounded-10' style='left: 20%' title='Last [B]' data-name='playPause' use:click={playLast}>
+        <span class='icon ctrl position-absolute rounded-10' style='left: 20%' title='Last' data-name='playPause' use:click={playLast}>
           <SkipBack size='3rem' fill='white' />
         </span>
       {/if}
-      <span class='icon ctrl position-absolute rounded-10' data-name='playPause' style='left: 50%; margin-left: -3rem;' use:click={playPause}>
-        {#if ended}
-          <RotateCw size='3rem' />
-        {:else}
-          {#if paused}
-            <Play size='3rem' fill='white' />
+        <span class='icon ctrl position-absolute rounded-10' data-name='playPause' style='left: 50%; margin-left: -3rem;' use:click={playPause}>
+          {#if ended}
+            <RotateCw size='3rem' />
           {:else}
-            <Pause size='3rem' fill='white' />
+            {#if paused}
+              <Play size='3rem' fill='white' />
+            {:else}
+              <Pause size='3rem' fill='white' />
+            {/if}
           {/if}
-        {/if}
-      </span>
+        </span>
       {#if hasNext}
-        <span class='icon ctrl position-absolute rounded-10' style='right: 20%' title='Next [N]' data-name='playPause' use:click={playNext}>
+        <span class='icon ctrl position-absolute rounded-10' style='right: 20%' title='Next' data-name='playPause' use:click={playNext}>
           <SkipForward size='3rem' fill='white' />
         </span>
       {/if}
     </div>
     <!-- eslint-disable-next-line svelte/valid-compile -->
-    <span class='icon ctrl h-full align-items-center w-150 mw-full ml-auto' on:click={forward}>
+    <span class='icon ctrl h-full align-items-center w-150 mw-full ml-auto' class:mb-50={!miniplayer} on:click={forward}>
       <FastForward size='3rem' />
     </span>
     <div class='position-absolute bufferingDisplay' />
@@ -1450,15 +1471,7 @@
       </button>
     {/if}
   </div>
-  <div class='bottom d-flex z-40 flex-column px-20'>
-    <div class='d-none d-secondary-stats justify-content-center'>
-      <span class='icon'><Users size='3rem' class='pt-5' strokeWidth={3} /> </span>
-      <span class='stats'>{torrent.peers || 0}</span>
-      <span class='icon'><ArrowDown size='3rem' /></span>
-      <span class='stats'>{fastPrettyBytes(torrent.down)}/s</span>
-      <span class='icon'><ArrowUp size='3rem' /></span>
-      <span class='stats'>{fastPrettyBytes(torrent.up)}/s</span>
-    </div>
+  <div class='bottom d-flex z-40 flex-column px-20' class:font-size-16={SUPPORTS.isAndroid} class:font-size-20={!SUPPORTS.isAndroid}>
     <div class='w-full d-flex align-items-center h-20 mb-5 seekbar' tabindex='0' role='button' on:keydown={handleSeekbarKey}>
       <Seekbar
         accentColor='var(--accent-color)'
@@ -1512,13 +1525,18 @@
           </span>
         {/if}
       </div>
-      <div class='ts' class:mr-auto={playbackRate === 1}>{toTS(targetTime, safeduration > 3600 ? 2 : 3)} / {toTS(safeduration - targetTime, safeduration > 3600 ? 2 : 3)}</div>
+      <div class='ts' class:font-size-16={SUPPORTS.isAndroid} class:font-size-20={!SUPPORTS.isAndroid} class:mr-auto={playbackRate === 1}>{toTS(targetTime, safeduration > 3600 ? 2 : 3)} / {toTS(safeduration - targetTime, safeduration > 3600 ? 2 : 3)}</div>
       {#if playbackRate !== 1}
-        <div class='ts mr-auto'>x{playbackRate.toFixed(1)}</div>
+        <div class='ts mr-auto' class:font-size-16={SUPPORTS.isAndroid} class:font-size-20={!SUPPORTS.isAndroid}>x{playbackRate.toFixed(1)}</div>
       {/if}
       <span class='icon ctrl mr-5 d-flex align-items-center keybinds' title='Keybinds [`]' use:click={() => (showKeybinds = true)}>
         <Keyboard size='2.5rem' strokeWidth={2.5} />
       </span>
+      {#if playPage}
+        <span class='icon ctrl mr-5 d-flex align-items-center' title='Now Playing [O]' use:click={() => ($view = media?.media)}>
+          <Eye size='2.5rem' strokeWidth={2.5} />
+        </span>
+      {/if}
       {#if 'audioTracks' in HTMLVideoElement.prototype && video?.audioTracks?.length > 1}
         <div class='dropdown dropup with-arrow' use:click={toggleDropdown}>
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Audio Tracks'>
@@ -1701,7 +1719,7 @@
     height: 100%;
   }
   .stats {
-    font-size: 2.3rem !important;
+    font-size: 2.3rem;
     padding-top: 1.5rem;
     white-space: nowrap;
     font-weight: 600;
@@ -1869,6 +1887,15 @@
   .mh-40 {
     max-height: 40rem;
   }
+  .mr-40 {
+    margin-right: 4rem !important;
+  }
+  .mr-50 {
+    margin-right: 5rem !important;
+  }
+  .mb-50 {
+    margin-bottom: 5rem !important;
+  }
 
   .ctrl {
     cursor: pointer;
@@ -1908,9 +1935,12 @@
     border-radius: 1rem;
   }
 
+  .btn-shadow {
+    filter: drop-shadow(0rem 0rem 0.5rem rgba(0, 0, 0, 0.9));
+  }
+
   .bottom .ts {
     color: #ececec;
-    font-size: 2rem !important;
     white-space: nowrap;
     align-self: center;
     line-height: var(--base-line-height);
@@ -1940,14 +1970,6 @@
     }
     .mt-60 {
       margin-top: 6rem !important;
-    }
-    .d-secondary-stats {
-      display: flex !important;
-    }
-  }
-  @media (min-width: 60rem) {
-    .d-primary-stats {
-      display: flex !important;
     }
   }
 

@@ -39,6 +39,8 @@
   import Helper from '@/modules/helper.js'
   import { AppWindow, Heart, LogIn, Logs, Play, Rss, Settings } from 'lucide-svelte'
 
+  export let playPage = false
+
   const groups = {
     player: {
       name: 'Player',
@@ -118,7 +120,7 @@
     </div>
     <Tab>
       <div class='root h-full w-full overflow-y-md-auto p-20' use:smoothScroll>
-        <PlayerSettings bind:settings={$settings} />
+        <PlayerSettings bind:settings={$settings} bind:playPage />
         <!-- spacing element to make space for miniplayer on mobile -->
         <div class='h-250' />
       </div>

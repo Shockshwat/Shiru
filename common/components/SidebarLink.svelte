@@ -4,6 +4,7 @@
 
   let _click = () => {}
   export { _click as click }
+  export let rbClick = null
   export let image = ''
   export let page
   export let _page = ''
@@ -14,9 +15,12 @@
   export let overlay = ''
 
   const btnSize = !SUPPORTS.isAndroid ? '3.1rem' : '3.4rem'
+  function handleOverlays() {
+    if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) }
+  }
 </script>
 
-<div class='sidebar-link sidebar-link-with-icon pointer overflow-hidden {css}' class:my-auto={SUPPORTS.isAndroid} use:click={() => { if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) } _click() } }>
+<div class='sidebar-link sidebar-link-with-icon pointer overflow-hidden {css}' class:my-auto={SUPPORTS.isAndroid} use:click={() => { handleOverlays(); _click() } } on:contextmenu|preventDefault={() => { if (rbClick) { handleOverlays(); rbClick() } } }>
   <span class='text-nowrap d-flex align-items-center w-full h-full'>
     {#if image}
       <span class='rounded d-flex'>

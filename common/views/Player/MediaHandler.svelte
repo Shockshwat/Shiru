@@ -316,6 +316,7 @@
   export let miniplayer = false
   export let page = 'home'
   export let overlay = []
+  export let playPage = false
 </script>
 
-<Player files={$processed} {miniplayer} media={$nowPlaying} bind:playFile bind:page bind:overlay on:current={handleCurrent} on:duration={handleRanged} />
+<Player files={$processed} {miniplayer} media={$nowPlaying} bind:playFile bind:page bind:overlay bind:playPage on:current={handleCurrent} on:duration={handleRanged} />

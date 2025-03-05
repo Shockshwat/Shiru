@@ -11,7 +11,7 @@
   import Helper from '@/modules/helper.js'
   import IPC from '@/modules/ipc.js'
   import SidebarLink from './SidebarLink.svelte'
-  import { Clock, Download, Heart, Home, ListVideo, LogIn, Settings, Users, Bell, BellDot } from 'lucide-svelte'
+  import { Clock, Download, Heart, Home, ListVideo, TvMinimalPlay, LogIn, Settings, Users, Bell, BellDot } from 'lucide-svelte'
   import { MagnifyingGlass } from 'svelte-radix'
 
   let updateState = ''
@@ -27,6 +27,7 @@
   const btnSize = !SUPPORTS.isAndroid ? '3.1rem' : '3.4rem'
 
   export let page
+  export let playPage
 </script>
 
 <div class='sidebar z-30 d-md-block' class:animated={$settings.expandingSidebar}>
@@ -49,8 +50,14 @@
     {#if $media?.media}
       {@const currentMedia = $view}
       {@const active = $view && !$notifyView && !$profileView && !$actionPrompt && 'active'}
-      <SidebarLink click={() => { $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media) }} icon='queue_music' text='Now Playing' {page} overlay={active} nowPlaying={$view === $media?.media} let:active>
-        <ListVideo size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
+      <SidebarLink click={() => {
+        if (playPage) {
+          page = 'player'
+        } else {
+          $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media)
+        }
+      }} rbClick={() => { $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media) }} _page={playPage ? 'player' : ''} icon='queue_music' text={$media?.display ? 'Last Watched' : 'Now Playing'} {page} overlay={active} nowPlaying={!playPage && ($view?.id === $media?.media?.id)} let:active>
+        <svelte:component this={playPage ? TvMinimalPlay : ListVideo} size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
       </SidebarLink>
     {/if}
     <SidebarLink click={() => { page = 'watchtogether' }} _page='watchtogether' icon='groups' text='Watch Together' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>

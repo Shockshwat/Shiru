@@ -4,10 +4,13 @@
   import { anilistClient } from '@/modules/anilist.js'
   import IPC from '@/modules/ipc.js'
   import { rss } from './views/TorrentSearch/TorrentModal.svelte'
+  import { files } from './views/Player/MediaHandler.svelte'
+  import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
 
   export const page = writable('home')
   export const overlay = writable([])
+  export const playPage = writable(settings.value.disableMiniplayer || false)
   export const view = writable(null)
   export async function handleAnime (detail) {
     IPC.emit('window-show')
@@ -34,6 +37,11 @@
   view.subscribe((value) => {
     if (value !== null) addPage(value, 'view')
   })
+  playPage.subscribe((value) => {
+    const currentSettings = settings.value
+    currentSettings.disableMiniplayer = value
+    settings.value = currentSettings
+  })
 
   let minimizeApp
   window.addEventListener('popstate', e => {
@@ -53,6 +61,10 @@
     view.set(null)
     rss.set(null)
     if (document.fullscreenElement) document.exitFullscreen()
+    if (state.type === 'page' && state.value === 'player' && (!files?.value || files?.value?.length === 0)) {
+      window.history.back()
+      return
+    }
     if (state.type === 'page') page.set(state.value)
     else view.set(state.value)
   })
@@ -75,8 +87,8 @@
 
 <div class='page-wrapper with-transitions bg-dark position-relative' data-sidebar-type='overlayed-all'>
   <Menubar bind:page={$page} />
-  <Sidebar bind:page={$page} />
-  <Navbar bind:page={$page} />
+  <Sidebar bind:page={$page} bind:playPage={$playPage} />
+  <Navbar bind:page={$page} bind:playPage={$playPage} />
   <div class='overflow-hidden content-wrapper h-full'>
     <Toaster visibleToasts={2} position='top-right' theme='dark' richColors duration={10000} closeButton />
     <Profiles bind:overlay={$overlay} />
@@ -84,7 +96,7 @@
     <ViewAnime bind:overlay={$overlay} />
     <TorrentModal bind:overlay={$overlay} />
     <MinimizeTray bind:overlay={$overlay} />
-    <Router bind:page={$page} bind:overlay={$overlay} />
+    <Router bind:page={$page} bind:overlay={$overlay} bind:playPage={$playPage} />
   </div>
 </div>
 

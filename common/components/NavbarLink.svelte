@@ -3,15 +3,19 @@
 
   let _click = () => {}
   export { _click as click }
+  export let rbClick = null
   export let page
   export let _page = ''
   export let css = ''
   export let icon = ''
   export let nowPlaying = false
   export let overlay = ''
+  function handleOverlays() {
+    if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) }
+  }
 </script>
 
-<div class='navbar-link navbar-link-with-icon pointer overflow-hidden mx-auto {css}' use:click={() => { if ((!icon.includes("login") && !icon.includes("bell") && !icon.includes("favorite")) || (!overlay && !icon.includes("favorite"))) { window.dispatchEvent(new CustomEvent('overlay-check', { detail: { nowPlaying: !overlay && nowPlaying } })) }  _click() } }>
+<div class='navbar-link navbar-link-with-icon pointer overflow-hidden mx-auto {css}' use:click={() => { handleOverlays(); _click() } } on:contextmenu|preventDefault={() => { if (rbClick) { handleOverlays(); rbClick() } } }>
   <span class='rounded d-flex'>
     <slot active={(page === _page && overlay !== 'active') || (overlay === 'active' && nowPlaying)}>{icon}</slot>
   </span>

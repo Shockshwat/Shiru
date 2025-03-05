@@ -304,6 +304,7 @@ export default class TorrentClient extends WebTorrent {
       announce: ANNOUNCE,
       deselect: this.settings.torrentStreamedDownload
     })
+    if (!data) return
 
     torrent.once('verified', () => {
       if (this.hault) return

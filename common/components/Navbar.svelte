@@ -9,9 +9,10 @@
   import NavbarLink from './NavbarLink.svelte'
   import { MagnifyingGlass } from 'svelte-radix'
   import { onDestroy, onMount } from 'svelte'
-  import { Home, Users, Clock, Settings, Bell, BellDot, ListVideo } from 'lucide-svelte'
+  import { Home, Users, Clock, Settings, Bell, BellDot, ListVideo, TvMinimalPlay } from 'lucide-svelte'
   const view = getContext('view')
   export let page
+  export let playPage
   onMount(() => {
     if (SUPPORTS.isAndroid) {
       window.Capacitor.Plugins.App.addListener('backButton', () => {
@@ -44,8 +45,14 @@
     {#if $media?.media}
       {@const currentMedia = $view}
       {@const active = $view && !$notifyView && !$profileView && !$actionPrompt && 'active'}
-      <NavbarLink click={() => { $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media) }} icon='queue_music' {page} overlay={active} nowPlaying={$view === $media?.media} let:active>
-        <ListVideo size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
+      <NavbarLink click={() => {
+        if (playPage) {
+          page = 'player'
+        } else {
+          $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media)
+        }
+      }} rbClick={() => { $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media) }} _page={playPage ? 'player' : ''} icon='queue_music' {page} overlay={active} nowPlaying={!playPage && ($view?.id === $media?.media?.id)} let:active>
+        <svelte:component this={playPage ? TvMinimalPlay : ListVideo} size='3.4rem' class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
       </NavbarLink>
     {/if}
     <NavbarLink click={() => { page = 'watchtogether' }} _page='watchtogether' icon='groups' {page} overlay={($view || $profileView || $notifyView || $actionPrompt || $rss) && 'active'} let:active>

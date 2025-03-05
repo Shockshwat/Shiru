@@ -107,3 +107,9 @@ client.on('open', ({ detail }) => {
 IPC.on('intent-end', () => {
   client.dispatch('externalWatched')
 })
+
+window.addEventListener('torrent-unload', () => {
+  files.value = []
+  media.value = { ...media.value, display: true } // set display to true to allow the "Last Watched" button to remain on the SideBar.
+  client.send(`torrent`, null) // this will not override the cached loadedTorrent, we rely on users to enable disableStartupTorrent if they don't want to load the previous torrent when the app starts.
+})
