@@ -80,6 +80,8 @@ export default class App {
       const focusedWindow = this.mainWindow
       focusedWindow?.isMaximized() ? focusedWindow.unmaximize() : focusedWindow.maximize()
     })
+    this.mainWindow.on('maximize', () => this.mainWindow.webContents.send('isMaximized', true))
+    this.mainWindow.on('unmaximize', () => this.mainWindow.webContents.send('isMaximized', false))
 
     ipcMain.on('close-prompt', () => {
       this.showAndFocus()
