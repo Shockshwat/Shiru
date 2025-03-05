@@ -1,5 +1,6 @@
 <script>
-  import { statusColorMap, getKitsuMappings } from '@/modules/anime.js'
+  import { statusColorMap } from '@/modules/anime.js'
+  import { episodesList } from '@/modules/episodes.js'
   import EpisodePreviewCard from './EpisodePreviewCard.svelte'
   import { hoverClick, hoverExit } from '@/modules/click.js'
   import { writable } from 'svelte/store'
@@ -101,10 +102,10 @@
           {anilistClient.title(media) || data.parseObject?.anime_title}
         </div>
         <div class='text-muted font-size-12 title overflow-hidden'>
-          {#if data.episodeData?.title?.en}
-            {data.episodeData?.title?.en}
+          {#if data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja}
+            {data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja}
           {:else}
-            {#await getKitsuMappings(media?.id) then mappings}
+            {#await episodesList.getKitsuEpisodes(media?.id) then mappings}
               {@const kitsuMappings = data.episode && mappings?.data?.find(ep => ep?.attributes?.number === Number(data.episode) || data.episode)?.attributes}
               {kitsuMappings?.titles?.en_us || kitsuMappings?.titles?.en_jp || data.episodeData?.title?.jp || ''}
             {/await}

@@ -1,5 +1,6 @@
 <script>
-  import { statusColorMap, formatMap, getKitsuMappings } from '@/modules/anime.js'
+  import { statusColorMap, formatMap } from '@/modules/anime.js'
+  import { episodesList } from '@/modules/episodes.js'
   import { since } from '@/modules/util.js'
   import { click } from '@/modules/click.js'
   import { liveAnimeEpisodeProgress } from '@/modules/animeprogress.js'
@@ -71,12 +72,12 @@
           {/if}
           {anilistClient.title(media) || data.parseObject.anime_title}
         </div>
-        {#if data.episodeData?.title?.en}
-          <div class='text-muted font-size-12 title overflow-hidden' title={data.episodeData?.title?.en}>
-            {data.episodeData?.title?.en}
+        {#if data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja}
+          <div class='text-muted font-size-12 title overflow-hidden' title={data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja}>
+            {data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja}
           </div>
         {:else}
-          {#await getKitsuMappings(media?.id) then mappings}
+          {#await episodesList.getKitsuEpisodes(media?.id) then mappings}
             {@const kitsuMappings = data.episode && mappings?.data?.find(ep => ep?.attributes?.number === Number(data.episode) || data.episode)?.attributes}
             {@const ep_title =  kitsuMappings?.titles?.en_us || kitsuMappings?.titles?.en_jp || data.episodeData?.title?.jp || ''}
             <div class='text-muted font-size-12 title overflow-hidden' title={ep_title}>
@@ -130,9 +131,9 @@
     </div>
     <div class='w-full text-muted description overflow-hidden pt-15'>
       {#if data.episodeData?.summary || data.episodeData?.overview}
-        {(data.episodeData?.summary || data.episodeData?.overview || media?.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
+        {(data.episodeData?.summary || data.episodeData?.overview).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
       {:else}
-        {#await getKitsuMappings(media?.id) then mappings}
+        {#await episodesList.getKitsuEpisodes(media?.id) then mappings}
           {@const kitsuMappings = data.episode && mappings?.data?.find(ep => ep?.attributes?.number === Number(data.episode) || data.episode)?.attributes}
           {(kitsuMappings?.synopsis || kitsuMappings?.description || media?.description || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
         {/await}

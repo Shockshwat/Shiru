@@ -72,7 +72,7 @@ export async function traceAnime (image) { // WAIT lookup logic
       season: "",
       sort: "",
       load: (page = 1, perPage = 50, variables = {}) => {
-        const res = anilistClient.searchIDS({ page, perPage, id: ids, ...SectionsManager.sanitiseObject(variables) }).then(res => {
+        const res = anilistClient.searchIDS({ page, perPage, id: ids, ...SectionsManager.sanitiseObject(variables) }).then(async res => {
           for (const index in res.data?.Page?.media) {
             const media = res.data.Page.media[index]
             const counterpart = result.find(({ anilist }) => anilist === media.id)
@@ -82,7 +82,8 @@ export async function traceAnime (image) { // WAIT lookup logic
               similarity: counterpart.similarity,
               episodeData: {
                 image: counterpart.image,
-                video: counterpart.video
+                video: counterpart.video,
+                ...(await getEpisodeMetadataForMedia(media))?.[counterpart.episode]
               }
             }
           }
@@ -567,7 +568,7 @@ export async function getEpisodeMetadataForMedia (media) {
   if (episodeMetadataMap.has(`${media?.id}`)) {
     return episodeMetadataMap.get(`${media?.id}`)
   }
-  const promiseData = (async () => (await getAniMappings(media?.id) || {}))()
+  const promiseData = (async () => (await getAniMappings(media?.id) || {})?.episodes)()
   episodeMetadataMap.set(`${media?.id}`, promiseData)
   return promiseData
 }
