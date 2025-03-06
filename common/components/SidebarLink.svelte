@@ -26,7 +26,7 @@
       <span class='rounded d-flex'>
         <img src={image} class='h-30 rounded' style='height: {btnSize} !important; width: {btnSize} !important' alt='logo' />
       </span>
-      <span class='text ml-20 {overlay === "profile" ? "font-weight-bolder font-size-18" : ""}'>{text}</span>
+      <span class='text ml-20' class:font-weight-bolder={overlay === 'profile'} class:font-size-16={overlay === 'profile'}>{text}</span>
     {:else}
       {@const active = (page === _page && overlay !== 'active') || overlay === 'notify' || (overlay === 'active' && nowPlaying)}
       <span class='rounded d-flex'>
