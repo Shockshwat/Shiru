@@ -905,7 +905,7 @@
         stats = {}
         handleStats(a, b, b)
       })
-      seek(-0.001) // stupid hack because the initial request doesn't trigger canvas to re-render, stats won't appear unless the current time changes.
+      if (paused) seek(-0.001) // stupid hack because the initial request doesn't trigger canvas to re-render, stats won't appear unless the current time changes.
     }
   }
   async function handleStats (now, metadata, lastmeta) {
