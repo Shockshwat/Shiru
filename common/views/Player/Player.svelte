@@ -329,7 +329,22 @@
     wasPaused = null
     currentTime = targetTime
   }
-
+  $: pagePause(page, playPage)
+  let pagePaused = false
+  function pagePause(page, playPage) {
+    if (buffer === 0) {
+      pagePaused = false
+      return
+    }
+    if (!video?.ended && (((page !== 'player') || overlay?.length > 0) && !paused && !pip)) {
+      pagePaused = false
+      playPause()
+    } else if (!video?.ended && ((page === 'player') && paused && !pagePaused && (!overlay || overlay.length === 0)) && playPage && !pip) {
+      playPause()
+    } else if ((((page !== 'player') || overlay?.length > 0) && paused)) {
+      pagePaused = true
+    }
+  }
   async function autoPlay () {
     emit('duration', duration)
     const fillerEpisode = await episodesList.getSingleEpisode(media?.media?.idMal, media?.episode)
