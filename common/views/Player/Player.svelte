@@ -351,7 +351,7 @@
     filler = fillerEpisode?.filler && 'Filler'
     recap = fillerEpisode?.recap && 'Recap'
     skipPrompt = filler || recap
-    if ((page === 'player') && !filler && !recap) {
+    if ((((page === 'player') && (!overlay || overlay.length === 0)) || pip) && !filler && !recap) {
       video.play()
       setTimeout(() => subs?.renderer?.resize(), 200) // stupid fix because video metadata doesn't update for multiple frames
     } else {
