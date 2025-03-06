@@ -554,6 +554,7 @@
           canvasVideo.onloadedmetadata = () => {
             canvasVideo.play()
             if (pip) {
+              if (paused) canvasVideo.pause()
               canvasVideo.requestPictureInPicture().then(pipwindow => {
                 pipwindow.onresize = () => {
                   const { width, height } = pipwindow
