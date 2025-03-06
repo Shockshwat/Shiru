@@ -1,6 +1,6 @@
 {
   "name": "shiru",
-  "version": "6.0.4",
+  "version": "6.0.5",
   "license": "GPL-3.0-or-later",
   "private": true,
   "author": "RockinChaos <RockinChaos@users.noreply.github.com>",
@@ -70,7 +70,7 @@
       "!node_modules/**/*.{mk,a,o,h}"
     ],
     "mac": {
-      "artifactName": "${os}-${productName}-${version}-mac.${ext}",
+      "artifactName": "${os}-${productName}-v${version}-mac.${ext}",
       "defaultArch": "universal",
       "singleArchFiles": "node_modules/+(register-scheme|utp-native|fs-native-extensions)/**",
       "category": "public.app-category.video",
@@ -87,14 +87,14 @@
       ]
     },
     "win": {
-      "artifactName": "${os}-${productName}-${version}.${ext}",
+      "artifactName": "${os}-${productName}-v${version}.${ext}",
       "target": [
         "nsis",
         "portable"
       ]
     },
     "linux": {
-      "artifactName": "${os}-${productName}-${version}.${ext}",
+      "artifactName": "${os}-${productName}-v${version}.${ext}",
       "category": "AudioVideo;Video",
       "description": "BitTorrent streaming software with no paws in the way—watch anime in real-time, no waiting for downloads!",
       "maintainer": "RockinChaos <RockinChaos@users.noreply.github.com>",
@@ -117,12 +117,12 @@
       ]
     },
     "portable": {
-      "artifactName": "${os}-${productName}-${version}-portable.${ext}"
+      "artifactName": "${os}-${productName}-v${version}-portable.${ext}"
     },
     "nsis": {
       "allowToChangeInstallationDirectory": true,
       "oneClick": false,
-      "artifactName": "${os}-${productName}-${version}-installer.${ext}"
+      "artifactName": "${os}-${productName}-v${version}-installer.${ext}"
     }
   }
 }
