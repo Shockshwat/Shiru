@@ -3,6 +3,7 @@
     import { malDubs } from '@/modules/animedubs.js'
     import { animeSchedule } from '@/modules/animeschedule.js'
     import { getMediaMaxEp } from '@/modules/anime.js'
+    import { matchPhrase } from '@/modules/util.js'
     import { writable } from 'svelte/store'
     import { Mic, MicOff, Captions, Adult } from 'lucide-svelte'
 
@@ -58,10 +59,11 @@
             </div>
         </div>
     {:else if !viewAnime}
-        {$isDubbed ? 'Dub' : $isPartial ? 'Partial Dub' : 'Sub'}
+        {@const multiAudio = (matchPhrase(data?.parseObject?.file_name, ['Multi Audio', 'Dual Audio'], 3) || matchPhrase(data?.parseObject?.file_name, ['Dual'], 1)) || (banner && ($isDubbed || $isPartial)) }
+        {$isDubbed ? `Dub${ multiAudio ? ' | Sub' : ''}` : $isPartial ? `Partial Dub${ multiAudio ? ' | Sub' : ''}` : 'Sub'}
     {:else if viewAnime}
         <svelte:component this={$isDubbed ? Mic : $isPartial ? MicOff : Captions} class='mx-10' size='2.2rem' />
-        <span class='mr-20'>{$isDubbed ? 'Dub' : $isPartial ? 'Partial Dub' : 'Sub'}</span>
+        <span class='mr-20'>{$isDubbed ? 'Dub | Sub' : $isPartial ? 'Partial Dub | Sub' : 'Sub'}</span>
     {/if}
 {/if}
 
