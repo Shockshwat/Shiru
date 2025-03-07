@@ -5,9 +5,11 @@ import path from 'path'
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient('shiru', process.execPath, [path.resolve(process.argv[1])])
+    app.setAsDefaultProtocolClient('magnet', process.execPath, [path.resolve(process.argv[1])])
   }
 } else {
   app.setAsDefaultProtocolClient('shiru')
+  app.setAsDefaultProtocolClient('magnet')
 }
 
 export default class Protocol {
@@ -113,6 +115,13 @@ export default class Protocol {
    * @param {string} text
    */
   handleProtocol (text) {
+    // Handle magnet links
+    if (text.startsWith("magnet:")) {
+      this.add(text)
+      return
+    }
+
+    // Handle shiru:// scheme
     const match = text.match(this.protocolRx)
     if (match) this.protocolMap[match[1]]?.(match[2])
     return match

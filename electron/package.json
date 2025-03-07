@@ -53,7 +53,8 @@
     "protocols": {
       "name": "shiru",
       "schemes": [
-        "shiru"
+        "shiru",
+        "magnet"
       ]
     },
     "publish": [

@@ -172,6 +172,13 @@ const protocolMap = {
 const protocolRx = /shiru:\/\/([a-z0-9]+)\/(.*)/i
 
 function handleProtocol (text) {
+  // Handle magnet links
+  if (text.startsWith("magnet:")) {
+    this.add(text)
+    return
+  }
+
+  // Handle shiru:// scheme
   const match = text.match(protocolRx)
   if (match) protocolMap[match[1]]?.(match[2])
 }
@@ -192,7 +199,7 @@ function sendMalToken (line) {
     if (state.endsWith('/')) state = state.slice(0, -1)
     if (state.includes('%')) state = decodeURIComponent(state)
     IPC.emit('maltoken', code, state)
-  } 
+  }
 }
 
 /**
