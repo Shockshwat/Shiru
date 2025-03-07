@@ -50,8 +50,11 @@
     {#if $media?.media}
       {@const currentMedia = $view}
       {@const active = $view && !$notifyView && !$profileView && !$actionPrompt && 'active'}
+      {@const wasOverlay = ($view || $profileView || $notifyView || $actionPrompt || $rss)}
       <SidebarLink click={() => {
-        if (playPage) {
+        if (playPage && (page === 'player') && !wasOverlay) {
+          playPage = false
+        } else if (playPage) {
           page = 'player'
         } else {
           $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media)
