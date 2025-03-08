@@ -112,7 +112,7 @@
           {/if}
         </div>
       </div>
-      <div class='col-auto d-flex flex-column align-items-end text-right'>
+      <div class='col-auto d-flex flex-column align-items-end text-right mt-3'>
         <div class='text-white font-weight-bold'>
           {#if data.episode}
             {@const episodes = (data.parseObject?.file_name?.match(/\b\d+\s*[-~]\s*\d+\b/) || []).map(m => m.split(/[-~]/).map(n => +n.trim()))[0] || Array.isArray(data.episode) ? data.episode : []}
@@ -165,6 +165,9 @@
   .episode-card:hover {
     z-index: 30 !important;
     /* fixes transform scaling on click causing z-index issues */
+  }
+  .mt-3 {
+    margin-top: 0.3rem;
   }
   .mb-150 {
     margin-bottom: 15rem !important;

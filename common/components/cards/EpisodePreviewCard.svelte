@@ -86,7 +86,7 @@
           {/await}
         {/if}
       </div>
-      <div class='col-auto d-flex flex-column align-items-end text-right' title={data.parseObject?.file_name} >
+      <div class='col-auto d-flex flex-column align-items-end text-right mt-3' title={data.parseObject?.file_name} >
         <div class='text-white font-weight-bold font-weight-very-bold'>
           {#if data.episode}
             {@const episodes = (data.parseObject?.file_name?.match(/\b\d+\s*[-~]\s*\d+\b/) || []).map(m => m.split(/[-~]/).map(n => +n.trim()))[0] || Array.isArray(data.episode) ? data.episode : []}
@@ -195,6 +195,9 @@
     animation: 0.3s ease 0s 1 load-in;
     left: -100%;
     right: -100%;
+  }
+  .mt-3 {
+    margin-top: 0.3rem;
   }
   .title {
     display: -webkit-box;
