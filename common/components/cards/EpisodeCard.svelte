@@ -102,12 +102,12 @@
           {anilistClient.title(media) || data.parseObject?.anime_title}
         </div>
         <div class='text-muted font-size-12 title overflow-hidden'>
-          {#if data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja}
-            {data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja}
-          {:else}
+          {#if data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja || data.episodeData?.title?.jp}
+            {data.episodeData?.title?.en || data.episodeData?.title?.['x-jat'] || data.episodeData?.title?.ja || data.episodeData?.title?.jp}
+          {:else if (data.episode && !Array.isArray(data.episode))}
             {#await episodesList.getKitsuEpisodes(media?.id) then mappings}
               {@const kitsuMappings = data.episode && mappings?.data?.find(ep => ep?.attributes?.number === Number(data.episode) || data.episode)?.attributes}
-              {kitsuMappings?.titles?.en_us || kitsuMappings?.titles?.en_jp || data.episodeData?.title?.jp || ''}
+              {kitsuMappings?.titles?.en_us || kitsuMappings?.titles?.en_jp || ''}
             {/await}
           {/if}
         </div>

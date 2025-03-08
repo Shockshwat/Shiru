@@ -175,7 +175,7 @@
                         <span class='badge badge-episode mr-5'>Movie</span>
                       {:else if !notification.season}
                         {#if delayed}<span class='badge badge-delayed mr-5'>Delayed</span>{/if}
-                        <span class='badge badge-episode mr-5'>{notification.episode ? `Episode ${notification.episode}` : `Batch`} </span>
+                        <span class='badge badge-episode mr-5'>{notification.episode ? `Episode ${Array.isArray(notification.episode) ? `${notification.episode[0]} ~ ${notification.episode[1]}` : notification.episode}` : `Batch`} </span>
                       {:else if notification.season}
                       <span class='badge badge-episode mr-5'>Season {notification.episode}</span>
                       {/if}
