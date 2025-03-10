@@ -9,6 +9,7 @@
     episode = isNaN(episode) ? 1 : episode
     if (!force && findInCurrent({ media, episode })) {
       window.dispatchEvent(new Event('overlay-check'))
+      window.dispatchEvent(new Event('player'))
       return
     }
     rss.set({ media, episode })

@@ -22,6 +22,7 @@
   IPC.on('schedule', () => {
     page.set('schedule')
   })
+  window.addEventListener('player', () => page.set('player'))
 
   let ignoreNext = false
   function addPage (value, type) {
