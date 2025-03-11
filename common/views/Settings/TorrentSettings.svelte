@@ -128,6 +128,12 @@
     <label for='rss-autoplay'>{settings.rssAutoplay ? 'On' : 'Off'}</label>
   </div>
 </SettingCard>
+<SettingCard title='Auto-Select Files' description='Automatically selects the requested file when clicking the desired episode if it already exists in the batch before prompting the torrent selection. Disable this to always be prompted to select a torrent regardless of what is in the current batch.'>
+  <div class='custom-switch'>
+    <input type='checkbox' id='rss-autofile' bind:checked={settings.rssAutofile} />
+    <label for='rss-autofile'>{settings.rssAutofile ? 'On' : 'Off'}</label>
+  </div>
+</SettingCard>
 {#if SUPPORTS.doh}
   <SettingCard title='Use DNS Over HTTPS' description='Enables DNS Over HTTPS, useful if your ISP blocks certain domains.'>
     <div class='custom-switch'>

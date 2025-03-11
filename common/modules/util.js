@@ -330,6 +330,7 @@ export const defaults = {
   preferDubs: false,
   adult: 'none',
   rssAutoplay: true,
+  rssAutofile: true,
   rssQuality: '1080',
   rssFeedsNew: SUPPORTS.extensions ? [['New Releases', 'SubsPlease']] : [],
   rssNotify: ['CURRENT', 'PLANNING'],

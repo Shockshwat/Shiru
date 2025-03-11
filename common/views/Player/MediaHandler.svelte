@@ -6,6 +6,7 @@
   import { anilistClient } from '@/modules/anilist.js'
   import { mediaCache } from '@/modules/cache.js'
   import { episodesList } from '@/modules/episodes.js'
+  import { settings } from '@/modules/settings.js'
   import { getAniMappings, getKitsuMappings, hasZeroEpisode } from '@/modules/anime.js'
   import Debug from 'debug'
 
@@ -37,6 +38,7 @@
   }
 
   export function findInCurrent (obj) {
+    if (!settings.value.rssAutofile) return false
     const oldNowPlaying = nowPlaying.value
     if (!oldNowPlaying.media?.id || !oldNowPlaying.episode || (oldNowPlaying.media.id === obj.media.id && oldNowPlaying.episode === obj.episode)) return false
 
