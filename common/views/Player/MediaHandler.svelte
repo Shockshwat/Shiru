@@ -38,7 +38,7 @@
 
   export function findInCurrent (obj) {
     const oldNowPlaying = nowPlaying.value
-    if (oldNowPlaying.media?.id === obj.media.id && oldNowPlaying.episode === obj.episode) return false
+    if (!oldNowPlaying.media?.id || !oldNowPlaying.episode || (oldNowPlaying.media.id === obj.media.id && oldNowPlaying.episode === obj.episode)) return false
 
     const fileList = files.value
     const targetFile = fileList.find(file => file.media?.media?.id === obj.media.id &&
@@ -122,7 +122,7 @@
         title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
         episode: ep,
         episodeRange,
-        episodeTitle: streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title)),
+        episodeTitle: (streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title))) || (media && (media.format === 'MOVIE') ? 'The Movie' : ''),
         thumbnail: media?.coverImage.extraLarge
       }
 

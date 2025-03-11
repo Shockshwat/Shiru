@@ -80,7 +80,7 @@
     const mappings = await getAniMappings(id) || {}
     const { episodes, specialCount, episodeCount: newEpisodeCount } = mappings
 
-    /** @type {{ airingAt: number; episode: number; filler?: boolean; dubAiring?: object; }[]} */
+    /** @type {{ zeroEpisode: object; airingAt: number; episode: number; filler?: boolean; dubAiring?: object; }[]} */
     episodeList = Array.from({ length: (newEpisodeCount > episodeCount ? newEpisodeCount : episodeCount) }, (_, i) => ({
       episode: i + 1, image: null, summary: null, rating: null, title: null, length: null, airdate: null, airingAt: null, filler: episodesList.getSingleEpisode(idMal, (i + 1)), dubAiring: dubbedEpisode(i, media)
     }))
