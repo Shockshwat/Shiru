@@ -78,7 +78,7 @@
       if (duration && (duration > 120) && nowPlaying.value?.episode && nowPlaying.value?.media?.duration) {
           // We need check the mappings to verify that the episode isn't actually an ultra-long premiere episode like "Oshi No Ko", Anilist doesn't differentiate these so we need to manually check.
           const mappings = (!nowPlaying.value.media.episodes || !nowPlaying.value.media.episodes <= 100) && (await getAniMappings(nowPlaying.value.media.id) || {})?.episodes
-          const episode = mappings && Object.values(mappings)?.find(episode => (episode.episodeNumber && Number(episode.episodeNumber)) === Number(nowPlaying.value.episode) && episode.length > 1)
+          const episode = mappings && Object.values(mappings)?.find(episode => ((episode.episodeNumber || episode.episode) && Number((episode.episodeNumber || episode.episode))) === Number(nowPlaying.value.episode) && episode.length > 1)
           debug(`Duration of the current media has changed, checking for multiple episodes in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
           const mediaDuration = (episode?.length && episode.length * 60) || (nowPlaying.value.media.duration * 60)
           if (duration > (mediaDuration + 120)) { // Add 2 minutes (120 second) buffer
