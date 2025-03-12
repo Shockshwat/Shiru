@@ -22,7 +22,8 @@
     animeSchedule.dubAiredLists.subscribe(value => getDubEpisodes(value))
     function getDubEpisodes(dubAiredLists) {
         if (!banner && !viewAnime) {
-            const episodes = String(($isDubbed || $isPartial) && dubAiredLists?.filter(episode => episode.id === media.id)?.reduce((max, ep) => Math.max(max, ep.episode.aired), 0) || (dubAiredLists?.find(entry => entry.media?.media?.id === media.id)?.episodeNumber && '0') || (!$isPartial && media.status !== 'RELEASING' && media.status !== 'NOT_YET_RELEASED' && Number(media.seasonYear || 0) < 2025 && getMediaMaxEp(media)) || '')
+            const dubAiring = animeSchedule.dubAiring.value?.find(entry => entry.unaired && entry.media?.media?.id === media.id)
+            const episodes = String(($isDubbed || $isPartial) && dubAiredLists?.filter(episode => episode.id === media.id)?.reduce((max, ep) => Math.max(max, ep.episode.aired), 0) || (dubAiredLists?.find(entry => entry.media?.media?.id === media.id)?.episodeNumber && '0') || (!$isPartial && media.status !== 'RELEASING' && media.status !== 'NOT_YET_RELEASED' && Number(media.seasonYear || 0) < 2025 && !dubAiring && getMediaMaxEp(media)) || '')
             if (dubEpisodes !== episodes) dubEpisodes = episodes
         }
     }
