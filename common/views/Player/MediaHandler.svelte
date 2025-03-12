@@ -168,7 +168,7 @@
 
     // unwatched
     let lowestUnwatched
-    for (const format of ['TV', 'MOVIE', 'ONA', 'OVA', 'SPECIAL']) {
+    for (const format of ['SPECIAL', 'TV', 'MOVIE', 'ONA', 'OVA']) {
       for (const { media } of videoFiles) {
         const cachedMedia = mediaCache.value[media.media?.id] || media?.media
         if (cachedMedia?.format === format && !cachedMedia.mediaListEntry && (!lowestUnwatched || (((Number(lowestUnwatched.episode) >= Number(media?.episode)) || (media?.episode && !lowestUnwatched.episode)) && Number(lowestUnwatched.season) >= Number(media?.season)))) lowestUnwatched = { media: cachedMedia, episode: media?.episode, season: media?.season }
