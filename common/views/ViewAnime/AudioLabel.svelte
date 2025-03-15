@@ -41,7 +41,7 @@
 </script>
 {#if settings.value.cardAudio}
     {#if !banner && !viewAnime}
-        {@const subEpisodes = String(media.status !== 'NOT_YET_RELEASED' && media.status !== 'CANCELLED' && getMediaMaxEp(media, true) || dubEpisodes || '')}
+        {@const subEpisodes = String(media.status !== 'NOT_YET_RELEASED' && media.status !== 'CANCELLED' && getMediaMaxEp(media, (media.status !== 'FINISHED')) || dubEpisodes || '')}
         <div class='position-absolute bottom-0 right-0 d-flex h-2' class:mb-4={smallCard} class:mb-3={!smallCard}>
             {#if media.isAdult}
                 <div class='pl-10 pr-15 text-dark font-weight-bold d-flex align-items-center h-full lg-slant adult mrl-2'>
@@ -56,7 +56,7 @@
             {/if}
             <div class='px-10 z-10 text-dark rounded-right font-weight-bold d-flex align-items-center h-full subbed slant mrl-1'>
                 <Captions size='2rem' strokeWidth='1.5' />
-                <span class='d-flex align-items-center line-height-1' class:ml-3={subEpisodes && subEpisodes.length > 0}><div class='line-height-1 mt-2'>{subEpisodes}</div></span>
+                <span class='d-flex align-items-center line-height-1' class:ml-3={(subEpisodes && subEpisodes.length > 0) || (dubEpisodes && Number(dubEpisodes) > 0)}><div class='line-height-1 mt-2'>{#if subEpisodes && (!dubEpisodes || (Number(subEpisodes) >= Number(dubEpisodes)))}{Number(subEpisodes)}{:else}{Number(dubEpisodes)}{/if}</div></span>
             </div>
         </div>
     {:else if !viewAnime}
