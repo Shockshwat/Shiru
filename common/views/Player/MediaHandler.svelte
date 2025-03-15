@@ -40,8 +40,7 @@
   export function findInCurrent (obj) {
     if (!settings.value.rssAutofile) return false
     const oldNowPlaying = nowPlaying.value
-    if (!oldNowPlaying.media?.id || !oldNowPlaying.episode || (oldNowPlaying.media.id === obj.media.id && oldNowPlaying.episode === obj.episode)) return false
-
+    if (!oldNowPlaying.media?.id || (oldNowPlaying.media.id === obj.media.id && oldNowPlaying.episode === obj.episode)) return false
     const fileList = files.value
     const targetFile = fileList.find(file => file.media?.media?.id === obj.media.id &&
       (file.media?.episode === obj.episode || obj.media.episodes === 1 || (!obj.media.episodes && (obj.episode === 1 || !obj.episode) && (oldNowPlaying.episode === 1 || !oldNowPlaying.episode))) // movie check
@@ -50,7 +49,7 @@
     if (!targetFile) return false
     if (oldNowPlaying.media?.id !== obj.media.id) {
       handleMedia(obj, { media: obj.media, episode: obj.episode })
-      handleFiles(fileList)
+      handleFiles(fileList, targetFile) // targetFile is defined to force the targetFile media to load instead of the lowestUnwatched, lowestPlanning, or lowestCurrent
     } else {
       playFile(targetFile)
     }
@@ -146,7 +145,9 @@
   // find the best media in batch to play
   // currently in progress or unwatched
   // tv, movie, ona, ova, special
-  async function findPreferredPlaybackMedia (videoFiles) {
+  async function findPreferredPlaybackMedia (files, targetFile) {
+    const videoFiles = targetFile ? (files.filter(file => file.media?.media?.id === targetFile?.media?.media?.id) || files) : files // force the requested target files to load.
+
     for (const { media } of videoFiles) {
       const cachedMedia = mediaCache.value[media.media?.id] || media?.media
       const zeroEpisode = await checkForZero(cachedMedia)
@@ -188,7 +189,7 @@
     return files?.map(({ name, media, url }) => `\n${name} ${media?.parseObject?.anime_title} ${media?.parseObject?.episode_number} ${media?.media?.title?.userPreferred} ${media?.episode}`).join('')
   }
 
-  async function handleFiles (files) {
+  async function handleFiles (files, targetFile) {
     debug(`Got ${files?.length} files`, fileListToDebug(files))
     if (!files?.length) return processed.set(files)
     let videoFiles = []
@@ -228,7 +229,7 @@
     })
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
-    const newPlaying = await findPreferredPlaybackMedia(videoFiles)
+    const newPlaying = await findPreferredPlaybackMedia(videoFiles, targetFile)
     debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
 
     const filtered = newPlaying?.media && videoFiles.filter(file => (file.media?.media?.id && file.media?.media?.id === newPlaying.media.id) || !file.media?.media?.id)
