@@ -205,6 +205,8 @@ export default new class AnimeResolver {
           .replace(/Symphogear GX (Season\s*3|S\s*3|\s*03)/i, 'Symphogear GX') // Symphogear S3 fix.... see above.
           .replace(/Symphogear AXZ (Season\s*4|S\s*4|\s*04)/i, 'Symphogear AXZ') // Symphogear S4 fix.... see above.
           .replace(/Symphogear XV (Season\s*5|S\s*5|\s*05)/i, 'Symphogear XV') // Symphogear S5 fix.... see above.
+          .replace(/Kiss X Sis/i, 'Kiss×Sis') // Kiss X Sis fix, Anilist is weird using Unicode characters, not a release groups fault.
+          .replace(/KissXSis/i, 'Kiss×Sis') // Kiss X Sis fix, see above.
 
       // Restore preserved patterns by converting markers back
       name = name
@@ -318,8 +320,8 @@ export default new class AnimeResolver {
       }
       debug(`${failed || !(media?.title?.userPreferred) ? `Failed to resolve` : `Resolved`} ${parseObj.anime_title} ${parseObj.episode_number} ${episode} ${media?.id}:${media?.title?.userPreferred}`)
       fileAnimes.push({
-        episode: episode || parseObj.episode_number || (media?.episodes === 1 ? 1 : media.format === 'MOVIE' ? 1 : null),
-        ...(!media || media.format !== 'MOVIE' || parseObj?.anime_season ? {season: parseObj?.anime_season ? Number(parseObj.anime_season) : 1} : {}),
+        episode: episode || parseObj.episode_number || (media?.episodes === 1 ? 1 : media?.format === 'MOVIE' ? 1 : null),
+        ...(!media || media?.format !== 'MOVIE' || parseObj?.anime_season ? {season: parseObj?.anime_season ? Number(parseObj.anime_season) : 1} : {}),
         parseObject: parseObj,
         media,
         failed: failed || !(media?.title?.userPreferred)
@@ -390,7 +392,7 @@ export default new class AnimeResolver {
     // check that anime_title is similar to the resolved media title, if it's not then we likely already are at the root level... resolves issues with niche series like MF GHOST.
     let isRoot = false
     if (!root || (root && !this.isVerified(root, parseObj, titleKeys, threshold))) {
-      debug(`Detect incorrect Root for ${parseObj?.anime_title}, assuming the title is already root from ${media.id}:${media.title?.userPreferred}`)
+      debug(`Detected incorrect Root for ${parseObj?.anime_title}, assuming the title is already root from ${media.id}:${media.title?.userPreferred}`)
       isRoot = true
     }
     // value bigger than episode count

@@ -190,7 +190,7 @@ function replaceSeasonWithWords(text) {
 export function matchKeys(nest, phrase, keys, threshold = 0.4) {
   if (!phrase) return true
   if (!nest) return false
-  const cleanedPhrase = replaceSeasonWithWords(phrase)
+  const cleanedPhrase = replaceSeasonWithWords(phrase.replace(!SUPPORTS.isAndroid ? new RegExp('[^\\p{L}\\p{N}\\p{Zs}\\p{Pd}]', 'gu') : /[^a-zA-Z0-9\s\-\u00C0-\u024F\u0400-\u04FF\u0370-\u03FF\u0600-\u06FF\u0900-\u097F\u4E00-\u9FFF]/g, ''))
   const cleanedNest = structuredClone(nest)
   keys.forEach((key) => {
     const value = getNestedValue(cleanedNest, key)
