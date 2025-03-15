@@ -187,7 +187,7 @@
   }
 
   function fileListToDebug (files) {
-    return files?.map(({ name, media, url }) => `\n${name} ${media?.parseObject?.anime_title} ${media?.parseObject?.episode_number} ${media?.media?.title?.userPreferred} ${media?.episode}`).join('')
+    return files?.map(({ name, media, url }) => `\n${name} ${media?.parseObject?.anime_title} ${media?.parseObject?.episode_number} ${media?.media?.id}:${media?.media?.title?.userPreferred} ${media?.episode}`).join('')
   }
 
   async function handleFiles (files, targetFile) {
@@ -204,21 +204,26 @@
       }
       if (file.torrent_name) torrentNames.push(file.torrent_name)
     }
+
+    // assign any resolved media to their video files that haven't failed to be resolved.
     const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => file.name))
-    if (resolved[0].failed) {
-      debug('Media has failed to resolve using the file name, trying again using the torrent name ...')
-      const torrentName = [...new Set(torrentNames)][0] // temporary, may need to handle multiple torrents in the future.
-      const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => `${torrentName} ${file.name}`))
-      videoFiles.map(file => {
-          file.media = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(`${torrentName} ${file.name}`).includes(parseObject.file_name))
-          return file
-      })
-    } else {
-      videoFiles.map(file => {
-          file.media = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(file.name).includes(parseObject.file_name))
-          return file
-      })
+    videoFiles.forEach((file) => {
+        const parseObject = resolved.find(({ parseObject }) => AnimeResolver.cleanFileName(file.name).includes(parseObject.file_name))
+        if (parseObject && !parseObject.failed) file.media = parseObject
+    })
+
+    // Identify files that still need to be resolved, attempting again using the torrent name instead.
+    const failedToResolve = videoFiles.filter(file => !file.media)
+    if (failedToResolve.length) {
+        debug('Some media files failed to resolve using the file name, trying again using the torrent name...')
+        const torrentName = [...new Set(torrentNames)][0] // temporary, may need to handle multiple torrents in the future.
+        const resolvedByName = await AnimeResolver.resolveFileAnime(failedToResolve.map(file => `${torrentName} ${file.name}`))
+        failedToResolve.forEach((file) => {
+            const parseObject = resolvedByName.find(({ parseObject }) => AnimeResolver.cleanFileName(`${torrentName} ${file.name}`).includes(parseObject.file_name))
+            if (parseObject) file.media = parseObject
+        })
     }
+
     videoFiles = videoFiles.filter(file => {
         if (typeof file.media.parseObject.anime_type === 'string') return !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type.toUpperCase())
         else if (Array.isArray(file.media.parseObject.anime_type)) { // rare edge cases where the type is an array, only batches like a full season + movie + special.
@@ -228,6 +233,7 @@
         }
         return true
     })
+    videoFiles?.sort((a, b) => a.media.media?.id - b.media.media?.id) // group media ids together for easier readability.
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
     const newPlaying = await findPreferredPlaybackMedia(videoFiles, targetFile)
