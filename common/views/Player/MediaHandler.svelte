@@ -220,10 +220,16 @@
         const resolvedByName = await AnimeResolver.resolveFileAnime(failedToResolve.map(file => `${torrentName} ${file.name}`))
         failedToResolve.forEach((file) => {
             const parseObject = resolvedByName.find(({ parseObject }) => AnimeResolver.cleanFileName(`${torrentName} ${file.name}`).includes(parseObject.file_name))
+            const failedEntry = resolved.find(resolvedFile => AnimeResolver.cleanFileName(resolvedFile.parseObject.file_name) === AnimeResolver.cleanFileName(file.name))
+            const animeType = failedEntry?.parseObject.anime_type
+            if (animeType) parseObject.parseObject.anime_type = animeType
             if (parseObject) file.media = parseObject
         })
     }
+    videoFiles?.sort((a, b) => a.media.media?.id - b.media.media?.id) // group media ids together for easier readability.
+    debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
+    const resolvedFiles = videoFiles?.length
     videoFiles = videoFiles.filter(file => {
         if (typeof file.media.parseObject.anime_type === 'string') return !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type.toUpperCase())
         else if (Array.isArray(file.media.parseObject.anime_type)) { // rare edge cases where the type is an array, only batches like a full season + movie + special.
@@ -233,8 +239,7 @@
         }
         return true
     })
-    videoFiles?.sort((a, b) => a.media.media?.id - b.media.media?.id) // group media ids together for easier readability.
-    debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
+    debug(`Removed matching type exclusions for ${resolvedFiles - videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
     const newPlaying = await findPreferredPlaybackMedia(videoFiles, targetFile)
     debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
