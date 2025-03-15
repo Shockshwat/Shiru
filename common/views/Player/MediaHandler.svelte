@@ -98,7 +98,7 @@
       const zeroEpisode = media && await checkForZero(media)
       const ep = (Number(episode || parseObject?.episode_number) === 0) || (zeroEpisode && !episode) ? 0 : (Number(episode || parseObject?.episode_number) || null)
       const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
-      let streamingEpisode = streamingTitle
+      let streamingEpisode
       if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {
         // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
         const { episodes, specialCount, episodeCount } = await getAniMappings(media?.id) || {}
@@ -114,6 +114,7 @@
           if (episodeTitle && episodeTitle?.title) streamingEpisode = {title: (`Episode ${Number(episode)} - ` + episodeTitle.title)}
         }
       }
+      if (!streamingEpisode) streamingEpisode = streamingTitle
       if (streamingEpisode?.title) {
         const titleParts = streamingEpisode.title.split(' - ')
         streamingEpisode.title = (titleParts?.[0]?.trim() === titleParts?.[1]?.trim()) ? titleParts?.[0]?.trim() : streamingEpisode.title
