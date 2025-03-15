@@ -244,7 +244,7 @@
           {@const target = userProgress + 1 === (episode + (zeroEpisode ? 1 : 0))}
           {@const hasFiller = filler?.filler || filler?.recap}
           {@const progress = !watched && ($animeProgress?.[episode + (zeroEpisode ? 1 : 0)] ?? 0)}
-          {@const resolvedTitle = episodeList.filter((ep) => ep.episode < episode).some((ep) => matchPhrase(ep.title, title, 0.1)) ? null : title}
+          {@const resolvedTitle = episodeList.filter((ep) => ep.episode < episode).some((ep) => matchPhrase(ep.title, title, 0.1, true)) ? null : title}
           <div class='w-full content-visibility-auto scale' class:my-20={!mobileList || index !== 0} class:opacity-half={completed} class:scale-target={target} class:px-20={!target} class:px-10={target} class:h-150={image || summary}>
             <div class='rounded w-full h-full overflow-hidden d-flex flex-xsm-column flex-row pointer position-relative' class:border={target || hasFiller} class:bg-black={completed} class:border-secondary={hasFiller} class:bg-dark={!completed} use:click={() => play(episode)}>
               {#if image}
