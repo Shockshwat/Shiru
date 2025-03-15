@@ -195,11 +195,16 @@ export default new class AnimeResolver {
       // Remove file extensions and replace all remaining periods with spaces
       name = name.replace(/\.(mkv|mp4|avi|mov|wmv|flv|webm|m4v|mpeg|mpg|3gp|ogg|ogv)$/i, '').replace(/\./g, ' ')
 
-      // Fix common naming issues
+      // Fix common naming issues, the unfortunate depression of horribly named releases. Please don't be like them, do better.
       name = name
           .replace('1-2', '1/2').replace('1_2', '1/2') // Ranma 1/2 fix.
           .replace(/new /i, '') // Prince of Tennis fix.
           .replace(/Link Click (Season\s*3|S\s*3|\s*03)/i, 'Link Click: Bridon Arc') // Link Click S3 fix.
+          .replace(/Symphogear (Season\s*2|S\s*2|\s*02)/i, 'Symphogear G') // Not the releasers fault, Anilist is missing the "Season 2/2nd Season" synonym so this is difficult to resolve when G and GX is only different by 1 character.
+          .replace(/Symphogear G (Season\s*2|S\s*2|\s*02)/i, 'Symphogear G') // Symphogear S2 fix. No you are not playing Season 2 of Symphogear G, why would you name it S2EXX but include the actual title.. that just makes it Season 1, aka "Symphogear G".
+          .replace(/Symphogear GX (Season\s*3|S\s*3|\s*03)/i, 'Symphogear GX') // Symphogear S3 fix.... see above.
+          .replace(/Symphogear AXZ (Season\s*4|S\s*4|\s*04)/i, 'Symphogear AXZ') // Symphogear S4 fix.... see above.
+          .replace(/Symphogear XV (Season\s*5|S\s*5|\s*05)/i, 'Symphogear XV') // Symphogear S5 fix.... see above.
 
       // Restore preserved patterns by converting markers back
       name = name
