@@ -1,7 +1,7 @@
 <script context='module'>
   import { writable } from 'simple-store-svelte'
   import AnimeResolver from '@/modules/animeresolver.js'
-  import { videoRx } from '@/modules/util.js'
+  import { videoRx, matchPhrase } from '@/modules/util.js'
   import { tick } from 'svelte'
   import { anilistClient } from '@/modules/anilist.js'
   import { mediaCache } from '@/modules/cache.js'
@@ -190,6 +190,29 @@
     return files?.map(({ name, media, url }) => `\n${name} ${media?.parseObject?.anime_title} ${media?.parseObject?.episode_number} ${media?.media?.id}:${media?.media?.title?.userPreferred} ${media?.episode}`).join('')
   }
 
+  /**
+   * Attempts to fix any weird edge-cases with bad release groups (Judas).
+   * The fact that this is even needed is extremely disappointing.
+   *
+   * @param videoFiles - The video files to be corrected.
+   * @return The corrected video files.
+   */
+  function cleanFiles(videoFiles) {
+    // Kiss X Sis fix, release group specified OVA and TV without the TV tag, making this unresolvable unless we correct.
+    if (videoFiles.some(file => matchPhrase(AnimeResolver.cleanFileName(file.name), ['Kiss X Sis OVA', 'KissXSis OVA', 'Kiss×Sis OVA'], 0.3, false))
+        && videoFiles.some(file => !matchPhrase(AnimeResolver.cleanFileName(file.name), ['Kiss X Sis OVA', 'KissXSis OVA', 'Kiss×Sis OVA'], 0.3, false && matchPhrase(AnimeResolver.cleanFileName(file.name), ['Kiss X Sis', 'KissXSis', 'Kiss×Sis'], 0.3, false)))) {
+        videoFiles.forEach(file => {
+            if (videoFiles.some(file => matchPhrase(AnimeResolver.cleanFileName(file.name), ['Kiss X Sis OVA', 'KissXSis OVA', 'Kiss×Sis OVA'], 0.3, false))) {
+                file.name = file.name.replace(/Kiss[ ×]?X[ ×]?Sis[ ]?OVA/i, 'Kiss×Sis')
+            } else if (matchPhrase(AnimeResolver.cleanFileName(file.name), ['Kiss X Sis', 'KissXSis', 'Kiss×Sis'], 0.3, false)) {
+                file.name = file.name.replace(/Kiss[ ×]?X[ ×]?Sis(?!.*OVA)/i, 'Kiss×Sis (TV)')
+            }
+        })
+        debug(`Detected Kiss×Sis, found OVA defined but additional files are missing it! Files have been corrected to remove OVA and specify TV.`, fileListToDebug(videoFiles))
+    }
+    return videoFiles
+  }
+
   async function handleFiles (files, targetFile) {
     debug(`Got ${files?.length} files`, fileListToDebug(files))
     if (!files?.length) return processed.set(files)
@@ -204,6 +227,7 @@
       }
       if (file.torrent_name) torrentNames.push(file.torrent_name)
     }
+    videoFiles = cleanFiles(videoFiles)
 
     // assign any resolved media to their video files that haven't failed to be resolved.
     const resolved = await AnimeResolver.resolveFileAnime(videoFiles.map(file => file.name))
