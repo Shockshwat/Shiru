@@ -1375,9 +1375,9 @@
     on:loadedmetadata={clearLoadInterval}
     on:loadedmetadata={loadAnimeProgress}
     on:leavepictureinpicture={() => { pip = false }} />
-  {#if stats}
-    <div class='position-absolute top-0 bg-tp p-10 m-15 text-monospace rounded z-50'>
-      <button class='close' type='button' use:click={toggleStats}><span>×</span></button>
+  {#if stats && !miniplayer}
+    <div class='position-absolute top-0 bg-tp p-10 ml-20 mt-100 text-monospace rounded z-50'>
+      <button class='close btn btn-square mt-5' type='button' use:click={toggleStats}><X size='1.4rem' strokeWidth='3'/></button>
       FPS: {stats.fps}<br />
       Presented frames: {stats.presented}<br />
       Dropped frames: {stats.dropped}<br />
@@ -1944,6 +1944,9 @@
     height: 100%;
   }
 
+  .mt-100 {
+    margin-top: 10rem !important;
+  }
   .h-20 {
     height: 2rem;
   }
