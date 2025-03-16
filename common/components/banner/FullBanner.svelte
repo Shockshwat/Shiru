@@ -104,7 +104,7 @@
     {/if}
   </div>
   <div class='text-muted description overflow-hidden w-600 mw-full default-cursor'>
-    {currentStatic.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()}
+    {currentStatic.description?.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim() || ''}
   </div>
   <div class='details text-white text-capitalize pt-15 pb-10 d-flex w-600 mw-full default-cursor'>
     {#each currentStatic.genres as genre}
