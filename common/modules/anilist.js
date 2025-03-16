@@ -811,10 +811,10 @@ class AnilistClient {
   /** @param {import('./al.d.ts').Media} media */
   title(media) {
     const cachedMedia = mediaCache.value[media?.id || media] || media
-    const preferredTitle = cachedMedia?.title.userPreferred
+    const preferredTitle = cachedMedia?.title?.userPreferred
     if (alToken) return preferredTitle
-    if (settings.value.titleLang === 'romaji') return cachedMedia?.title.romaji || preferredTitle
-    else return cachedMedia?.title.english || preferredTitle
+    if (settings.value.titleLang === 'romaji') return cachedMedia?.title?.romaji || preferredTitle
+    else return cachedMedia?.title?.english || preferredTitle
   }
 
   /** @param {import('./al.d.ts').Media} media */

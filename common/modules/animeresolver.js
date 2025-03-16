@@ -476,7 +476,7 @@ export default new class AnimeResolver {
    * @param {boolean} [skip]
    */
   findEdge (media, type, formats = ['TV', 'TV_SHORT'], skip) {
-    let res = media.relations.edges.find(edge => {
+    let res = media.relations?.edges?.find(edge => {
       if (edge.relationType === type) {
         return formats.includes(edge.node.format)
       }

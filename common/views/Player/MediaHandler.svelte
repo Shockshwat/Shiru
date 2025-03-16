@@ -97,9 +97,9 @@
     if (media || episode || parseObject) {
       const zeroEpisode = media && await checkForZero(media)
       const ep = (Number(episode || parseObject?.episode_number) === 0) || (zeroEpisode && !episode) ? 0 : (Number(episode || parseObject?.episode_number) || null)
-      const streamingTitle = media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
+      const streamingTitle = media?.streamingEpisodes?.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
       let streamingEpisode
-      if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {
+      if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes?.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {
         // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
         const { episodes, specialCount, episodeCount } = await getAniMappings(media?.id) || {}
         let mappingsTitle = episode && episodes && episodes[Number(episode)]?.title?.en
@@ -121,11 +121,11 @@
       }
 
       const details = {
-        title: anilistClient.title(media) || parseObject.anime_title || parseObject.file_name,
+        title: anilistClient.title(media) || parseObject?.anime_title || parseObject?.file_name,
         episode: ep,
         episodeRange,
-        episodeTitle: (streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title))) || (media && (media.format === 'MOVIE') ? 'The Movie' : ''),
-        thumbnail: media?.coverImage.extraLarge
+        episodeTitle: (streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title))) || ((media?.format === 'MOVIE') ? 'The Movie' : ''),
+        thumbnail: media?.coverImage?.extraLarge
       }
 
       nowPlaying.set({
@@ -150,20 +150,20 @@
     const videoFiles = targetFile ? (files.filter(file => file.media?.media?.id === targetFile?.media?.media?.id) || files) : files // force the requested target files to load.
 
     for (const { media } of videoFiles) {
-      const cachedMedia = mediaCache.value[media.media?.id] || media?.media
+      const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
       const zeroEpisode = await checkForZero(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     for (const { media } of videoFiles) {
-      const cachedMedia = mediaCache.value[media.media?.id] || media?.media
+      const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
         const zeroEpisode = await checkForZero(cachedMedia)
       if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
     }
 
     let lowestPlanning
     for (const { media } of videoFiles) {
-      const cachedMedia = mediaCache.value[media.media?.id] || media?.media
+      const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
       if (cachedMedia?.mediaListEntry?.status === 'PLANNING' && (!lowestPlanning || (((Number(lowestPlanning.episode) >= Number(media?.episode)) || (media?.episode && !lowestPlanning.episode)) && Number(lowestPlanning.season) >= Number(media?.season)))) lowestPlanning = { media: cachedMedia, episode: media?.episode, season: media?.season }
     }
     if (lowestPlanning) return lowestPlanning
@@ -172,14 +172,14 @@
     let lowestUnwatched
     for (const format of ['TV', 'MOVIE', 'ONA', 'OVA', 'SPECIAL']) {
       for (const { media } of videoFiles) {
-        const cachedMedia = mediaCache.value[media.media?.id] || media?.media
+        const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
         if (cachedMedia?.format === format && !cachedMedia.mediaListEntry && (!lowestUnwatched || (((Number(lowestUnwatched.episode) >= Number(media?.episode)) || (media?.episode && !lowestUnwatched.episode)) && ((Number(lowestUnwatched.season) >= Number(media?.season)) && (cachedMedia?.format !== 'SPECIAL' || (mediaCache.value[lowestUnwatched?.media?.id] || lowestUnwatched?.media)?.format === 'SPECIAL'))))) lowestUnwatched = { media: cachedMedia, episode: media?.episode, season: media?.season }
       }
     }
     if (lowestUnwatched) return lowestUnwatched
 
     // highest occurrence if all else fails - unlikely
-    const max = highestOccurrence(videoFiles, file => file.media.media?.id)?.media
+    const max = highestOccurrence(videoFiles, file => file.media?.media?.id)?.media
     if (max?.media) {
       const zeroEpisode = await checkForZero(max?.media)
       return { media: max.media, episode: ((mediaCache.value[max.media?.id] || max.media).mediaListEntry?.progress + (!zeroEpisode ? 1 : 0) || (!zeroEpisode ? 1 : 0)) }
@@ -250,14 +250,14 @@
             if (parseObject) file.media = parseObject
         })
     }
-    videoFiles?.sort((a, b) => a.media.media?.id - b.media.media?.id) // group media ids together for easier readability.
+    videoFiles?.sort((a, b) => a.media?.media?.id - b.media?.media?.id) // group media ids together for easier readability.
     debug(`Resolved ${videoFiles?.length} video files`, fileListToDebug(videoFiles))
 
     const resolvedFiles = videoFiles?.length
     videoFiles = videoFiles.filter(file => {
-        if (typeof file.media.parseObject.anime_type === 'string') return !TYPE_EXCLUSIONS.includes(file.media.parseObject.anime_type.toUpperCase())
-        else if (Array.isArray(file.media.parseObject.anime_type)) { // rare edge cases where the type is an array, only batches like a full season + movie + special.
-            for (let animeType of file.media.parseObject.anime_type) {
+        if (typeof file.media?.parseObject?.anime_type === 'string') return !TYPE_EXCLUSIONS.includes(file.media?.parseObject?.anime_type.toUpperCase())
+        else if (Array.isArray(file.media?.parseObject?.anime_type)) { // rare edge cases where the type is an array, only batches like a full season + movie + special.
+            for (let animeType of file.media?.parseObject?.anime_type) {
                 if (TYPE_EXCLUSIONS.includes(animeType.toUpperCase())) return false
             }
         }
@@ -268,25 +268,25 @@
     const newPlaying = await findPreferredPlaybackMedia(videoFiles, targetFile)
     debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
 
-    const filtered = newPlaying?.media && videoFiles.filter(file => (file.media?.media?.id && file.media?.media?.id === newPlaying.media.id) || !file.media?.media?.id)
+    const filtered = newPlaying?.media && videoFiles.filter(file => (file.media?.media?.id && file.media?.media?.id === newPlaying.media?.id) || !file.media?.media?.id)
     debug(`Filtered ${filtered?.length} files based on media`, fileListToDebug(filtered))
 
     let result
     if (filtered?.length) {
       result = filtered
     } else {
-      const max = highestOccurrence(videoFiles, file => file.media.parseObject.anime_title)?.media?.parseObject?.anime_title
+      const max = highestOccurrence(videoFiles, file => file.media?.parseObject?.anime_title)?.media?.parseObject?.anime_title
       if (max) {
           debug(`Highest occurrence anime title: ${max}`)
-          result = videoFiles.filter(file => file.media.parseObject.anime_title === max)
+          result = videoFiles.filter(file => file.media?.parseObject?.anime_title === max)
       } else {
           result = remapByTitle(videoFiles)
           debug(`All occurrences were identical, guessing the episode and/or season and attaching to the files`, fileListToDebug(result))
       }
     }
     result = remapByTitle(result)
-    result.sort((a, b) => a.media.episode - b.media.episode)
-    result.sort((a, b) => (b.media.parseObject.anime_season ?? 1) - (a.media.parseObject.anime_season ?? 1))
+    result.sort((a, b) => a.media?.episode - b.media?.episode)
+    result.sort((a, b) => (b.media?.parseObject?.anime_season ?? 1) - (a.media?.parseObject?.anime_season ?? 1))
     debug(`Sorted ${result.length} files`, fileListToDebug(result))
 
     processed.set([...result, ...otherFiles])
@@ -311,14 +311,14 @@
   // map the episode and season by attempting to fetch them from the title, should only occur in when there is a severe error in media resolving.
   const remapByTitle = (arr = []) => {
       return arr.map((el) => {
-          if (!el.media.episode) {
-              const matches = el.media.parseObject.anime_title.match(/(\d{2})/g)
+          if (!el.media?.episode) {
+              const matches = el.media?.parseObject?.anime_title?.match(/(\d{2})/g)
               if (matches && matches.length > 0) {
                   const seasonNumber = matches[0]
                   const episodeNumber = matches[matches.length - 1]
                   el.media.season = parseInt(seasonNumber)
                   el.media.episode = parseInt(episodeNumber)
-                  el.media.parseObject.anime_title = el.media.parseObject.anime_title.replace(seasonNumber, '').replace(episodeNumber, '').trim()
+                  el.media.parseObject.anime_title = el.media?.parseObject?.anime_title?.replace(seasonNumber, '').replace(episodeNumber, '').trim()
               }
           }
           return el
