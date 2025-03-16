@@ -55,7 +55,9 @@
 </script>
 
 {#key currentStatic}
-  <img src={currentStatic.bannerImage || (currentStatic.trailer?.id ? `https://i.ytimg.com/vi/${currentStatic.trailer?.id}/maxresdefault.jpg` : currentStatic.coverImage?.extraLarge || ' ')} alt='banner' class='img-cover w-full h-full position-absolute' />
+  <div class="position-absolute h-full w-full overflow-hidden" style='z-index: -1 !important;'>
+    <img src={currentStatic.bannerImage || (currentStatic.trailer?.id && `https://i.ytimg.com/vi/${currentStatic.trailer?.id}/maxresdefault.jpg`) || currentStatic.coverImage?.extraLarge || ' '} alt='banner' class='img-cover position-absolute h-full w-full' class:banner-rotated={!(currentStatic.bannerImage || currentStatic.trailer?.id) && settings.value.adult === 'hentai' && settings.value.hentaiBanner}/>
+  </div>
 {/key}
 <div class='gradient-bottom h-full position-absolute top-0 w-full' />
 <div class='gradient-left h-full position-absolute top-0 w-800' />
@@ -194,6 +196,13 @@
   }
   .banner, img {
     animation: fadeIn ease .8s;
+  }
+  .banner-rotated {
+    width: 100vh !important;
+    height: 100vw !important;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
   }
   .grab {
     cursor: grab;

@@ -62,7 +62,7 @@
   {/if}
   <div class='item d-flex flex-column h-full pointer content-visibility-auto' class:opacity-half={completed}>
     <div class='image h-200 w-full position-relative rounded overflow-hidden d-flex justify-content-between align-items-end text-white' class:bg-black={episodeThumbnail === ' '}>
-      <img loading='lazy' src={episodeThumbnail} alt='cover' class='cover-img w-full h-full position-absolute' class:cover-rotated={!(data.episodeData?.image || media?.bannerImage)} style:--color={media?.coverImage?.color || '#1890ff'} referrerpolicy='no-referrer' />
+      <img loading='lazy' src={episodeThumbnail} alt='cover' class='cover-img w-full h-full position-absolute' class:cover-rotated={!(data.episodeData?.image || media?.bannerImage) && media?.genres?.includes('Hentai')} style:--color={media?.coverImage?.color || '#1890ff'} referrerpolicy='no-referrer' />
       {#if data.episodeData?.video}
         <video src={data.episodeData.video}
                class='w-full position-absolute left-0'
@@ -200,7 +200,7 @@
     height: 38rem !important;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
+    transform: translate(-50%, -50%) rotate(-90deg);
   }
   .list-status-circle {
     background: var(--statusColor);

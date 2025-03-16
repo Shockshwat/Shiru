@@ -329,6 +329,7 @@ export const defaults = {
   playerDeband: false,
   preferDubs: false,
   adult: 'none',
+  hentaiBanner: false,
   rssAutoplay: true,
   rssAutofile: true,
   rssQuality: '1080',

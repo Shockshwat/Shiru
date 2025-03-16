@@ -1,7 +1,7 @@
 <script context='module'>
   import SectionsManager, { sections } from '@/modules/sections.js'
-  import { settings } from '@/modules/settings.js'
   import { anilistClient, currentSeason, currentYear } from '@/modules/anilist.js'
+  import { settings } from '@/modules/settings.js'
   import Helper from '@/modules/helper.js'
   import { writable } from 'svelte/store'
 
@@ -10,7 +10,7 @@
   setInterval(() => getTitles(true), 5 * 60 * 1000)
 
   async function getTitles(refresh) {
-    const res = anilistClient.search({ method: 'Search', sort: 'POPULARITY_DESC', perPage: 15, onList: false, season: currentSeason, year: currentYear, status_not: 'NOT_YET_RELEASED' })
+    const res = anilistClient.search({ method: 'Search', ...(settings.value.adult === 'hentai' && settings.value.hentaiBanner ? { genre: ['Hentai'] } : {}), sort: 'POPULARITY_DESC', perPage: 50, onList: false, ...(settings.value.adult !== 'hentai' || !settings.value.hentaiBanner ? { season: currentSeason } : {}), year: currentYear, status_not: 'NOT_YET_RELEASED' })
     if (refresh) {
       const renderData = await res
       bannerData.set(Promise.resolve(renderData))

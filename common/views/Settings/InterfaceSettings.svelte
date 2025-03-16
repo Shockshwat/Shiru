@@ -85,6 +85,14 @@
     <option value='hentai'>Hentai</option>
   </select>
 </SettingCard>
+{#if settings.adult === 'hentai'}
+  <SettingCard title='Hentai Banner' description={'Changes the displayed series on the home page banner to be exclusively Hentai.'}>
+    <div class='custom-switch'>
+      <input type='checkbox' id='hentai-banner' bind:checked={settings.hentaiBanner} />
+      <label for='hentai-banner'>{settings.hentaiBanner ? 'On' : 'Off'}</label>
+    </div>
+  </SettingCard>
+{/if}
 {#if SUPPORTS.angle}
   <h4 class='mb-10 font-weight-bold'>Rendering Settings</h4>
   <SettingCard title='ANGLE Backend' description="What ANGLE backend to use for rendering. DON'T CHANGE WITHOUT REASON! On some Windows machines D3D9 might help with flicker. Changing this setting to something your device doesn't support might prevent Shiru from opening which will require a full reinstall. While Vulkan is an available option it might not be fully supported on Linux.">
