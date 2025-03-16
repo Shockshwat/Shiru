@@ -29,12 +29,13 @@
         if (cachedItem?.delayedIndefinitely && cachedItem?.status?.toUpperCase()?.includes('FINISHED')) { // skip these as they are VERY likely partial dubs so production isn't necessarily in a suspended state.
           return false
         }
-        if (cachedItem?.media?.media?.airingSchedule?.nodes[0]?.airingAt) {
-          const airingAt = new Date(cachedItem.media.media.airingSchedule.nodes[0].airingAt)
-          if (airingAt < new Date()) {
-            cachedItem.media.media.airingSchedule.nodes[0].episode = cachedItem.media.media.airingSchedule.nodes[0].episode + 1
-            cachedItem.media.media.airingSchedule.nodes[0].airingAt = (new Date(airingAt.getTime() + (cachedItem.delayedIndefinitely ? 6 * 365 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000))).toISOString().slice(0, -5) + 'Z'
-          }
+        if (cachedItem?.media?.media?.airingSchedule?.nodes?.length) {
+            const airingFirst = new Date(Math.min(...cachedItem.media.media.airingSchedule.nodes.map(node => new Date(node.airingAt))))
+            if (airingFirst < new Date()) {
+                const highestEpisode = Math.max(...cachedItem.media.media.airingSchedule.nodes.filter(node => new Date(node.airingAt).getTime() === airingFirst.getTime()).map(node => node.episode))
+                cachedItem.media.media.airingSchedule.nodes[0].episode = highestEpisode + 1
+                cachedItem.media.media.airingSchedule.nodes[0].airingAt = new Date(airingFirst.getTime() + (cachedItem.delayedIndefinitely ? 6 * 365 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000)).toISOString().slice(0, -5) + 'Z'
+            }
         }
         return (!(cachedItem?.media?.media?.airingSchedule?.nodes[0]?.episode > media.episodes) || !media.episodes) && cachedItem?.media?.media?.airingSchedule?.nodes[0]?.airingAt && self.findIndex(m => m.id === media.id) === index
       }).sort((a, b) => {
