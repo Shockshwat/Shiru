@@ -26,7 +26,7 @@
   termMapping.VORBIS = { text: 'Vorbis', color: '#f67255' }
   termMapping.DUALAUDIO = { text: 'Dual Audio', color: '#f67255' }
   termMapping.ENGLISHAUDIO = { text: 'English Audio', color: '#f67255' }
-  termMapping['DUB'] = termMapping.DUALAUDIO
+  termMapping['DUB'] = termMapping.ENGLISHAUDIO
   termMapping['DUAL'] = termMapping.DUALAUDIO
   termMapping['DUAL AUDIO'] = termMapping.DUALAUDIO
   termMapping['MULTI AUDIO'] = termMapping.DUALAUDIO
