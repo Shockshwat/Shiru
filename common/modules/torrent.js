@@ -92,6 +92,7 @@ export async function add (torrentID, hide) {
     files.set([])
     if (!hide) {
       page.set('player')
+      media.value = { display: true }
       window.dispatchEvent(new Event('overlay-check'))
       if (SUPPORTS.isAndroid) document.querySelector('.content-wrapper').requestFullscreen() // this WILL not work with auto-select torrents due to permissions check.
     }
