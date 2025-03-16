@@ -49,7 +49,8 @@
       <NavbarLink click={() => {
         if (playPage && (page === 'player') && !wasOverlay) {
           playPage = false
-        } else if (playPage) {
+        }
+        if (playPage) {
           page = 'player'
         } else {
           $view = (currentMedia?.id === $media?.media.id && active ? null : $media?.media)

@@ -336,7 +336,7 @@
       pagePaused = false
       return
     }
-    if (!video?.ended && (((page !== 'player') || overlay?.length > 0) && !paused && !pip)) {
+    if (!video?.ended && (((page !== 'player') || overlay?.length > 0) && !paused && playPage && !pip)) {
       pagePaused = false
       playPause()
     } else if (!video?.ended && ((page === 'player') && paused && !pagePaused && (!overlay || overlay.length === 0)) && playPage && !pip) {
