@@ -6,7 +6,7 @@
   export let data
 
   function shuffle (array) {
-    let currentIndex = array.length
+    let currentIndex = (array.length >= 20 ? 20 : array.length) // We only need the first 20 entries, anything else wouldn't really be high in popularity.
     let randomIndex
     while (currentIndex > 0) {
       randomIndex = Math.floor(Math.random() * currentIndex--);
@@ -27,7 +27,7 @@
     <SkeletonBanner />
   {:then res}
     {#if !res.errors}
-      <FullBanner mediaList={shuffleAndFilter(res?.data?.Page?.media)} />
+      <FullBanner mediaList={shuffleAndFilter(res?.data?.Page?.media?.filter(media => media))} />
     {:else}
       <ErrorCard promise={res} />
     {/if}

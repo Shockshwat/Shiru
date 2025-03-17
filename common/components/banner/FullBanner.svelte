@@ -15,7 +15,7 @@
 
   let currentStatic = mediaList[0]
   $: current = mediaList[0]
-  mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[current?.id]) !== JSON.stringify(current))) current = value[current?.id] })
+  mediaCache.subscribe((value) => { if (current?.id && value && value[current?.id]?.id && (JSON.stringify(value[current?.id]) !== JSON.stringify(current))) { current = value[current?.id]; currentStatic = current } })
 
   const view = getContext('view')
   function viewMedia () {
@@ -28,29 +28,29 @@
   }
 
   function currentIndex () {
-    return mediaList.indexOf(currentStatic)
+    return mediaList.findIndex(media => media?.id === currentStatic?.id)
   }
 
   let timeout = schedule(currentIndex() + 1)
   function schedule (index) {
     return setTimeout(() => {
-      current = mediaCache.value[mediaList[index % mediaList.length]?.id]
+      current = mediaCache.value[mediaList[index % mediaList.length]?.id] || mediaList[index % mediaList.length]
       currentStatic = current
       timeout = schedule(index + 1)
     }, 15000)
   }
 
   function setCurrent (media) {
-    if (current === mediaCache.value[media?.id]) return
+    if (current?.id === media?.id) return
     clearTimeout(timeout)
-    current = mediaCache.value[media?.id]
+    current = mediaCache.value[media?.id] || media
     currentStatic = current
     timeout = schedule(currentIndex() + 1)
   }
 
   function swipeMedia(deltaX) {
-    if (deltaX < 0) setCurrent(mediaList[(currentIndex() + 1) % mediaList.length]);
-    else setCurrent(mediaList[(currentIndex() - 1 + mediaList.length) % mediaList.length]);
+    if (deltaX < 0) setCurrent(mediaList[(currentIndex() + 1) % mediaList.length])
+    else setCurrent(mediaList[(currentIndex() - 1 + mediaList.length) % mediaList.length])
   }
 </script>
 
