@@ -197,7 +197,7 @@ class RSSMediaManager {
       }
       res.date = items[i].date
       res.link = items[i].link
-      res.onclick = () => add(items[i].link)
+      res.onclick = () => add(items[i].link, { media: res.media, episode: res.episode })
       return res
     })
   }

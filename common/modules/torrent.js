@@ -27,7 +27,7 @@ class TorrentWorker extends EventTarget {
     clipboard.on('text', ({ detail }) => {
       for (const { text } of detail) {
         if (page?.value !== 'watchtogether' && torrentRx.exec(text)) {
-          media.set(null)
+          media.value = { torrent: true }
           add(text)
           this.dispatch('info', 'A Magnet Link has been detected and is being processed. Files will be loaded shortly...')
         }
@@ -36,7 +36,7 @@ class TorrentWorker extends EventTarget {
     clipboard.on('files', async ({ detail }) => {
       for (const file of detail) {
         if (file.name.endsWith('.torrent')) {
-          media.set(null)
+          media.value = { torrent: true }
           add(new Uint8Array(await file.arrayBuffer()))
         }
       }
@@ -81,7 +81,7 @@ client.on('info', ({ detail }) => {
   toast('Torrent Info', { description: '' + (detail.message || detail) })
 })
 
-export async function add (torrentID, hide) {
+export async function add (torrentID, search, hide) {
   if (torrentID) {
     debug('Adding torrent', { torrentID })
     if (torrentID.startsWith?.('magnet:')) {
@@ -92,7 +92,7 @@ export async function add (torrentID, hide) {
     files.set([])
     if (!hide) {
       page.set('player')
-      media.value = { display: true }
+      media.value = { media: (search?.media || media.value?.media), episode: (search?.episode || media.value?.episode), ...(media.value?.torrent ? { torrent: true } : { feed: true }) }
       window.dispatchEvent(new Event('overlay-check'))
       if (SUPPORTS.isAndroid) document.querySelector('.content-wrapper').requestFullscreen() // this WILL not work with auto-select torrents due to permissions check.
     }

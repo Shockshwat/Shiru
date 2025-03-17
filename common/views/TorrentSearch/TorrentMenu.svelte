@@ -128,7 +128,7 @@
     }
     const existingMagnets = cache.getEntry(caches.HISTORY, 'lastMagnet') || {}
     cache.setEntry(caches.HISTORY, 'lastMagnet', { ...existingMagnets, [search?.media?.id]: !result.parseObject?.episode_number || Array.isArray(result.parseObject.episode_number) ? { [`batch`]: result } : { ...(existingMagnets[search?.media?.id] || {}), [`${search.episode}`]: result } })
-    add(result.link)
+    add(result.link, { media: search?.media, episode: search?.episode })
     close()
   }
 
