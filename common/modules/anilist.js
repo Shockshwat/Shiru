@@ -336,7 +336,7 @@ class AnilistClient {
             message: type === 'AIRING' ? `${media.format !== 'MOVIE' ? `Episode ${episode}` : `The Movie`} (Sub) is out in Japan, ${media.format !== 'MOVIE' ? `it should be available soon.` : `, if this is a theatrical release it will likely a few months before it is available for streaming.`}` : 'Was recently announced!',
             icon: media.coverImage.medium,
             iconXL: media.coverImage.extraLarge,
-            heroImg: media?.bannerImage
+            heroImg: media?.bannerImage || (media?.trailer?.id && `https://i.ytimg.com/vi/${media?.trailer?.id}/hqdefault.jpg`)
           }
           if (settings.value.systemNotify) {
             IPC.emit('notification', {

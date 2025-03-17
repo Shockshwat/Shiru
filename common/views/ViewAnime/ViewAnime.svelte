@@ -190,8 +190,10 @@
         </button>
       {/if}
       <button class='close pointer z-30 bg-dark top-20 right-0 position-fixed' type='button' use:click={() => close()}> &times; </button>
-      {#await (staticMedia.bannerImage && staticMedia) || getKitsuMappings(staticMedia.id) then banner}
-        <img class='w-full cover-img banner position-absolute' alt='banner' src={banner?.bannerImage || banner?.included?.[0]?.attributes?.coverImage?.original || banner?.included?.[0]?.attributes?.coverImage?.large || banner?.included?.[0]?.attributes?.coverImage?.small || banner?.included?.[0]?.attributes?.coverImage?.tiny || ' '} />
+      {#await ((staticMedia.bannerImage || staticMedia.trailer?.id) && staticMedia) || getKitsuMappings(staticMedia.id) then banner}
+        <object class='w-full cover-img banner position-absolute' data={banner?.bannerImage || (banner.trailer?.id && `https://i.ytimg.com/vi/${banner.trailer?.id}/maxresdefault.jpg`) || banner?.included?.[0]?.attributes?.coverImage?.original || banner?.included?.[0]?.attributes?.coverImage?.large || banner?.included?.[0]?.attributes?.coverImage?.small || banner?.included?.[0]?.attributes?.coverImage?.tiny || ' '}>
+          <img class='w-full cover-img banner position-absolute' src={(banner.trailer?.id && `https://i.ytimg.com/vi/${banner.trailer?.id}/hqdefault.jpg`) || ' '} alt='banner'>
+        </object>
       {/await}
       <div class='row px-20'>
         <div class='col-lg-7 col-12 pb-10'>

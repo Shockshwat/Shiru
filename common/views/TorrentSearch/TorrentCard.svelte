@@ -105,9 +105,11 @@
 </script>
 
 <div class='card bg-dark p-15 d-flex mx-0 overflow-hidden pointer mb-10 mt-0 position-relative scale' role='button' tabindex='0' use:click={() => play(result)} on:contextmenu|preventDefault={() => copyToClipboard(result.link)} title={result.parseObject.file_name}>
-  {#if media.bannerImage}
+  {#if media.bannerImage || media.trailer?.id}
     <div class='position-absolute top-0 left-0 w-full h-full'>
-      <img src={media.bannerImage} alt='bannerImage' class='img-cover w-full h-full' style='border-radius: 5px;' />
+      <object class='img-cover w-full h-full' data={media.bannerImage || (media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/maxresdefault.jpg`) || ' '}>
+        <img class='img-cover w-full h-full' src={(media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/hqdefault.jpg`) || ' '} alt='bannerImage'>
+      </object>
       <div class='position-absolute top-0 left-0 w-full h-full' style='background: var(--torrent-card-gradient)' />
     </div>
   {/if}
