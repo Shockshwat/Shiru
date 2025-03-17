@@ -108,7 +108,9 @@
   {#if media.bannerImage || media.trailer?.id}
     <div class='position-absolute top-0 left-0 w-full h-full'>
       <object class='img-cover w-full h-full' data={media.bannerImage || (media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/maxresdefault.jpg`) || ' '}>
-        <img class='img-cover w-full h-full' src={(media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/hqdefault.jpg`) || ' '} alt='bannerImage'>
+        <object class='img-cover w-full h-full' data={(media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/hqdefault.jpg`) || ' '}>
+          <img class='img-cover w-full h-full' src={' '} alt='bannerImage'> <!-- trailer no longer exists... hide all images. -->
+        </object>
       </object>
       <div class='position-absolute top-0 left-0 w-full h-full' style='background: var(--torrent-card-gradient)' />
     </div>

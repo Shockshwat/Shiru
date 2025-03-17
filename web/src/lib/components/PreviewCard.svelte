@@ -48,7 +48,9 @@
 <div class='position-absolute w-350 h-400 absolute-container z-10 top-0 bottom-0 m-auto bg-dark-light rounded overflow-hidden pointer'>
   <div class='banner position-relative bg-black overflow-hidden'>
     <object class='img-cover w-full h-full' data={media.bannerImage || (media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/maxresdefault.jpg`) || media.coverImage?.extraLarge || ' '}>
-      <img class='img-cover w-full h-full' src={(media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/hqdefault.jpg`) || ' '} alt='banner' loading='lazy'>
+      <object class='img-cover w-full h-full' data={(media.trailer?.id && `https://i.ytimg.com/vi/${media.trailer?.id}/hqdefault.jpg`) || media.coverImage?.extraLarge || ' '}>
+        <img class='img-cover w-full h-full' src={media.coverImage?.extraLarge || ' '} alt='banner' loading='lazy'> <!-- trailer no longer exists... fallback to cover image. -->
+      </object>
     </object>
     {#if media.trailer?.id}
       <div class='material-symbols-outlined filled position-absolute z-10 top-0 right-0 p-15 font-size-22' class:d-none={hide} use:click={toggleMute}>{muted ? 'volume_off' : 'volume_up'}</div>
