@@ -52,11 +52,12 @@
     w2gEmitter.emit('player', { time: Math.floor(currentTime), paused })
   }
 
-  export let miniplayer = false
-  $condition = () => SUPPORTS.keybinds && ((!miniplayer && !document.querySelector('.modal.show')) || overlay.includes('viewanime'))
   export let page
   export let overlay
   export let playPage
+  export let miniplayer = false
+  $condition = () => SUPPORTS.keybinds && ((!miniplayer && !document.querySelector('.modal.show')) || (overlay.includes('viewanime') && page === 'player'))
+
   export let files = []
   $: updateFiles(files)
   let src = null
