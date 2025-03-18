@@ -58,11 +58,6 @@
                   {media.duration + ' Minutes'}
                 </span>
             {/if}
-            {#if !_variables?.scheduleList && settings.value.cardAudio}
-                <span class='badge pl-5 pr-5'>
-                  <AudioLabel {media} banner={true}/>
-                </span>
-            {/if}
             {#if media.isAdult}
                 <span class='badge pl-5 pr-5'>
                   Rated 18+

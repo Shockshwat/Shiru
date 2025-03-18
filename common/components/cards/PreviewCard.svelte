@@ -111,11 +111,6 @@
             {formatMap[media.format]}
           {/if}
         </span>
-        {#if !variables?.scheduleList && settings.value.cardAudio}
-          <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
-            <AudioLabel {media} banner={true}/>
-          </span>
-        {/if}
         {#if maxEp > 1 || (maxEp !== 1 && ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress)}
           <span class='badge pl-5 pr-5' class:font-size-14={!SUPPORTS.isAndroid} class:font-size-12={SUPPORTS.isAndroid}>
             {['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media.mediaListEntry?.status) && media.mediaListEntry?.progress ? media.mediaListEntry.progress + ' / ' : ''}{maxEp && maxEp !== 0 && !(media.mediaListEntry?.progress > maxEp) ? maxEp : '?'}
