@@ -274,7 +274,7 @@
   let hasNext = false
   let hasLast = false
   function checkAvail (media, current) {
-    if (((media?.media?.nextAiringEpisode?.episode - 1 || getMediaMaxEp(media?.media)) > media?.episode) || ((media?.media && !media.media.nextAiringEpisode?.episode && !media.media.airingSchedule?.nodes?.[0]?.episode && !media.media.episodes))) hasNext = true
+    if ((((media?.media?.nextAiringEpisode?.episode - 1 || getMediaMaxEp(media?.media)) - (media?.zeroEpisode ? 1 : 0)) > media?.episode) || ((media?.media && !media.media.nextAiringEpisode?.episode && !media.media.airingSchedule?.nodes?.[0]?.episode && !media.media.episodes))) hasNext = true
     else hasNext = videos.indexOf(current) !== videos.length - 1
     if (media?.episode > 1) hasLast = true
     else hasLast = videos.indexOf(current) > 0
@@ -1400,7 +1400,7 @@
       </div>
       <div class='font-weight-normal overflow-hidden text-truncate text-muted' class:font-size-16={!SUPPORTS.isAndroid} class:font-size-14={SUPPORTS.isAndroid}>
         {#if (media?.episode === 0 || media?.episode) && media?.media?.format !== 'MOVIE' && (!media?.episodeTitle || !media.episodeTitle.includes(media.episode))}
-          {@const maxEpisodes = getMediaMaxEp(media.media)}
+          {@const maxEpisodes = getMediaMaxEp(media.media) - (media.zeroEpisode ? 1 : 0)}
           Episode {media.episodeRange || media.episode}
           {#if maxEpisodes && (Number(maxEpisodes) > 1)} of {maxEpisodes}{:else if !maxEpisodes && videos && (videos.length > 1)} of {videos.length}{/if} <!-- for when the media fails to resolve, we can predict that the file length is likely the episode count. -->
         {:else if current && (videos?.length > 1)}
