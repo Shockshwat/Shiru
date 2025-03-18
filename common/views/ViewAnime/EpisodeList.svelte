@@ -122,10 +122,10 @@
 
     let lastValidAirDate = null
     let lastDuration = durationMap[media?.format]
+    let zeroAsFirstEpisode
     const zeroEpisode = await hasZeroEpisode(media, mappings)
     const kitsuMappings = await episodesList.getKitsuEpisodes(media.id)
     if (zeroEpisode) {
-      alEpisodes = alEpisodes.slice(0, -1)
       alEpisodes.unshift({ episode: 0, title: zeroEpisode[0].title, airingAt: media.airingSchedule?.nodes?.find(node => node.episode === 1)?.airingAt || zeroEpisode[0].airingAt, filler: episodesList.getSingleEpisode(idMal, 0), dubAiring: dubbedEpisode(0, media)})
     }
     for (const { episode, title: oldTitle, airingAt, filler, dubAiring } of alEpisodes) {
@@ -165,10 +165,16 @@
         zeroSummary = zeroEpisode?.summary || zeroEpisode?.[0]?.summary || 'This is a zero episode which means a prequel, prologue or a teaser which may be important to the story.'
         lastDuration = zeroEpisode?.length || zeroEpisode?.[0]?.length || lastDuration
       }
+      if (zeroEpisode && episode === 1 && /episode\s*0/i.test(title || kitsuEpisode?.titles?.en_us || kitsuEpisode?.titles?.en_jp || newTitle?.jp || oldTitle?.jp)) {
+        zeroAsFirstEpisode = true
+        continue // skip setting this episode as it's Episode 0
+      }
 
-      episodeList[episode - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === (image || kitsuEpisode?.thumbnail?.original || streamingThumbnail) && ep.episode !== episode) ? null : (image || kitsuEpisode?.thumbnail?.original || streamingThumbnail), summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description) && ep.episode !== episode) ? null : (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description), rating, title: title || kitsuEpisode?.titles?.en_us || kitsuEpisode?.titles?.en_jp || newTitle?.jp || oldTitle?.jp, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
+      const episodeNumber = episode - (zeroAsFirstEpisode ? 1 : 0)
+      episodeList[episodeNumber - (!zeroEpisode ? 1 : 0)] = { zeroEpisode, episode: episodeNumber, image: episode === 0 ? zeroEpisode[0]?.thumbnail : episodeList.some((ep) => ep.image === (image || kitsuEpisode?.thumbnail?.original || streamingThumbnail) && ep.episode !== episodeNumber) ? null : (image || kitsuEpisode?.thumbnail?.original || streamingThumbnail), summary: episode === 0 ? (zeroSummary || summary) : episodeList.some((ep) => ep.summary === (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description) && ep.episode !== episodeNumber) ? null : (summary || overview || kitsuEpisode?.synopsis || kitsuEpisode?.description), rating, title: title || kitsuEpisode?.titles?.en_us || kitsuEpisode?.titles?.en_jp || newTitle?.jp || oldTitle?.jp, length: lastDuration, airdate: validatedAiringAt, airingAt: validatedAiringAt, filler, dubAiring }
     }
 
+    if (zeroEpisode && episodeList.length === alEpisodes.length) episodeList = episodeList.slice(0, -1)
     currentEpisodes = episodeList?.slice(0, maxEpisodes)
     return episodeList && episodeList?.length > 0 ? episodeList : null
   }

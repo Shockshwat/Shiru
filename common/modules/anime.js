@@ -8,8 +8,10 @@ import clipboard from './clipboard.js'
 import { search, key } from '@/views/Search.svelte'
 import { playAnime } from '@/views/TorrentSearch/TorrentModal.svelte'
 import { animeSchedule } from '@/modules/animeschedule.js'
+import AnimeResolver from '@/modules/animeresolver.js'
 import { settings } from '@/modules/settings.js'
 import { cache, caches } from '@/modules/cache.js'
+import { matchPhrase } from '@/modules/util.js'
 import Helper from '@/modules/helper.js'
 
 import { Drama, BookHeart, MountainSnow, Laugh, Adult, Droplets, FlaskConical, Ghost, Skull, HeartPulse, Volleyball, Car, Brain, Footprints, Guitar, Bot, WandSparkles, Activity } from 'lucide-svelte'
@@ -207,12 +209,20 @@ export async function anitomyscript (...args) {
   return parseObjs
 }
 
-//TODO: Mushoku zero episodes, they're weird. Why does season 1 part 1 show a zero episode when its a part of season 2 part 2...? We could manually specify it since very few series do this but its better to programmatically guestimate. We are not a database.
+/**
+ * Checks if a series has a zero episode.
+ *
+ * @param media
+ * @param existingMappings
+ * @returns {Promise<[unknown]|[{title: (string|string|*), thumbnail, length, summary, airingAt: *}]|null>}
+ */
 export async function hasZeroEpisode(media, existingMappings) { // really wish they could make fetching zero episodes less painful.
   if (!media) return null
   const mappings = existingMappings || (await getAniMappings(media.id)) || {}
-  let hasZeroEpisode = media.streamingEpisodes?.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) && Number(parseFloat(match[1])) === 0 : false})
-  if (hasZeroEpisode?.length > 0 && media.episodes >= media.streamingEpisodes?.length) {
+  const hasZeroEpisode = media.streamingEpisodes?.filter((ep) => { const match = (/Episode (\d+(\.\d+)?) - /).exec(ep.title); return match ? Number.isInteger(parseFloat(match[1])) && Number(parseFloat(match[1])) === 0 : false})
+  const zeroAsFirstEpisode = /episode\s*0/i.test(mappings?.episodes?.[1]?.title?.en || mappings?.episodes?.[1]?.title?.jp) // The first episode is titled as Episode 0 so this is likely a Prologue, fixes issues with series like `Fate/stay night: Unlimited Blade Works`
+  // no clue what fixed Mushoku but this initial part seems to allow "Episode 0 : Guardian Fits" to properly be mapped to season 2 part 1, ensure when making changes this doesn't appear on season 1 part 1.
+  if (hasZeroEpisode?.length > 0 && ((media.episodes >= media.streamingEpisodes?.length) || zeroAsFirstEpisode)) {
     return [{...hasZeroEpisode[0], title: hasZeroEpisode[0]?.title?.replace('Episode 0 - ', '')}]
   } else if (!(media.episodes && media.episodes === mappings?.episodeCount && media.status === 'FINISHED')) {
     const special = (mappings?.episodes?.S0 || mappings?.episodes?.s0 || mappings?.episodes?.S1 || mappings?.episodes?.s1)

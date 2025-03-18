@@ -1,6 +1,6 @@
 import { anilistClient } from './anilist.js'
 import { mediaCache } from './cache.js'
-import { anitomyscript } from './anime.js'
+import { anitomyscript, hasZeroEpisode } from './anime.js'
 import { chunks, matchKeys } from './util.js'
 import Debug from 'debug'
 
@@ -237,7 +237,7 @@ export default new class AnimeResolver {
     return (!parseObj?.anime_year || (media?.seasonYear >= Number(parseObj?.anime_year))) && !(!matchKeys(media, (!parseObj?.anime_season || !(Number(parseObj?.anime_season) > 1) || !hasSeason) ? parseObj?.anime_title : parseObj?.anime_title?.replace(/S\d+|season-\d+/gi, '') + 'Season ' + Number(parseObj?.anime_season), titleKeys, threshold) && !matchKeys(media, parseObj?.anime_title?.replace(/S\d+|season-\d+/gi, '') + (hasSeason && parseObj?.anime_season ? 'Season ' + Number(parseObj?.anime_season) : ''), titleKeys, threshold) && (!parseObj?.anime_season || !(Number(parseObj?.anime_season) > 1) || !matchKeys(media, parseObj?.anime_title?.replace(/S\d+|season-\d+/gi, `Season ${parseObj?.anime_season}`), titleKeys, 0.3)))
   }
 
-  // TODO: anidb aka true episodes need to be mapped to anilist episodes a bit better, shit like mushoku offsets caused by episode 0's in between seasons
+  // ~~TODO~~ (LIKELY DONE VIA OUR NEW ZERO EPISODE HANDLING): anidb aka true episodes need to be mapped to anilist episodes a bit better, shit like mushoku offsets caused by episode 0's in between seasons
   // TODO: attempt to map series missing from anilist by searching myanimelist, example; 69: Itsuwari no Bishou
   /**
    * Resolves anime metadata from a given file name.
@@ -256,7 +256,8 @@ export default new class AnimeResolver {
       const titleKeys = ['title.userPreferred', 'title.english', 'title.romaji', 'title.native', 'synonyms']
       let needsVerification = !media || !this.isVerified(media, parseObj, titleKeys, threshold)
       // resolve episode, if movie, dont.
-      let maxep = media?.nextAiringEpisode?.episode || media?.episodes
+      let zeroEpisode = await hasZeroEpisode(media)
+      let maxep = (media?.nextAiringEpisode?.episode || media?.episodes) - (zeroEpisode ? 1 : 0)
       debug(`Resolving ${parseObj?.anime_title} ${parseObj?.episode_number} ${maxep} ${media?.title?.userPreferred} ${media?.format} verified:${!needsVerification}`)
       if ((media?.format !== 'MOVIE' || maxep) && parseObj.episode_number) {
         if (Array.isArray(parseObj.episode_number)) {
@@ -268,6 +269,7 @@ export default new class AnimeResolver {
             if (needsVerification) {
               const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
               media = mediaSearch.media
+              episode = mediaSearch.episode || episode
               failed = mediaSearch.failed
             }
           } else {
@@ -283,6 +285,7 @@ export default new class AnimeResolver {
               if (needsVerification) {
                 const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
                 media = mediaSearch.media
+                episode = mediaSearch.episode || episode
                 failed = mediaSearch.failed
               }
             }
@@ -294,7 +297,8 @@ export default new class AnimeResolver {
             debug(`Media failed to resolve, attempting to fetch root media for ${parseObj.anime_title}`)
             const parseNew = await this.findAndCacheTitle(parseObj.anime_title.replace(/S\d+(E\d+)?/, ''))
             media = this.animeNameCache[this.getCacheKeyForTitle(parseNew[0])]
-            maxep = media?.nextAiringEpisode?.episode || media?.episodes
+            zeroEpisode = await hasZeroEpisode(media)
+            maxep = (media?.nextAiringEpisode?.episode || media?.episodes) - (zeroEpisode ? 1 : 0)
             offset = (-(media?.episodes || media?.nextAiringEpisode?.episode)) || 0
           }
           if ((maxep && parseInt(parseObj.episode_number) > maxep) || (offset !== 0 && maxep && parseInt(parseObj.episode_number) <= maxep)) {
@@ -309,6 +313,7 @@ export default new class AnimeResolver {
             if (needsVerification) {
               const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
               media = mediaSearch.media
+              episode = mediaSearch.episode || episode
               failed = mediaSearch.failed
             }
           }
@@ -316,6 +321,7 @@ export default new class AnimeResolver {
       } else if (needsVerification) {
         const mediaSearch = (await this.manualMediaSearch(parseObj, media, titleKeys, threshold))
         media = mediaSearch.media
+        episode = mediaSearch.episode || episode
         failed = mediaSearch.failed
       }
       debug(`${failed || !(media?.title?.userPreferred) ? `Failed to resolve` : `Resolved`} ${parseObj.anime_title} ${parseObj.episode_number} ${episode} ${media?.id}:${media?.title?.userPreferred}`)
@@ -350,6 +356,7 @@ export default new class AnimeResolver {
       const handleEp = await this.handleEpisode(parseObj, maxep, offset, media, prequel, titleKeys, threshold)
       defaults.parseObj = handleEp.parseObj
       defaults.media = handleEp.media
+      defaults.episode = handleEp.episode
       prequel.result.ignore = !handleEp.failed
       prequel.result.failed = handleEp.failed
     }
@@ -459,8 +466,9 @@ export default new class AnimeResolver {
       if (search.data.Page.media) {
         for (const searchMedia of search.data.Page.media) {
           if (this.isVerified(searchMedia, {...parseObj, anime_title: title}, titleKeys, threshold)) {
-            debug(`Found media from manual search for ${parseObj.anime_title}: ${searchMedia?.id}:${searchMedia?.title?.userPreferred} while ignoring the original compound ${media?.id}:${media?.title?.userPreferred}, this is likely correct...`)
-            if (parseObj.anime_season) return { media: await this.resolveBySeason(searchMedia, parseObj) }
+            debug(`Found media from manual search for ${parseObj.anime_title}:${parseObj.anime_season}:${parseObj.episode_number}: ${searchMedia?.id}:${searchMedia?.title?.userPreferred} while ignoring the original compound ${media?.id}:${media?.title?.userPreferred}, this is likely correct...`)
+            if (parseObj.anime_season > 1) return { media: await this.resolveBySeason(searchMedia, parseObj) }
+            else if (searchMedia.status === 'FINISHED' && parseObj.episode_number > searchMedia.episodes) return (await this.findPrequel(parseObj, 0, searchMedia, titleKeys, threshold))?.result
             else return { media: searchMedia }
           }
         }
@@ -498,7 +506,8 @@ export default new class AnimeResolver {
 
     let { media, episode, increment, offset = 0, rootMedia = opts.media, force } = opts
 
-    const rootHighest = (rootMedia.nextAiringEpisode?.episode || rootMedia.episodes)
+    const zeroEpisode = await hasZeroEpisode(media)
+    const rootHighest = (rootMedia.nextAiringEpisode?.episode || rootMedia.episodes) - (zeroEpisode ? 1 : 0)
 
     const prequel = !increment && this.findEdge(media, 'PREQUEL')?.node
     const sequel = !prequel && (increment || increment == null) && this.findEdge(media, 'SEQUEL')?.node

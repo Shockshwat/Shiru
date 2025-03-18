@@ -77,10 +77,10 @@
       if (duration && (duration > 120) && nowPlaying.value?.episode && nowPlaying.value?.media?.duration) {
           // We need check the mappings to verify that the episode isn't actually an ultra-long premiere episode like "Oshi No Ko", Anilist doesn't differentiate these so we need to manually check.
           const mappings = (!nowPlaying.value.media.episodes || !nowPlaying.value.media.episodes <= 100) && (await getAniMappings(nowPlaying.value.media.id) || {})?.episodes
-          const episode = mappings && Object.values(mappings)?.find(episode => ((episode.episodeNumber || episode.episode) && Number((episode.episodeNumber || episode.episode))) === Number(nowPlaying.value.episode) && episode.length > 1)
+          const episode = mappings && (mappings[nowPlaying.value.episode] || Object.values(mappings)?.find(episode => ((episode.episode || episode.episodeNumber) && Number((episode.episode || episode.episodeNumber))) === Number(nowPlaying.value.episode) && episode.length > 1))
           debug(`Duration of the current media has changed, checking for multiple episodes in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
           const mediaDuration = (episode?.length && episode.length * 60) || (nowPlaying.value.media.duration * 60)
-          if (duration > (mediaDuration + 120)) { // Add 2 minutes (120 second) buffer
+          if (duration > (mediaDuration + 360)) { // Add 6 minutes (360 second) buffer
               debug(`Multiple episodes have been detected in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
               const episodeMultiplier = Math.round(duration / mediaDuration) // Round to nearest whole number
               handleMedia({
@@ -97,11 +97,19 @@
     if (media || episode || parseObject) {
       const zeroEpisode = media && await checkForZero(media)
       const ep = (Number(episode || parseObject?.episode_number) === 0) || (zeroEpisode && !episode) ? 0 : (Number(episode || parseObject?.episode_number) || null)
-      const streamingTitle = media?.streamingEpisodes?.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === ep)
+      const streamingTitle = media?.streamingEpisodes?.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)?.[1]) === ep)
       let streamingEpisode
       if (!newPlaying && (!streamingEpisode || !episodeRx.exec(streamingEpisode.title) || episodeRx.exec(streamingEpisode.title)[2].toLowerCase()?.trim()?.startsWith('episode') || media?.streamingEpisodes?.find(episode => episodeRx.exec(episode.title) && Number(episodeRx.exec(episode.title)[1]) === (media?.episodes + 1)))) {
         // better episode title fetching, especially for "two cour" anime releases like Dead Mount Play... shocker, the anilist database for streamingEpisodes can be wrong!
-        const { episodes, specialCount, episodeCount } = await getAniMappings(media?.id) || {}
+        const mappings = await getAniMappings(media?.id) || {}
+          if (/episode\s*0/i.test(mappings?.episodes?.[1]?.title?.en || mappings?.episodes?.[1]?.title?.jp)) {
+            delete mappings?.episodes?.[1]
+            mappings.episodes = Object.keys(mappings.episodes).sort((a, b) => a - b).reduce((acc, key, index) => {
+                acc[index + 1] = mappings.episodes?.[key]
+                return acc
+            }, {})
+          }
+        const { episodes, specialCount, episodeCount } = mappings
         let mappingsTitle = episode && episodes && episodes[Number(episode)]?.title?.en
         if (episode && (!mappingsTitle || mappingsTitle.length === 0)) {
           const kitsuMappings = (await getKitsuMappings(media?.id))?.data?.find(ep => ep?.attributes?.number === Number(episode))?.attributes
@@ -122,6 +130,7 @@
 
       const details = {
         title: anilistClient.title(media) || parseObject?.anime_title || parseObject?.file_name,
+        zeroEpisode,
         episode: ep,
         episodeRange,
         episodeTitle: (streamingEpisode && (episodeRx.exec(streamingEpisode.title)?.[2] || episodeRx.exec(streamingEpisode.title))) || ((media?.format === 'MOVIE') ? 'The Movie' : ''),
