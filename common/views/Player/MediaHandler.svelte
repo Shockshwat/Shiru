@@ -164,18 +164,36 @@
             if ((media?.media?.id === targetFile?.media?.media?.id) && (media?.episode === targetFile?.media?.episode) && (!targetFile?.media?.season || (media?.season === targetFile?.media?.season))) return { media: media, episode: media?.episode, season: media?.season }
         }
     }
+
+    // watching
     for (const { media } of videoFiles) {
       const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
       const zeroEpisode = await checkForZero(cachedMedia)
-      if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
+      if (cachedMedia?.mediaListEntry?.status === 'CURRENT') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0), season: media?.season }
     }
 
+    // rewatching
     for (const { media } of videoFiles) {
       const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
-        const zeroEpisode = await checkForZero(cachedMedia)
-      if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0) }
+      const zeroEpisode = await checkForZero(cachedMedia)
+      if (cachedMedia?.mediaListEntry?.status === 'REPEATING') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0), season: media?.season }
     }
 
+    // paused
+    for (const { media } of videoFiles) {
+      const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
+      const zeroEpisode = await checkForZero(cachedMedia)
+      if (cachedMedia?.mediaListEntry?.status === 'PAUSED') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0), season: media?.season }
+    }
+
+    // dropped
+    for (const { media } of videoFiles) {
+      const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
+      const zeroEpisode = await checkForZero(cachedMedia)
+      if (cachedMedia?.mediaListEntry?.status === 'DROPPED') return { media: cachedMedia, episode: (cachedMedia.mediaListEntry.progress || 0) + (!zeroEpisode ? 1 : 0), season: media?.season }
+    }
+
+    // planning
     let lowestPlanning
     for (const { media } of videoFiles) {
       const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
