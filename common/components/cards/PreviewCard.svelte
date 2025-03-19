@@ -2,18 +2,15 @@
   import { formatMap, getMediaMaxEp, playMedia } from '@/modules/anime.js'
   import { anilistClient } from '@/modules/anilist.js'
   import { episodesList } from '@/modules/episodes.js'
-  import { settings } from '@/modules/settings.js'
   import { SUPPORTS } from '@/modules/support.js'
   import { click } from '@/modules/click.js'
   import Scoring from '@/views/ViewAnime/Scoring.svelte'
-  import AudioLabel from '@/views/ViewAnime/AudioLabel.svelte'
   import Helper from '@/modules/helper.js'
   import { Heart, Play, VolumeX, Volume2, ThumbsUp, ThumbsDown } from 'lucide-svelte'
 
   /** @type {import('@/modules/al.d.ts').Media} */
   export let media
   export let type = null
-  export let variables
 
   $: maxEp = getMediaMaxEp(media)
 

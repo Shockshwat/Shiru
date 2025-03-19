@@ -1,7 +1,6 @@
 <script>
   import { getContext } from 'svelte'
   import { airingAt, episode, formatMap, getMediaMaxEp, statusColorMap } from '@/modules/anime.js'
-  import { settings } from '@/modules/settings.js'
   import { click } from '@/modules/click.js'
   import { page } from '@/App.svelte'
   import { SUPPORTS } from '@/modules/support.js'

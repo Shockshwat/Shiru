@@ -38,7 +38,7 @@
 
 <div class='d-flex p-md-20 p-15 position-relative first-check {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState, viewMedia]}>
   {#if preview}
-    <PreviewCard {media} {type} variables={_variables} />
+    <PreviewCard {media} {type} />
   {/if}
   <div class='item small-card d-flex flex-column pointer'>
     {#if $page === 'schedule'}
