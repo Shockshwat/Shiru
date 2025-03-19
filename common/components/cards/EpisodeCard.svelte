@@ -115,7 +115,7 @@
       <div class='col-auto d-flex flex-column align-items-end text-right mt-3'>
         <div class='text-white font-weight-bold'>
           {#if data.episode}
-            {@const episodes = (data.parseObject?.file_name?.match(/\b\d+\s*[-~]\s*\d+\b/) || []).map(m => m.split(/[-~]/).map(n => +n.trim()))[0] || Array.isArray(data.episode) ? data.episode : []}
+            {@const episodes = (data.parseObject?.file_name?.match(/\b\d+\s*[-~]\s*\d+\b/) || []).map(m => m.split(/[-~]/).map(n => +n.trim()))[0] || Array.isArray(data.episode) ? data.episode : (typeof data.episode === 'string' && data.episode?.match(/^\d+\s*~\s*\d+$/)) ? data.episode.split(/~\s*/).map(n => +n.trim()) : []}
             {#if episodes?.length > 0 && ((Number(episodes[0]) || episodes[0]) < (Number(episodes[1]) || episodes[1]))}
               Episodes {Number(episodes[0]) || episodes[0]} ~ {Number(episodes[1]) || episodes[1]}
             {:else}
