@@ -203,6 +203,9 @@
             <div class='d-flex flex-sm-row flex-column align-items-sm-end pb-20 mb-15'>
               <div class='cover d-flex flex-row align-items-sm-end align-items-center justify-content-center mw-full mb-sm-0 mb-20 w-full' style='max-height: 50vh;'>
                 <img class='rounded cover-img overflow-hidden h-full' alt='cover-art' src={staticMedia.coverImage?.extraLarge || staticMedia.coverImage?.medium} />
+                <div class='position-relative h-full'>
+                  <AudioLabel media={staticMedia} smallCard={false} />
+                </div>
               </div>
               <div class='pl-sm-20 ml-sm-20'>
                 <h1 class='font-weight-very-bold text-white select-all mb-0' class:font-size-24={SUPPORTS.isAndroid}>{anilistClient.title(staticMedia)}</h1>
@@ -247,9 +250,6 @@
                       </span>
                     </div>
                   {/if}
-                  <div class='d-flex flex-row mt-10'>
-                    <AudioLabel media={staticMedia} viewAnime={true}/>
-                  </div>
                 </div>
                 <div class='d-flex flex-row flex-wrap play'>
                   <button class='btn btn-lg btn-secondary w-250 text-dark font-weight-bold shadow-none border-0 d-flex align-items-center justify-content-center mr-10 mt-20'

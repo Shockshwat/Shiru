@@ -60,7 +60,7 @@
             </div>
         </div>
     {:else if !viewAnime}
-        {@const multiAudio = (matchPhrase(data?.parseObject?.file_name, ['Multi Audio', 'Dual Audio'], 3) || matchPhrase(data?.parseObject?.file_name, ['Dual'], 1)) || (banner && !episode && !smallCard && ($isDubbed || $isPartial)) }
+        {@const multiAudio = (matchPhrase(data?.parseObject?.file_name, ['Multi Audio', 'Dual Audio'], 3) || matchPhrase(data?.parseObject?.file_name, ['Dual'], 1)) || (banner && !episode && ($isDubbed || $isPartial)) }
         {$isDubbed ? `Dub${ multiAudio ? ' | Sub' : ''}` : $isPartial ? `Partial Dub${ multiAudio ? ' | Sub' : ''}` : 'Sub'}
     {:else if viewAnime}
         <svelte:component this={$isDubbed ? Mic : $isPartial ? MicOff : Captions} class='mx-10' size='2.2rem' />
