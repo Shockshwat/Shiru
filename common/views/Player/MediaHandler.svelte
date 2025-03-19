@@ -158,6 +158,12 @@
   async function findPreferredPlaybackMedia (files, targetFile) {
     const videoFiles = targetFile ? (files.filter(file => file.media?.media?.id === targetFile?.media?.media?.id) || files) : files // force the requested target files to load.
 
+    // force play the target file if we are specifically requesting it, but do need to validate it still exists.
+    if (targetFile) {
+        for (const { media } of videoFiles) {
+            if ((media?.media?.id === targetFile?.media?.media?.id) && (media?.episode === targetFile?.media?.episode) && (!targetFile?.media?.season || (media?.season === targetFile?.media?.season))) return { media: media, episode: media?.episode, season: media?.season }
+        }
+    }
     for (const { media } of videoFiles) {
       const cachedMedia = mediaCache.value[media?.media?.id] || media?.media
       const zeroEpisode = await checkForZero(cachedMedia)
