@@ -174,7 +174,7 @@ const protocolRx = /shiru:\/\/([a-z0-9]+)\/(.*)/i
 function handleProtocol (text) {
   // Handle magnet links
   if (text.startsWith("magnet:")) {
-    this.add(text)
+    add(text)
     return
   }
 
