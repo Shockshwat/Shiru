@@ -74,11 +74,11 @@
     {/if}
     {#if updateState === 'downloading'}
       <SidebarLink click={() => { toast('Update is downloading...', { description: 'This may take a moment, the update will be ready shortly.' }) }} icon='download' text='Update Downloading...' css='{!$settings.donate && !SUPPORTS.isAndroid ? `mt-auto` : ``}' {page} let:active>
-        <Download size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
+        <Download size={btnSize} class='flex-shrink-0 p-5 m-5 rounded' strokeWidth='2.5' color='#4a90e2' />
       </SidebarLink>
     {:else if updateState === 'ready'}
       <SidebarLink click={() => { IPC.emit('quit-and-install') }} icon='download' text='Update Ready!' css='{!$settings.donate && !SUPPORTS.isAndroid ? `mt-auto` : ``}' {page} let:active>
-        <Download size={btnSize} class='flex-shrink-0 p-5 m-5 rounded update' strokeWidth='2.5' color={active ? 'currentColor' : '#5e6061'} />
+        <Download size={btnSize} class='flex-shrink-0 p-5 m-5 rounded update' strokeWidth='2.5' color='currentColor' />
       </SidebarLink>
     {/if}
     <SidebarLink click={() => { $notifyView = !$notifyView }} icon='bell' text='Notifications' css='{!$settings.donate && !SUPPORTS.isAndroid && updateState !== `downloading` && updateState !== `ready` ? `mt-auto` : ``}' {page} overlay={!$actionPrompt && $notifyView && 'notify'} nowPlaying={$view} let:active>
