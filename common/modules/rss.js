@@ -136,6 +136,7 @@ class RSSMediaManager {
         const progress = media?.mediaListEntry?.progress
         const behind = progress < (Number(episode) - 1)
         const details = {
+          id: media?.id,
           title: anilistClient.title(media) || parseObject.anime_title,
           message: `${media?.format === 'MOVIE' ? `The Movie` : episode ? `${media?.episodes === Number(episode) ? `The wait is over! ` : ``}Episode ${Number(episode)}` : parseObject?.anime_title?.match(/S(\d{2})/) ? `Season ${parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10)}` : `Batch`} (${dubbed ? 'Dub' : 'Sub'}) ${Number(episode) || media?.format === 'MOVIE' ? `is out${media?.format !== 'MOVIE' && media?.episodes === Number(episode) ? `, this season is now ready to binge` : ``}!` : `is now ready to binge!`}`,
           icon: media?.coverImage.medium,
@@ -164,7 +165,6 @@ class RSSMediaManager {
         window.dispatchEvent(new CustomEvent('notification-app', {
           detail: {
             ...details,
-            id: media?.id,
             episode: Number(episode) || (parseObject?.anime_title?.match(/S(\d{2})/) ? parseInt(parseObject.anime_title.match(/S(\d{2})/)[1], 10) : Number(episode)),
             timestamp: Math.floor(new Date(date).getTime() / 1000),
             format: media?.format,

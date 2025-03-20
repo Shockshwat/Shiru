@@ -332,6 +332,7 @@ class AnilistClient {
       for (const { media, episode, type, createdAt } of newNotifications) {
         if ((settings.value.aniNotify !== 'limited' || type !== 'AIRING') && media.type === 'ANIME' && media.format !== 'MUSIC' && (!settings.value.preferDubs || !malDubs.isDubMedia(media))) {
           const details = {
+            id: media?.id,
             title: media.title.userPreferred,
             message: type === 'AIRING' ? `${media.format !== 'MOVIE' ? `Episode ${episode}` : `The Movie`} (Sub) is out in Japan, ${media.format !== 'MOVIE' ? `it should be available soon.` : `, if this is a theatrical release it will likely a few months before it is available for streaming.`}` : 'Was recently announced!',
             icon: media.coverImage.medium,
@@ -353,7 +354,6 @@ class AnilistClient {
           window.dispatchEvent(new CustomEvent('notification-app', {
             detail: {
               ...details,
-              id: media?.id,
               ...(type === 'AIRING' ? { episode: episode } : {}),
               timestamp: createdAt,
               format: media?.format,

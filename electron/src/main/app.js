@@ -54,7 +54,7 @@ export default class App {
   updater = new Updater(this.mainWindow, this.webtorrentWindow)
   dialog = new Dialog(this.webtorrentWindow)
   tray = new Tray(this.logo)
-  cacheDir = join(app.getPath('userData'), 'Cache', 'Cache_Data')
+  imageDir = join(app.getPath('userData'), 'Cache', 'Image_Data')
   debug = new Debug()
   close = false
   notifications = {}
@@ -115,11 +115,12 @@ export default class App {
     ]))
     this.tray.on('click', () => this.showAndFocus())
 
+    fs.rmSync(this.imageDir, { recursive: true, force: true })
     ipcMain.on('notification-unread', async (e, notificationCount) => this.setOverlayIcon(notificationCount))
     ipcMain.on('notification', async (e, opts) => {
-      opts.icon &&= await this.getImage(opts.icon)
-      opts.heroImg &&= await this.getImage(opts.heroImg, true)
-      opts.inlineImg &&= await this.getImage(opts.inlineImg)
+      opts.icon &&= await this.getImage(opts.id, opts.icon)
+      opts.heroImg &&= await this.getImage(opts.id, opts.heroImg, true)
+      opts.inlineImg &&= await this.getImage(opts.id, opts.inlineImg)
       const notification = new Notification({toastXml: toXmlString(opts) })
       notification.show()
     })
@@ -197,13 +198,20 @@ export default class App {
     if (!this.updater.install(forceRunAfter)) app.quit()
   }
 
-  async getImage(url, wideScreen) {
+  imageCache = new Map()
+  async getImage(id, url, wideScreen) {
+    const cacheKey = `${id}_${url}_${wideScreen}`
+    if (this.imageCache.has(cacheKey)) return this.imageCache.get(cacheKey)
     const res = await fetch(url)
     const arrayBuffer = await res.arrayBuffer()
     const urlParts = url.split('/')
-    const imagePath = join(this.cacheDir, urlParts[urlParts.length - 1])
+    const baseName = urlParts[urlParts.length - 1].replace(/\.[^/.]+$/, '')
+    const extension = urlParts[urlParts.length - 1].split('.').pop()
+    const uniqueName = `${baseName}_${id}.${extension}`
+    const imagePath = join(this.imageDir, uniqueName)
     const image = await Jimp.read(Buffer.from(arrayBuffer))
     const { width, height } = image.bitmap
+    this.imageCache.set(cacheKey, imagePath)
     if (wideScreen) {
       let adjWidth, adjHeight
       if (width / height > (16 / 9)) {
@@ -219,8 +227,10 @@ export default class App {
       await image.crop((width - squareRatio) / 2, (height - squareRatio) / 2, squareRatio, squareRatio).resize(128, 128, Jimp.RESIZE_BEZIER).writeAsync(imagePath)
     }
     setTimeout(() => {
-      fs.unlink(imagePath, (err) => {})
-    }, 10000)
+      fs.unlink(imagePath, (err) => {
+        if (!err) this.imageCache.delete(cacheKey)
+      })
+    }, 90000)
     return imagePath
   }
 
