@@ -149,7 +149,7 @@
               <div class='notification-item shadow-lg position-relative d-flex align-items-center ml-20 mr-20 mt-5 mb-5 p-5 scale pointer' role='button' tabindex='0' use:hoverExit={() => {notification.prompt = false; delete notification.prompt}} use:click={() => { if (!behind || notification.prompt) { notification.prompt = false; delete notification.prompt; notification.read = true; onclick(notification) } else { notification.prompt = true } } } on:contextmenu|preventDefault={() => { notification.read = true; onclick(notification, true); }} class:not-reactive={!$reactive} class:read={notification.read} class:behind={behind || delayed} class:current={!behind} class:not-watching={notWatching} class:watched={watched} class:announcement={announcement}>
                 {#if notification.heroImg}
                   <div class='position-absolute top-0 left-0 w-full h-full'>
-                    <img src={notification.heroImg} alt='bannerImage' class='hero-img w-full h-full'/>
+                    <img src={notification.heroImg} alt='bannerImage' class='hero-img img-cover w-full h-full' />
                     <div class='position-absolute top-0 left-0 w-full h-full rounded-5' style='background: var(--notification-card-gradient)' />
                   </div>
                 {/if}
