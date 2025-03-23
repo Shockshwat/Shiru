@@ -1,4 +1,5 @@
 import { app, protocol, shell, ipcMain } from 'electron'
+import { readFile } from 'fs/promises'
 import { development } from './util.js'
 import path from 'path'
 
@@ -44,6 +45,13 @@ export default class Protocol {
       this.handleProtocol(url)
     })
 
+    // Ensure .torrent files open properly on (certain versions) of macOS
+    app.on('open-file', (event, path) => {
+      event.preventDefault()
+      if (this.window) this.handleTorrentFile(path)
+      else ipcMain.once('webtorrent-heartbeat', () => this.handleTorrentFile(path))
+    })
+
     if (process.argv.length >= 2 && !process.defaultApp) {
       ipcMain.on('version', () => {
         for (const line of process.argv) {
@@ -61,13 +69,30 @@ export default class Protocol {
       // There's probably a better way to do this instead of a for loop and split[1][0]
       // but for now it works as a way to fix multiple OS's commandLine differences
       for (const line of commandLine) {
-        this.handleProtocol(line)
+        if (line.endsWith('.torrent')) this.handleTorrentFile(line)
+        else this.handleProtocol(line)
+      }
+    })
+
+    // A decent hack to allow time for the webtorrent to startup before processing any potential arguments.
+    ipcMain.once('webtorrent-heartbeat', () => {
+      if (!this.window) return
+      for (const arg of process.argv) {
+        if (arg.toLowerCase().endsWith('.torrent')) this.handleTorrentFile(arg)
       }
     })
 
     ipcMain.on('handle-protocol', (event, text) => {
       this.handleProtocol(text)
     })
+  }
+
+  /**
+   * Handles opening a `.torrent` file and sends it as a `Uint8Array`
+   * @param {string} filePath - The path to the .torrent file
+   */
+  async handleTorrentFile(filePath) {
+    this.add(new Uint8Array(await readFile(filePath)))
   }
 
   /**

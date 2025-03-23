@@ -16,7 +16,10 @@ IPC.on('intent', async url => {
   IPC.emit('intent-end')
 })
 
-App.addListener('appUrlOpen', ({ url }) => handleProtocol(url))
+App.addListener('appUrlOpen', ({ url }) => {
+  if (url.endsWith('.torrent')) handleTorrentFile(url)
+  else handleProtocol(url)
+})
 
 let canShowNotifications = false
 
@@ -181,6 +184,19 @@ function handleProtocol (text) {
   // Handle shiru:// scheme
   const match = text.match(protocolRx)
   if (match) protocolMap[match[1]]?.(match[2])
+}
+
+/**
+ * Handles opening a `.torrent` file and sends it as a `Uint8Array`
+ * @param {string} filePath - The path to the .torrent file
+ */
+async function handleTorrentFile(filePath) {
+  console.error("Opening torrent file:", filePath)
+  const response = await fetch(decodeURIComponent(filePath))
+  if (!response.ok) throw new Error(`Failed to fetch file: ${response.statusText}`)
+  const uint8Array = new Uint8Array(await response.arrayBuffer())
+  console.error("Successfully loaded .torrent file:", filePath)
+  add(uint8Array)
 }
 
 function sendToken (line) {

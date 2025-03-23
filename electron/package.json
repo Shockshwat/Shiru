@@ -57,6 +57,14 @@
         "magnet"
       ]
     },
+    "fileAssociations": [
+      {
+        "ext": "torrent",
+        "name": "Torrent File",
+        "description": "BitTorrent streaming, watch anime in real-time",
+        "role": "Viewer"
+      }
+    ],
     "publish": [
       {
         "provider": "github",
