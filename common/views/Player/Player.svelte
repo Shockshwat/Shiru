@@ -22,7 +22,7 @@
   import { SUPPORTS } from '@/modules/support.js'
   import 'rvfc-polyfill'
   import IPC from '@/modules/ipc.js'
-  import { X, Minus, ArrowDown, ArrowUp, Captions, Cast, CircleHelp, Contrast, FastForward, Keyboard, List, Eye, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX, SlidersVertical } from 'lucide-svelte'
+  import { X, Minus, ArrowDown, ArrowUp, Captions, Cast, CircleHelp, Contrast, FastForward, Keyboard, EllipsisVertical, List, Eye, FilePlus2, ListMusic, ListVideo, Maximize, Minimize, Pause, PictureInPicture, PictureInPicture2, Play, Proportions, RefreshCcw, Rewind, RotateCcw, RotateCw, ScreenShare, SkipBack, SkipForward, Users, Volume1, Volume2, VolumeX, SlidersVertical } from 'lucide-svelte'
   import Debug from 'debug'
 
   const debug = Debug('ui:player')
@@ -1232,6 +1232,14 @@
     }
   }
 
+  function handleFile(event) {
+    const file = event.target.files[0]
+    if (!file) return
+    const dataTransfer = new DataTransfer()
+    dataTransfer.items.add(file)
+    window.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dataTransfer }))
+  }
+
   function setDiscordRPC (np = media, browsing) {
     if ((!np || Object.keys(np).length === 0) && !browsing) return
     if (hidden) {
@@ -1546,6 +1554,17 @@
       {#if playbackRate !== 1}
         <div class='ts mr-auto' class:font-size-16={SUPPORTS.isAndroid} class:font-size-20={!SUPPORTS.isAndroid}>x{playbackRate.toFixed(1)}</div>
       {/if}
+      <div class='dropdown dropup with-arrow' use:click={toggleDropdown}>
+        <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='More'>
+          <EllipsisVertical size='2.5rem' strokeWidth={2.5} />
+        </span>
+        <div class='dropdown-menu dropdown-menu-left ctrl p-10 pb-5 text-capitalize mh-40 text-nowrap'>
+          <input type='file' class='d-none' id='search-subtitle' accept='.srt,.vtt,.ass,.ssa,.sub,.txt' on:input|preventDefault|stopPropagation={handleFile} />
+          <label for='search-subtitle' class='pointer d-flex align-items-center justify-content-center font-size-16'>
+            <FilePlus2 size='2.5rem' strokeWidth={2.5} /> <div class='ml-10'>Add Subtitles</div>
+          </label>
+        </div>
+      </div>
       <span class='icon ctrl mr-5 d-flex align-items-center keybinds' title='Keybinds [`]' use:click={() => (showKeybinds = true)}>
         <Keyboard size='2.5rem' strokeWidth={2.5} />
       </span>
