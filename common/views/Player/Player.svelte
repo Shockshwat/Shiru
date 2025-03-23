@@ -1522,12 +1522,12 @@
           {/if}
         {/if}</span>
       {#if hasLast}
-        <span class='icon ctrl m-5' title='Last [B]' use:click={playLast}>
+        <span class='icon ctrl m-5 d-btn' title='Last [B]' use:click={playLast}>
           <SkipBack size='2rem' fill='white' />
         </span>
       {/if}
       {#if hasNext}
-        <span class='icon ctrl m-5' title='Next [N]' use:click={playNext}>
+        <span class='icon ctrl m-5 d-btn' title='Next [N]' use:click={playNext}>
           <SkipForward size='2rem' fill='white' />
         </span>
       {/if}
@@ -1995,6 +1995,12 @@
   }
   .miniplayer .mobile-focus-target:focus-visible {
     background: hsla(209, 100%, 55%, 0.3);
+  }
+
+  @media (max-width: 30rem) {
+    .d-btn {
+      display: none !important;
+    }
   }
 
   @media (max-width: 60rem) {
