@@ -33,7 +33,7 @@ class TorrentWorker extends EventTarget {
         }
       }
     })
-    clipboard.on('files', async ({ detail }) => {
+    clipboard.on('files', async ({ detail }) => { // doesn't work on Capacitor....
       for (const file of detail) {
         if (file.name.endsWith('.torrent')) {
           media.value = { torrent: true }

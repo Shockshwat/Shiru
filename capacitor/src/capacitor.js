@@ -7,6 +7,7 @@ import { IntentUri } from 'capacitor-intent-uri'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { Device } from '@capacitor/device'
 import { FolderPicker } from 'capacitor-folder-picker'
+//import { Filesystem } from '@capacitor/filesystem'
 import { toast } from 'svelte-sonner'
 import IPC from './ipc.js'
 
@@ -17,8 +18,8 @@ IPC.on('intent', async url => {
 })
 
 App.addListener('appUrlOpen', ({ url }) => {
-  if (url.endsWith('.torrent')) handleTorrentFile(url)
-  else handleProtocol(url)
+  // if (url.startsWith('content://')) handleTorrentFile(url)
+  handleProtocol(url)
 })
 
 let canShowNotifications = false
@@ -188,14 +189,14 @@ function handleProtocol (text) {
 
 /**
  * Handles opening a `.torrent` file and sends it as a `Uint8Array`
- * @param {string} filePath - The path to the .torrent file
+ * @param {string} fileUri - The path to the .torrent file
  */
-async function handleTorrentFile(filePath) {
-  console.error("Opening torrent file:", filePath)
-  const response = await fetch(decodeURIComponent(filePath))
-  if (!response.ok) throw new Error(`Failed to fetch file: ${response.statusText}`)
-  const uint8Array = new Uint8Array(await response.arrayBuffer())
-  console.error("Successfully loaded .torrent file:", filePath)
+async function handleTorrentFile(fileUri) {
+  const fileContents = await Filesystem.readFile({ path: fileUri })
+  const binaryString = atob(fileContents.data)
+  const uint8Array = new Uint8Array(binaryString.length)
+  for (let i = 0; i < binaryString.length; i++) uint8Array[i] = binaryString.charCodeAt(i)
+  if (uint8Array.length === 0) throw new Error("Empty file or conversion failed")
   add(uint8Array)
 }
 
