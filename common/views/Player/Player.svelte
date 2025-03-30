@@ -1562,7 +1562,7 @@
             <EllipsisVertical size='2.5rem' strokeWidth={2.5} />
           </span>
           <div class='dropdown-menu dropdown-menu-left ctrl pt-5 pb-5 ml-10 text-capitalize mh-40 text-nowrap'>
-            <div role='button' aria-label='Add External Subtitles' class='pointer d-flex align-items-center justify-content-center font-size-16 not-reactive' title='Add External Subtitles' use:click={(target) => { fileInput.click(); toggleDropdown(target) }}>
+            <div role='button' aria-label='Add External Subtitles' class='pointer d-flex align-items-center justify-content-center font-size-16' title='Add External Subtitles' use:click={(target) => { fileInput.click(); toggleDropdown(target) }}>
               <FilePlus2 size='2rem' strokeWidth={2.5} /> <div class='ml-10'>Add Subtitles</div>
             </div>
           </div>
@@ -1581,7 +1581,7 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Audio Tracks'>
             <ListMusic size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-5 mr-15 text-capitalize text-nowrap'>
+          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-0 mr-15 text-capitalize text-nowrap'>
             <div class='custom-radio overflow-y-auto overflow-x-hidden mh-40'>
               {#each video.audioTracks as track}
                 <input name='audio-radio-set' type='radio' id='audio-{track.id}-radio' value={track.id} checked={track.enabled} />
@@ -1589,6 +1589,7 @@
                   {(track.language || (!Object.values(video.audioTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
                 </label>
               {/each}
+              <div class='mb-5 invisible'></div>
             </div>
           </div>
         </div>
@@ -1598,7 +1599,7 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Video Tracks'>
             <ListVideo size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-5 mr-15 text-capitalize text-nowrap'>
+          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-0 mr-15 text-capitalize text-nowrap'>
             <div class='custom-radio overflow-y-auto overflow-x-hidden mh-40'>
               {#each video.videoTracks as track}
                 <input name='video-radio-set' type='radio' id='video-{track.id}-radio' value={track.id} checked={track.selected} />
@@ -1606,6 +1607,7 @@
                   {(track.language || (!Object.values(video.videoTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
                 </label>
               {/each}
+              <div class='mb-5 invisible'></div>
             </div>
           </div>
         </div>
@@ -1628,10 +1630,11 @@
                   </label>
                 {/if}
               {/each}
+              <div class='mb-5 invisible'></div>
               <div role='button' aria-label='Add External Subtitles' class='position-absolute bottom-0 not-reactive' title='Add External Subtitles' style='margin-left: 0.1rem !important' use:click={(target) => { fileInput.click(); toggleDropdown(target) }}>
                 <FilePlus2 size="2rem" strokeWidth={2.5} />
               </div>
-              <input type='text' inputmode='numeric' pattern='-?[0-9]*.?[0-9]*' step='0.1' title='Subtitle Offset' bind:value={subDelay} on:click|stopPropagation class='form-control text-right form-control-sm' />
+              <input type='text' inputmode='numeric' pattern='-?[0-9]*.?[0-9]*' step='0.1' title='Subtitle Offset' bind:value={subDelay} on:click|stopPropagation class='form-control text-right form-control-sm not-reactive' />
             </div>
           </div>
         </div>

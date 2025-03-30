@@ -85,7 +85,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-a[href]:active, button:not([disabled]):active, fieldset:not([disabled]):active, input:not([disabled], [type='range']):active, optgroup:not([disabled]):active, option:not([disabled]):active, select:not([disabled]):active, textarea:not([disabled]):active, details:active, [tabindex]:not([tabindex="-1"], .seekbar, .dropdown, .scoring, .not-reactive):active, [contenteditable]:active, [controls]:active {
+a[href]:active, button:not([disabled]):active, fieldset:not([disabled]):active, input:not([disabled], [type='range'], .not-reactive):active, optgroup:not([disabled]):active, option:not([disabled]):active, select:not([disabled]):active, textarea:not([disabled]):active, details:active, [tabindex]:not([tabindex="-1"], .seekbar, .dropdown, .scoring, .not-reactive):active, [contenteditable]:active, [controls]:active {
   transition: box-shadow 0.1s ease, filter 0.1s ease !important;
   filter: brightness(0.95) contrast(1.05) !important;
   box-shadow: 0 0 2rem rgba(0, 0, 0, 0.1), 0 .4rem .6rem rgba(0, 0, 0, 0.05) !important;
