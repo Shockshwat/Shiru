@@ -1594,7 +1594,7 @@
         </div>
       {/if}
       {#if 'videoTracks' in HTMLVideoElement.prototype && video?.videoTracks?.length > 1}
-        <div class='dropdown dropup with-arrow'>
+        <div class='dropdown dropup with-arrow' use:click={toggleDropdown}>
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Video Tracks'>
             <ListVideo size='2.5rem' strokeWidth={2.5} />
           </span>
