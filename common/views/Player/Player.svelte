@@ -1232,6 +1232,7 @@
     }
   }
 
+  let fileInput
   function handleFile(event) {
     const file = event.target.files[0]
     if (!file) return
@@ -1554,17 +1555,19 @@
       {#if playbackRate !== 1}
         <div class='ts mr-auto' class:font-size-16={SUPPORTS.isAndroid} class:font-size-20={!SUPPORTS.isAndroid}>x{playbackRate.toFixed(1)}</div>
       {/if}
-      <div class='dropdown dropup with-arrow' use:click={toggleDropdown}>
-        <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='More'>
-          <EllipsisVertical size='2.5rem' strokeWidth={2.5} />
-        </span>
-        <div class='dropdown-menu dropdown-menu-left ctrl p-10 pb-5 text-capitalize mh-40 text-nowrap'>
-          <input type='file' class='d-none' id='search-subtitle' accept='.srt,.vtt,.ass,.ssa,.sub,.txt' on:input|preventDefault|stopPropagation={handleFile} />
-          <label for='search-subtitle' class='pointer d-flex align-items-center justify-content-center font-size-16'>
-            <FilePlus2 size='2.5rem' strokeWidth={2.5} /> <div class='ml-10'>Add Subtitles</div>
-          </label>
+      <input type='file' class='d-none' id='search-subtitle' accept='.srt,.vtt,.ass,.ssa,.sub,.txt' on:input|preventDefault|stopPropagation={handleFile} bind:this={fileInput}/>
+      {#if !subHeaders?.length}
+        <div class='dropdown dropup with-arrow' use:click={toggleDropdown}>
+          <span class='icon ctrl d-flex align-items-center h-full' title='More'>
+            <EllipsisVertical size='2.5rem' strokeWidth={2.5} />
+          </span>
+          <div class='dropdown-menu dropdown-menu-left ctrl pt-5 pb-5 ml-10 text-capitalize mh-40 text-nowrap'>
+            <div role='button' aria-label='Add External Subtitles' class='pointer d-flex align-items-center justify-content-center font-size-16 not-reactive' title='Add External Subtitles' use:click={(target) => { fileInput.click(); toggleDropdown(target) }}>
+              <FilePlus2 size='2rem' strokeWidth={2.5} /> <div class='ml-10'>Add Subtitles</div>
+            </div>
+          </div>
         </div>
-      </div>
+      {/if}
       <span class='icon ctrl mr-5 d-flex align-items-center keybinds' title='Keybinds [`]' use:click={() => (showKeybinds = true)}>
         <Keyboard size='2.5rem' strokeWidth={2.5} />
       </span>
@@ -1578,13 +1581,15 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Audio Tracks'>
             <ListMusic size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto overflow-x-hidden mh-40 text-nowrap'>
-            {#each video.audioTracks as track}
-              <input name='audio-radio-set' type='radio' id='audio-{track.id}-radio' value={track.id} checked={track.enabled} />
-              <label for='audio-{track.id}-radio' use:click={() => selectAudio(track.id)} class='pb-5'>
-                {(track.language || (!Object.values(video.audioTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
-              </label>
-            {/each}
+          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-5 mr-15 text-capitalize text-nowrap'>
+            <div class='custom-radio overflow-y-auto overflow-x-hidden mh-40'>
+              {#each video.audioTracks as track}
+                <input name='audio-radio-set' type='radio' id='audio-{track.id}-radio' value={track.id} checked={track.enabled} />
+                <label for='audio-{track.id}-radio' use:click={() => selectAudio(track.id)} class='pb-5'>
+                  {(track.language || (!Object.values(video.audioTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
+                </label>
+              {/each}
+            </div>
           </div>
         </div>
       {/if}
@@ -1593,13 +1598,15 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Video Tracks'>
             <ListVideo size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-left ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto overflow-x-hidden mh-40 text-nowrap'>
-            {#each video.videoTracks as track}
-              <input name='video-radio-set' type='radio' id='video-{track.id}-radio' value={track.id} checked={track.selected} />
-              <label for='video-{track.id}-radio' use:click={() => selectVideo(track.id)} class='pb-5'>
-                {(track.language || (!Object.values(video.videoTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
-              </label>
-            {/each}
+          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-5 mr-15 text-capitalize text-nowrap'>
+            <div class='custom-radio overflow-y-auto overflow-x-hidden mh-40'>
+              {#each video.videoTracks as track}
+                <input name='video-radio-set' type='radio' id='video-{track.id}-radio' value={track.id} checked={track.selected} />
+                <label for='video-{track.id}-radio' use:click={() => selectVideo(track.id)} class='pb-5'>
+                  {(track.language || (!Object.values(video.videoTracks).some(track => track.language === 'eng' || track.language === 'en') ? 'eng' : track.label)) + (track.label ? ' - ' + track.label : '')}
+                </label>
+              {/each}
+            </div>
           </div>
         </div>
       {/if}
@@ -1608,19 +1615,24 @@
           <span class='icon ctrl mr-5 d-flex align-items-center h-full' title='Subtitles [C]'>
             <Captions size='2.5rem' strokeWidth={2.5} />
           </span>
-          <div class='dropdown-menu dropdown-menu-right ctrl custom-radio p-10 pb-5 text-capitalize overflow-y-auto overflow-x-hidden mh-40 text-nowrap'>
-            <input name='subtitle-radio-set' type='radio' id='subtitle-off-radio' value='off' checked={subHeaders && subs?.current === -1} />
-            <label for='subtitle-off-radio' use:click={() => { subs.selectCaptions(-1); setTimeout(() => subs?.renderer?.resize(), 200); cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: 'OFF' }) }} class='pb-5'> OFF </label> <!-- stupid fix (resize) because video metadata doesn't update for multiple frames -->
-            {#each subHeaders as track}
-              {#if track}
-                {@const trackName = (track.language || (!Object.values(subs.headers).some(header => header.language === 'eng' || header.language === 'en') ? 'eng' : track.type)) + (track.name ? ' - ' + track.name : '')}
-                <input name='subtitle-radio-set' type='radio' id='subtitle-{track.number}-radio' value={track.number} checked={track.number === subs.current} />
-                <label for='subtitle-{track.number}-radio' use:click={() => { subs.selectCaptions(track.number); setTimeout(() => subs?.renderer?.resize(), 200); cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: trackName }) }} class='pb-5'> <!-- stupid fix (resize) because video metadata doesn't update for multiple frames -->
-                  {trackName}
-                </label>
-              {/if}
-            {/each}
-            <input type='text' inputmode='numeric' pattern='-?[0-9]*.?[0-9]*' step='0.1' bind:value={subDelay} on:click|stopPropagation class='form-control text-right form-control-sm' />
+          <div class='dropdown-menu dropdown-menu-right ctrl p-10 pb-5 mr-15 text-capitalize text-nowrap'>
+            <div class='custom-radio overflow-y-auto overflow-x-hidden mh-40'>
+              <input name='subtitle-radio-set' type='radio' id='subtitle-off-radio' value='off' checked={subHeaders && subs?.current === -1} />
+              <label for='subtitle-off-radio' use:click={() => { subs.selectCaptions(-1); setTimeout(() => subs?.renderer?.resize(), 200); cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: 'OFF' }) }} class='pb-5'> OFF </label> <!-- stupid fix (resize) because video metadata doesn't update for multiple frames -->
+              {#each subHeaders as track}
+                {#if track}
+                  {@const trackName = (track.language || (!Object.values(subs.headers).some(header => header.language === 'eng' || header.language === 'en') ? 'eng' : track.type)) + (track.name ? ' - ' + track.name : '')}
+                  <input name='subtitle-radio-set' type='radio' id='subtitle-{track.number}-radio' value={track.number} checked={track.number === subs.current} />
+                  <label for='subtitle-{track.number}-radio' use:click={() => { subs.selectCaptions(track.number); setTimeout(() => subs?.renderer?.resize(), 200); cache.setEntry(caches.HISTORY, 'lastSubtitle', { ...(cache.getEntry(caches.HISTORY, 'lastSubtitle') || {}), [media?.media?.id || media?.title || media?.parseObject?.title || media?.parseObject?.file_name]: trackName }) }} class='pb-5'> <!-- stupid fix (resize) because video metadata doesn't update for multiple frames -->
+                    {trackName}
+                  </label>
+                {/if}
+              {/each}
+              <div role='button' aria-label='Add External Subtitles' class='position-absolute bottom-0 not-reactive' title='Add External Subtitles' style='margin-left: 0.1rem !important' use:click={(target) => { fileInput.click(); toggleDropdown(target) }}>
+                <FilePlus2 size="2rem" strokeWidth={2.5} />
+              </div>
+              <input type='text' inputmode='numeric' pattern='-?[0-9]*.?[0-9]*' step='0.1' title='Subtitle Offset' bind:value={subDelay} on:click|stopPropagation class='form-control text-right form-control-sm' />
+            </div>
           </div>
         </div>
       {/if}
@@ -1629,7 +1641,7 @@
           {#if presentationConnection}
             <Cast size='2.5rem' fill='white' strokeWidth={0} />
           {:else}
-            <Cast size='2.5rem'strokeWidth={2.5} />
+            <Cast size='2.5rem' strokeWidth={2.5} />
           {/if}
         </span>
       {/if}
