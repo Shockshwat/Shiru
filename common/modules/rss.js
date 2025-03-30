@@ -37,7 +37,7 @@ const rssmap = {
 }
 export function getReleasesRSSurl (val) {
   const rss = rssmap[val] || val
-  return rss && new URL(rssmap[val] ? `${rss}${settings.value.rssQuality ? `"${settings.value.rssQuality}"` : ''}` : rss)
+  return rss && new URL(rssmap[val] ? `${rss}${settings.value.rssQuality ? `${settings.value.rssQuality}p|${settings.value.rssQuality}` : ''}` : rss)
 }
 
 export async function getRSSContent (url) {
