@@ -51,4 +51,7 @@
   .gallery :global(.item.small-card) {
     width: 19rem !important;
   }
+  .gallery :global(.small-card-ct) {
+    height: 100% !important;
+  }
 </style>

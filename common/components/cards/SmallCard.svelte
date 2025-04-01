@@ -36,7 +36,7 @@
   $: init(preview)
 </script>
 
-<div class='d-flex h-full p-md-20 p-15 position-relative small-card-ct {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState, viewMedia]}>
+<div class='d-flex p-md-20 p-15 position-relative small-card-ct {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState, viewMedia]}>
   {#if preview}
     <PreviewCard {media} {type} />
   {/if}
