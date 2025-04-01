@@ -36,7 +36,7 @@
   $: init(preview)
 </script>
 
-<div class='d-flex p-md-20 p-15 position-relative first-check {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState, viewMedia]}>
+<div class='d-flex h-full p-md-20 p-15 position-relative small-card-ct {$reactive ? `` : `not-reactive`}' use:hoverClick={[viewMedia, setHoverState, viewMedia]}>
   {#if preview}
     <PreviewCard {media} {type} />
   {/if}
@@ -89,7 +89,7 @@
 </div>
 
 <style>
-  .first-check:hover {
+  .small-card-ct:hover {
     z-index: 30;
     /* fixes transform scaling on click causing z-index issues */
   }

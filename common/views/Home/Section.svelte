@@ -65,7 +65,7 @@
   .btn {
     border-radius: 2rem;
   }
-  .gallery :global(.first-check:first-child) :global(.absolute-container) {
+  .gallery :global(.small-card-ct:first-child) :global(.absolute-container) {
     left: -48% !important;
   }
   .glow:hover {

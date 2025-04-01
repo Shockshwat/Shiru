@@ -15,7 +15,7 @@
   }
 </script>
 
-<div class='d-flex p-20 position-relative first-check' use:hoverClick={[noop, setHoverState]} use:initPreview>
+<div class='d-flex p-20 position-relative small-card-ct' use:hoverClick={[noop, setHoverState]} use:initPreview>
   {#if preview}
     <PreviewCard {media} />
   {/if}
@@ -41,9 +41,6 @@
 </div>
 
 <style>
-  /* .first-check:first-child :global(.absolute-container) {
-    left: -48% !important
-  } */
   .title {
     display: -webkit-box;
     -webkit-line-clamp: 2;

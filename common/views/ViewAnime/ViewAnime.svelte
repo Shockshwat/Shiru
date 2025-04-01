@@ -197,7 +197,7 @@
           </object>
         </object>
       {/await}
-      <div class='row px-20'>
+      <div class='row px-20' class:mb-40={!SUPPORTS.isAndroid}>
         <div class='col-lg-7 col-12 pb-10'>
           <div bind:this={leftColumn}>
             <div class='d-flex flex-sm-row flex-column align-items-sm-end pb-20 mb-15'>
@@ -367,6 +367,9 @@
 </div>
 
 <style>
+  .mb-40 {
+    margin-bottom: 4rem !important;
+  }
   .close {
     top: 5rem !important;
     left: unset !important;
@@ -411,9 +414,6 @@
   }
   .cover {
     aspect-ratio: 7/10;
-  }
-  .small-card {
-    width: 23rem !important;
   }
 
   button.bg-dark:not([disabled]):hover {
