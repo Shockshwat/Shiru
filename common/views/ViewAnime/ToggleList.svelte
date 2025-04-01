@@ -18,7 +18,7 @@
     </span>
   {:else}
     <span class='d-flex align-items-end'>
-      <ToggleTitle size={list.length} title={title} showMore={showMore}></ToggleTitle>
+      <ToggleTitle size={list.length} title={title} showMore={showMore} expandable={!SUPPORTS.isAndroid}></ToggleTitle>
     </span>
   {/if}
   <div class='pt-10 text-capitalize d-flex gallery'
