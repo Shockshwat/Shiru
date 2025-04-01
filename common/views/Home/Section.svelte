@@ -68,6 +68,9 @@
   .gallery :global(.small-card-ct:first-child) :global(.absolute-container) {
     left: -48% !important;
   }
+  .gallery :global(.small-card-ct:last-child) :global(.absolute-container) {
+    right: -48% !important;
+  }
   .glow:hover {
     color: var(--dm-link-text-color-hover) !important;
   }
