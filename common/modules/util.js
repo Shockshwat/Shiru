@@ -387,6 +387,8 @@ export const defaults = {
  * @typedef {Object} GeneralDefaults
  * @property {string} theme
  * @property {number} volume
+ * @property {string} posMiniplayer
+ * @property {string} widthMiniplayer
  * @property {Array<any>} sync
  * @property {typeof defaults} settings
  * @property {any} [lastFinished]
@@ -395,6 +397,8 @@ export const defaults = {
 export const generalDefaults = {
   theme: '',
   volume: 1,
+  posMiniplayer: 'bottom right',
+  widthMiniplayer: '0px',
   sync: [],
   settings: defaults,
   lastFinished: undefined,

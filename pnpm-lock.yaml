@@ -213,9 +213,6 @@ importers:
       svelte-loader:
         specifier: ^3.1.9
         version: 3.1.9(svelte@4.2.12)
-      svelte-miniplayer:
-        specifier: ^1.0.5
-        version: 1.0.5
       svelte-persisted-store:
         specifier: ^0.11.0
         version: 0.11.0(svelte@4.2.12)
@@ -5344,9 +5341,6 @@ packages:
     resolution: {integrity: sha512-RITPqze3TppOhaZF8SEFTDTwFHov17k3UkOjpxyL/No/YVrvckKmXWOEj7QEpsZZZSNQPb28tMZbHEI2xLhJMQ==}
     peerDependencies:
       svelte: ^3.0.0 || ^4.0.0-next.0
-
-  svelte-miniplayer@1.0.5:
-    resolution: {integrity: sha512-jzYqqBuXcSH5KzoPDlYQL6CQVbpY2LQB4/wBPG4T5R75wE8Dqu4auMU6NnJxHBRhgNCGlH+XBQvxy9G6yX/XQw==}
 
   svelte-persisted-store@0.11.0:
     resolution: {integrity: sha512-9RgJ5DrawGyyfK22A80cfu8Jose3CV8YjEZKz9Tn94rQ0tWyEmYr+XI+wrVF6wjRbW99JMDSVcFRiM3XzVJj/w==}
@@ -11885,8 +11879,6 @@ snapshots:
       svelte: 4.2.12
       svelte-dev-helper: 1.1.9
       svelte-hmr: 0.14.12(svelte@4.2.12)
-
-  svelte-miniplayer@1.0.5: {}
 
   svelte-persisted-store@0.11.0(svelte@4.2.12):
     dependencies:
