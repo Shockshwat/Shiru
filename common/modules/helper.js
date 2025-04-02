@@ -153,7 +153,7 @@ export default class Helper {
 
       debug(`Media viability: ${cachedMedia?.status}, Is from failed resolve: ${failed}`)
       if (failed) return
-      if (cachedMedia.status !== 'FINISHED' && cachedMedia.status !== 'RELEASING' && cachedMedia.status !== 'NOT_YET_RELEASED') return // include not yet released as sometimes anilist is slow at updating or a few episodes were potentially leaked.
+      if (cachedMedia.status === 'CANCELLED') return // allow for not yet released as sometimes anilist is slow at updating or a few episodes were potentially leaked.
 
       // check if media can even be watched, ex: it was resolved incorrectly
       // some anime/OVA's can have a single episode, or some movies can have multiple episodes
@@ -192,7 +192,7 @@ export default class Helper {
       }
 
       Object.assign(variables, this.getFuzzyDate(cachedMedia, status))
-      if (cachedMedia.mediaListEntry?.status !== variables.status || cachedMedia.mediaListEntry?.progress !== variables.episode || cachedMedia.mediaListEntry?.score !== (this.isAniAuth() ? (variables.score / 10) : variables.score) || cachedMedia.mediaListEntry?.repeat !== variables.repeat) {
+      if (cachedMedia.mediaListEntry?.status !== variables.status || cachedMedia.mediaListEntry?.progress !== variables.episode || cachedMedia.mediaListEntry?.score !== (this.isAniAuth() ? (variables.score / 10) : variables.score) || (cachedMedia.mediaListEntry?.repeat || 0) !== variables.repeat) {
         let res
         const description = `Title: ${anilistClient.title(cachedMedia)}\nStatus: ${this.statusName[variables.status]}\nEpisode: ${videoEpisode} / ${getMediaMaxEp(cachedMedia) ? getMediaMaxEp(cachedMedia) : '?'}${variables.score !== 0 ? `\nYour Score: ${this.isAniAuth() ? (variables.score / 10) : variables.score}` : ''}`
         if (this.isAniAuth()) {
