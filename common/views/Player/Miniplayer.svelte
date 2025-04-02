@@ -20,6 +20,7 @@
     $: maxwidth = $isMobile ? '25rem' : '120rem'
     $: width = !$isMobile ? (cache.getEntry(caches.GENERAL, 'widthMiniplayer') || '0px') : '0px'
     $: position = cache.getEntry(caches.GENERAL, 'posMiniplayer') || 'bottom right'
+    $: draggingPos = ''
     $: if (!$isMobile) { cache.setEntry(caches.GENERAL, 'widthMiniplayer', width); cache.setEntry(caches.GENERAL, 'posMiniplayer', position) }
     let height = '0px'
     let left = '0px'
@@ -60,9 +61,12 @@
             top = istop ? '0px' : '100%'
             left = isleft ? '0px' : '100%'
             if (pointerId) node.releasePointerCapture(pointerId)
+            draggingPos = istop ? ' top' : ' bottom'
+            draggingPos += isleft ? ' left' : ' right'
             timeout = setTimeout(() => {
                 position += istop ? ' top' : ' bottom'
                 position += isleft ? ' left' : ' right'
+                draggingPos = ''
             }, 600)
         }
         function handleDrag ({ clientX, clientY, touches }) {
@@ -97,7 +101,7 @@
     }
 </script>
 <div class='miniplayer-container {position} {$$restProps.class}'
-     class:mt-20={active} class:active class:animate={!dragging} class:custompos={!position}
+     class:mt-20={active && (position.match(/top/i) || draggingPos.match(/top/i))} class:active class:animate={!dragging} class:custompos={!position}
      style:--left={left} style:--top={top} style:--height={height} style:--width={width} style:--padding={padding} style:--maxwidth={maxwidth} style:--minwidth={minwidth}
      role='group' bind:this={container} on:dragstart|preventDefault|self>
     {#if resize && active}
