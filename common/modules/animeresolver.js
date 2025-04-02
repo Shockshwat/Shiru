@@ -134,8 +134,8 @@ export default new class AnimeResolver {
     })
 
     debug(`Finding ${titleObjects?.length} titles: ${titleObjects?.map(obj => obj.title).join(', ')}`)
-    for (const chunk of chunks(titleObjects, 60)) {
-      // single title has a complexity of 8.1, al limits complexity to 500, so this can be at most 62, undercut it to 60, al pagination is 50, but at most we'll do 30 titles since isAdult duplicates each title
+    for (const chunk of chunks(titleObjects, 55)) {
+      // single title has a complexity of 8.1, al limits complexity to 500, so this can be at most 62, undercut it to ~~60~~ 55, al pagination is 50, but at most we'll do 30 titles since isAdult duplicates each title
       const search = await anilistClient.alSearchCompound(chunk)
       if (!search || search?.errors) return
       for (const [key, media] of search) {
