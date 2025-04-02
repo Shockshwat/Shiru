@@ -205,11 +205,13 @@ export default new class AnimeResolver {
           .replace(/Symphogear GX (Season\s*3|S\s*3|\s*03)/i, 'Symphogear GX') // Symphogear S3 fix.... see above.
           .replace(/Symphogear AXZ (Season\s*4|S\s*4|\s*04)/i, 'Symphogear AXZ') // Symphogear S4 fix.... see above.
           .replace(/Symphogear XV (Season\s*5|S\s*5|\s*05)/i, 'Symphogear XV') // Symphogear S5 fix.... see above.
-          .replace(/Kiss X Sis/i, 'Kiss×Sis') // Kiss X Sis fix, Anilist is weird using Unicode characters, not a release groups fault.
-          .replace(/KissXSis/i, 'Kiss×Sis') // Kiss X Sis fix, see above.
-          .replace(/Steins_Gate/i, 'Steins;Gate')
-          .replace(/Steins Gate/i, 'Steins;Gate')
+          .replace(/Kiss X Sis|KissXSis/i, 'Kiss×Sis') // Kiss X Sis fix, Anilist is weird using Unicode characters, not a release groups fault.
+          .replace(/Steins_Gate|Steins Gate/i, 'Steins;Gate')
+          .replace(/Code Geass Movie 01|Code Geass Movie 1/i, 'Code Geass: Lelouch of the Rebellion I - Initiation')
+          .replace(/Code Geass Movie 02|Code Geass Movie 2/i, 'Code Geass: Lelouch of the Rebellion II - Transgression')
+          .replace(/Code Geass Movie 03|Code Geass Movie 3/i, 'Code Geass: Lelouch of the Rebellion III - Glorification')
       if (name.match(/Steins;Gate/i) && name.match(/Movie/i)) name = (/Steins;Gate 0/i.test(name) ? name.replace(/Steins;Gate 0/i, 'Steins;Gate 0:') : name.replace(/Steins;Gate/i, 'Steins;Gate:')).replace(/The Movie/i, '').replace(/Movie/i, '') // Steins;Gate movies are very sensitive when resolving.
+      if (name.match(/Code Geass /i) && !name.match(/Lelouch|Dakkan|Dakken|Rozé|Roze|Rose|Movie|Akito|Recapture/i)) name = name.replace(/Code Geass/i, 'Code Geass: Hangyaku No Lelouch')
 
       // Restore preserved patterns by converting markers back
       name = name
