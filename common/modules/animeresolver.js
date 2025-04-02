@@ -236,6 +236,10 @@ export default new class AnimeResolver {
    * @returns {boolean} If any of the media titles matches the parsed anime title.
    */
   isVerified(media, parseObj, titleKeys, threshold) {
+    // Stupid miscellaneous checks for poorly named series.
+    if ((String(parseObj?.episode_number).replace(/^0+/, '') === '1') && (parseObj?.anime_title || '').match(/Golden Time/i) && media?.format === 'MOVIE') return false // stupid fix for the unrelated Golden Time movie having the same name as the TV Series.
+
+    // Check that name "semi-loosely" exists in the resolved media.
     const hasSeason = matchKeys(media, 'Season', titleKeys, threshold)
     return (!parseObj?.anime_year || (media?.seasonYear >= Number(parseObj?.anime_year))) && !(!matchKeys(media, (!parseObj?.anime_season || !(Number(parseObj?.anime_season) > 1) || !hasSeason) ? parseObj?.anime_title : parseObj?.anime_title?.replace(/S\d+|season-\d+/gi, '') + 'Season ' + Number(parseObj?.anime_season), titleKeys, threshold) && !matchKeys(media, parseObj?.anime_title?.replace(/S\d+|season-\d+/gi, '') + (hasSeason && parseObj?.anime_season ? 'Season ' + Number(parseObj?.anime_season) : ''), titleKeys, threshold) && (!parseObj?.anime_season || !(Number(parseObj?.anime_season) > 1) || !matchKeys(media, parseObj?.anime_title?.replace(/S\d+|season-\d+/gi, `Season ${parseObj?.anime_season}`), titleKeys, 0.3)))
   }
