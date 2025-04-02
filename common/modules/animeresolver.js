@@ -211,7 +211,8 @@ export default new class AnimeResolver {
           .replace(/Code Geass Movie 02|Code Geass Movie 2/i, 'Code Geass: Lelouch of the Rebellion II - Transgression')
           .replace(/Code Geass Movie 03|Code Geass Movie 3/i, 'Code Geass: Lelouch of the Rebellion III - Glorification')
       if (name.match(/Steins;Gate/i) && name.match(/Movie/i)) name = (/Steins;Gate 0/i.test(name) ? name.replace(/Steins;Gate 0/i, 'Steins;Gate 0:') : name.replace(/Steins;Gate/i, 'Steins;Gate:')).replace(/The Movie/i, '').replace(/Movie/i, '') // Steins;Gate movies are very sensitive when resolving.
-      if (name.match(/Code Geass /i) && !name.match(/Lelouch|Dakkan|Dakken|Rozé|Roze|Rose|Movie|Akito|Recapture/i)) name = name.replace(/Code Geass/i, 'Code Geass: Hangyaku No Lelouch')
+      if (name.match(/Steins;Gate/i) && name.match(/Divide|β|Beta/i)) name = name.replace(/23β|23 β|23\(β\)|23 \(β\)|β|23Beta|23 Beta|Open the Missing Link|Divide By Zero/i, 'Kyoukaimenjou No Missing Link - Divide By Zero').replace(/Episode 23|23|Episode/i, '') // Steins;Gate 23β incorrectly detects as Episode 23 of the main series, we need to use the full Romaji name.
+      if (name.match(/Code Geass /i) && !name.match(/Lelouch|Dakkan|Dakken|Rozé|Roze|Rose|Movie|Akito|Recapture/i)) name = name.replace(/Code Geass/i, 'Code Geass: Hangyaku No Lelouch') // fixes the main series being detected as the Spin-off (alternative) series.
 
       // Restore preserved patterns by converting markers back
       name = name
