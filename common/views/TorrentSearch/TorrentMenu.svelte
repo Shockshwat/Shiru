@@ -15,6 +15,7 @@
 
   /** @param {Media} media */
   function isMovie (media) {
+    if (!media) return false
     if (media.format === 'MOVIE') return true
     if ([...Object.values(media.title), ...media.synonyms].some(title => title?.toLowerCase().includes('movie'))) return true
     // if (!getParentForSpecial(media)) return true // TODO: this is good for checking movies, but false positives with normal TV shows

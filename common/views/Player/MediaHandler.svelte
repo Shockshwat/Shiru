@@ -280,6 +280,10 @@
             const failedEntry = resolved.find(resolvedFile => AnimeResolver.cleanFileName(resolvedFile.parseObject.file_name) === AnimeResolver.cleanFileName(file.name))
             const animeType = failedEntry?.parseObject.anime_type
             if (animeType) parseObject.parseObject.anime_type = animeType
+            if (parseObject?.failed) { // hacky fix to remove the episode number when it failed to resolved, when using the torrent name + file name the resolver has a bias toward detecting the video resolution as the episode number.
+                if (parseObject?.parseObject?.episode_number && (String(parseObject?.parseObject?.episode_number || '') === String(failedEntry?.parseObject?.video_resolution || '').replace('p', ''))) delete parseObject.parseObject.episode_number
+                if (parseObject?.episode && (String(parseObject?.episode || '') === String(failedEntry?.parseObject?.video_resolution || '').replace('p', ''))) delete parseObject.episode
+            }
             if (parseObject) file.media = parseObject
         })
     }
