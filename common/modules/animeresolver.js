@@ -207,6 +207,9 @@ export default new class AnimeResolver {
           .replace(/Symphogear XV (Season\s*5|S\s*5|\s*05)/i, 'Symphogear XV') // Symphogear S5 fix.... see above.
           .replace(/Kiss X Sis/i, 'Kiss×Sis') // Kiss X Sis fix, Anilist is weird using Unicode characters, not a release groups fault.
           .replace(/KissXSis/i, 'Kiss×Sis') // Kiss X Sis fix, see above.
+          .replace(/Steins_Gate/i, 'Steins;Gate')
+          .replace(/Steins Gate/i, 'Steins;Gate')
+      if (name.match(/Steins;Gate/i) && name.match(/Movie/i)) name = (/Steins;Gate 0/i.test(name) ? name.replace(/Steins;Gate 0/i, 'Steins;Gate 0:') : name.replace(/Steins;Gate/i, 'Steins;Gate:')).replace(/The Movie/i, '').replace(/Movie/i, '') // Steins;Gate movies are very sensitive when resolving.
 
       // Restore preserved patterns by converting markers back
       name = name
