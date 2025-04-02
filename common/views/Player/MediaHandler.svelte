@@ -220,7 +220,7 @@
   }
 
   function fileListToDebug (files) {
-    return files?.map(({ name, media, url }) => `\n${name} ${media?.parseObject?.anime_title} ${media?.parseObject?.episode_number} ${media?.media?.id}:${media?.media?.title?.userPreferred} ${media?.episode}`).join('')
+    return files?.map(({ name, media }) => `\n${name} ${media?.parseObject?.anime_title} ${media?.parseObject?.anime_season}:${media?.parseObject?.episode_number} ${media?.media?.id}:${media?.media?.title?.userPreferred} ${media?.season}:${media?.episode}`).join('')
   }
 
   /**
@@ -323,7 +323,16 @@
     }
     result = remapByTitle(result)
     result.sort((a, b) => a.media?.episode - b.media?.episode)
-    result.sort((a, b) => (b.media?.parseObject?.anime_season ?? 1) - (a.media?.parseObject?.anime_season ?? 1))
+    if (newPlaying.media?.id) {
+        result.sort((a, b) => {
+            const seasonA = a.media?.parseObject?.anime_season
+            const seasonB = b.media?.parseObject?.anime_season
+            if (seasonA === undefined && seasonB === undefined) return 0
+            if (seasonA === undefined) return 1
+            if (seasonB === undefined) return -1
+            return seasonB - seasonA
+        })
+    } else result.sort((a, b) => (b.media?.parseObject?.anime_season ?? 1) - (a.media?.parseObject?.anime_season ?? 1))
     debug(`Sorted ${result.length} files`, fileListToDebug(result))
 
     processed.set([...result, ...otherFiles])
