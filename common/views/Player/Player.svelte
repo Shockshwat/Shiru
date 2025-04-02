@@ -1159,14 +1159,10 @@
 
   function checkCompletionByTime (currentTime, safeduration) {
     const fromend = Math.max(180, safeduration / 10)
-    if (safeduration && currentTime && (video?.readyState || externalPlayerReady) && safeduration - fromend < currentTime) {
-      if (media?.media?.episodes || media?.media?.nextAiringEpisode?.episode) {
-        if (media.media.episodes || media.media.nextAiringEpisode?.episode > media.episode) {
-          completed = true
-          externalPlayerReady = false
-          Helper.updateEntry(media)
-        }
-      }
+    if ((safeduration && currentTime && (video?.readyState || externalPlayerReady) && (safeduration - fromend < currentTime)) && (media?.media?.episodes || (media?.media?.nextAiringEpisode?.episode >= media.episode))) {
+      completed = true
+      externalPlayerReady = false
+      Helper.updateEntry(media)
     }
   }
   const torrent = {}
