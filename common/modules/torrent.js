@@ -14,6 +14,8 @@ const debug = Debug('ui:torrent')
 const torrentRx = /(^magnet:){1}|(^[A-F\d]{8,40}$){1}|(.*\.torrent$){1}/i
 
 class TorrentWorker extends EventTarget {
+  static excludedToastMessages = ['no buffer space']
+
   constructor () {
     super()
     this.ready = new Promise(resolve => {
@@ -65,6 +67,9 @@ client.on('files', ({ detail }) => {
 client.on('error', ({ detail }) => {
   debug(`Error: ${detail.message || detail}`)
   if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Errors')) {
+    for (const exclude of TorrentWorker.excludedToastMessages) {
+      if ((detail.message || detail)?.toLowerCase()?.includes(exclude)) return
+    }
     toast.error('Torrent Error', {description: '' + (detail.message || detail)})
   }
 })
@@ -72,12 +77,18 @@ client.on('error', ({ detail }) => {
 client.on('warn', ({ detail }) => {
   debug(`Warn: ${detail.message || detail}`)
   if (settings.value.toasts.includes('All') || settings.value.toasts.includes('Warnings')) {
+    for (const exclude of TorrentWorker.excludedToastMessages) {
+      if ((detail.message || detail)?.toLowerCase()?.includes(exclude)) return
+    }
     toast.warning('Torrent Warning', {description: '' + (detail.message || detail)})
   }
 })
 
 client.on('info', ({ detail }) => {
   debug(`Info: ${detail.message || detail}`)
+  for (const exclude of TorrentWorker.excludedToastMessages) {
+    if ((detail.message || detail)?.toLowerCase()?.includes(exclude)) return
+  }
   toast('Torrent Info', { description: '' + (detail.message || detail) })
 })
 
