@@ -81,14 +81,18 @@
           debug(`Duration of the current media has changed, checking for multiple episodes in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
           const mediaDuration = (episode?.length && episode.length * 60) || (nowPlaying.value.media.duration * 60)
           if (duration > (mediaDuration + 360)) { // Add 6 minutes (360 second) buffer
-              debug(`Multiple episodes have been detected in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
               const episodeMultiplier = Math.round(duration / mediaDuration) // Round to nearest whole number
-              handleMedia({
-                  media: nowPlaying.value.media,
-                  episode: nowPlaying.value.episode * episodeMultiplier,
-                  episodeRange: `${(nowPlaying.value.episode * episodeMultiplier) - (episodeMultiplier - 1)} ~ ${(nowPlaying.value.episode * episodeMultiplier)}`,
-                  parseObject: nowPlaying.value.parseObject
-              })
+              const startingEpisode = (nowPlaying.value.episode * episodeMultiplier) - (episodeMultiplier - 1)
+              const finalEpisode = nowPlaying.value.episode * episodeMultiplier
+              if (startingEpisode !== finalEpisode) {
+                  debug(`Multiple episodes have been detected in the video file for: ${JSON.stringify(nowPlaying.value.parseObject)}`)
+                  handleMedia({
+                      media: nowPlaying.value.media,
+                      episode: finalEpisode,
+                      episodeRange: `${startingEpisode} ~ ${finalEpisode}`,
+                      parseObject: nowPlaying.value.parseObject
+                  })
+              }
           }
       }
   }
@@ -305,7 +309,7 @@
     const newPlaying = await findPreferredPlaybackMedia(videoFiles, targetFile)
     debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
 
-    const filtered = newPlaying?.media && videoFiles.filter(file => (file.media?.media?.id && file.media?.media?.id === newPlaying.media?.id) || !file.media?.media?.id)
+    const filtered = newPlaying?.media && videoFiles.filter(file => (file.media?.media?.id && file.media?.media?.id === newPlaying?.media?.id) || !file.media?.media?.id)
     debug(`Filtered ${filtered?.length} files based on media`, fileListToDebug(filtered))
 
     let result
@@ -323,7 +327,7 @@
     }
     result = remapByTitle(result)
     result.sort((a, b) => a.media?.episode - b.media?.episode)
-    if (newPlaying.media?.id) {
+    if (newPlaying?.media?.id) {
         result.sort((a, b) => {
             const seasonA = a.media?.parseObject?.anime_season
             const seasonB = b.media?.parseObject?.anime_season
