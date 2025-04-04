@@ -313,7 +313,6 @@
         return true
     })
     debug(`Removed matching type exclusions for ${resolvedFiles - videoFiles?.length} video files`, fileListToDebug(videoFiles))
-    processedFiles.set([...videoFiles])
 
     const newPlaying = await findPreferredPlaybackMedia(videoFiles, targetFile)
     debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
@@ -338,6 +337,7 @@
     debug(`Sorted ${result.length} files`, fileListToDebug(result))
 
     processed.set([...result, ...otherFiles])
+    processedFiles.set([...sortFiles(videoFiles, newPlaying)])
     await tick()
     const file = (newPlaying?.episode && (result.find(({ media }) => media.episode === newPlaying.episode) || result.find(({ media }) => media.episode === 1))) || result[0]
     handleMedia(file?.media, newPlaying)
@@ -354,7 +354,7 @@
               if (seasonA === undefined && seasonB === undefined) return 0
               if (seasonA === undefined) return 1
               if (seasonB === undefined) return -1
-              return seasonB - seasonA
+              return  seasonA - seasonB
           })
       } else result.sort((a, b) => (b.media?.parseObject?.anime_season ?? 1) - (a.media?.parseObject?.anime_season ?? 1))
       return result
