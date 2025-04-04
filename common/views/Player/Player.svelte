@@ -393,7 +393,7 @@
         const target = (index + 1) % videos.length
         handleCurrent(videos[target])
         w2gEmitter.emit('index', { index: target })
-      } else if (media?.media?.nextAiringEpisode?.episode - 1 || media?.media?.episodes > media?.episode) {
+      } else if (media?.media?.nextAiringEpisode?.episode - 1 || ((media?.media?.episodes || getMediaMaxEp(media?.media)) > media?.episode)) {
         playAnime(media.media, media.episode + 1)
       }
     }
