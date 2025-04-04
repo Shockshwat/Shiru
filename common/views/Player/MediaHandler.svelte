@@ -24,6 +24,7 @@
   export const files = writable([])
 
   const processed = writable([])
+  const processedFiles = writable([])
 
   const noop = () => {}
 
@@ -252,7 +253,11 @@
 
   async function handleFiles (files, targetFile) {
     debug(`Got ${files?.length} files`, fileListToDebug(files))
-    if (!files?.length) return processed.set(files)
+    if (!files?.length) {
+        processed.set(files)
+        processedFiles.set(files)
+        return
+    }
     let videoFiles = []
     const otherFiles = []
     const torrentNames = []
@@ -305,6 +310,7 @@
         return true
     })
     debug(`Removed matching type exclusions for ${resolvedFiles - videoFiles?.length} video files`, fileListToDebug(videoFiles))
+    processedFiles.set([...videoFiles])
 
     const newPlaying = await findPreferredPlaybackMedia(videoFiles, targetFile)
     debug(`Found preferred playback media: ${newPlaying?.media?.id}:${newPlaying?.media?.title?.userPreferred} ${newPlaying?.episode}`)
@@ -408,4 +414,4 @@
   export let playPage = false
 </script>
 
-<Player files={$processed} {miniplayer} media={$nowPlaying} bind:playFile bind:page bind:overlay bind:playPage on:current={handleCurrent} on:duration={handleRanged} />
+<Player files={$processed} playableFiles={$processedFiles} {miniplayer} media={$nowPlaying} bind:playFile bind:page bind:overlay bind:playPage on:current={handleCurrent} on:duration={handleRanged} />

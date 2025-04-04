@@ -12,6 +12,7 @@
   --sidebar-minimised: 0px;
   --sidebar-width: 0px;
   --navbar-height: 7rem;
+  --secondary-color: #0065fa !important;
   --dark-color-base-hue: 220deg !important;
   --dark-color-base-saturation: 10% !important;
   --dark-color-hsl: var(--dark-color-base-hue), var(--dark-color-base-saturation), 10% !important;
