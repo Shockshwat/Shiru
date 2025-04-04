@@ -59,6 +59,7 @@
   $condition = () => SUPPORTS.keybinds && ((!miniplayer && !document.querySelector('.modal.show')) || (overlay.includes('viewanime') && page === 'player'))
 
   export let files = []
+  export let playableFiles = []
   $: updateFiles(files)
   let src = null
   let video = null
@@ -1384,16 +1385,28 @@
     on:leavepictureinpicture={() => { pip = false }} />
   {#if stats && !miniplayer}
     <div class='position-absolute top-0 bg-tp p-10 ml-20 mt-100 text-monospace rounded z-50'>
-      <button class='close btn btn-square mt-5' type='button' use:click={toggleStats}><X size='1.4rem' strokeWidth='3'/></button>
-      FPS: {stats.fps}<br />
-      Presented frames: {stats.presented}<br />
-      Dropped frames: {stats.dropped}<br />
-      Frame time: {stats.processing}<br />
-      Viewport: {stats.viewport}<br />
-      Resolution: {stats.resolution}<br />
-      Buffer health: {stats.buffer}<br />
-      Playback speed: x{stats.speed?.toFixed(1)}<br />
-      Name: {current.name || ''}
+      <button class='close btn btn-square mt-5' type='button' use:click={toggleStats}>
+        <X size='1.4rem' strokeWidth='3'/>
+      </button>
+      <div>FPS: {stats.fps}</div>
+      <div>Presented frames: {stats.presented}</div>
+      <div>Dropped frames: {stats.dropped}</div>
+      <div>Frame time: {stats.processing}</div>
+      <div>Viewport: {stats.viewport}</div>
+      <div>Resolution: {stats.resolution}</div>
+      <div>Buffer health: {stats.buffer}</div>
+      <div>Playback speed: x{stats.speed?.toFixed(1)}</div>
+      <div>Name: {current.name || ''}</div>
+      {#if playableFiles?.length > 1}
+        <div class='mt-10'>All files in this batch:</div>
+        <div class='overflow-auto ml-10 mt-5' style="max-height: 200px;">
+          {#each playableFiles as file}
+            <div class='ctrl rounded-10 pl-5 pr-5 pbf' title={file.name} use:click={() => playFile(file)}>
+              {file.name || 'UNK'}
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
   <div class='top z-40 row d-title'>
@@ -1943,6 +1956,9 @@
   }
   .mb-50 {
     margin-bottom: 5rem !important;
+  }
+  .pbf:hover {
+    background: var(--secondary-color);
   }
 
   .ctrl {
