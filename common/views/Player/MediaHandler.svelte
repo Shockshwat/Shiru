@@ -13,6 +13,7 @@
   const debug = Debug('ui:mediahandler')
 
   const episodeRx = /Episode (\d+) - (.*)/
+  const TYPE_EXCLUSIONS = ['ED', 'ENDING', 'NCED', 'NCOP', 'OP', 'OPENING', 'PREVIEW', 'PV']
 
   /**
    * This works pretty well now but isn't the most well designed, primarily this could be improved to decrease load times and the number of anilist queries by storing verified media mapped to their torrent.
@@ -42,9 +43,13 @@
     if (!settings.value.rssAutofile) return false
     const oldNowPlaying = nowPlaying.value
     if (!oldNowPlaying.media?.id || (oldNowPlaying.media.id === obj.media.id && oldNowPlaying.episode === obj.episode)) return false
-    const fileList = files.value
-    const targetFile = fileList.find(file => file.media?.media?.id === obj.media.id &&
-      (file.media?.episode === obj.episode || obj.media.episodes === 1 || (!obj.media.episodes && (obj.episode === 1 || !obj.episode) && (oldNowPlaying.episode === 1 || !oldNowPlaying.episode))) // movie check
+
+    const fileList = sortFiles(processedFiles?.value?.length >= 1 ? processedFiles.value : files.value, oldNowPlaying)
+    let targetFile = fileList.find(file => file.media?.media?.id === obj.media.id &&
+        (Number(file.media?.parseObject?.episode_number || 0) === obj.episode || obj.media.episodes === 1 || (!obj.media.episodes && (obj.episode === 1 || !obj.episode) && (oldNowPlaying.episode === 1 || !oldNowPlaying.episode))) // movie check
+    )
+    if (!targetFile) targetFile = fileList.find(file => file.media?.media?.id === obj.media.id &&
+        (file.media?.episode === obj.episode || obj.media.episodes === 1 || (!obj.media.episodes && (obj.episode === 1 || !obj.episode) && (oldNowPlaying.episode === 1 || !oldNowPlaying.episode))) // movie check
     )
 
     if (!targetFile) return false
@@ -155,8 +160,6 @@
     }
   }
 
-  const TYPE_EXCLUSIONS = ['ED', 'ENDING', 'NCED', 'NCOP', 'OP', 'OPENING', 'PREVIEW', 'PV']
-
   // find the best media in batch to play
   // currently in progress or unwatched
   // tv, movie, ona, ova, special
@@ -166,7 +169,7 @@
     // force play the target file if we are specifically requesting it, but do need to validate it still exists.
     if (targetFile) {
         for (const { media } of videoFiles) {
-            if ((media?.media?.id === targetFile?.media?.media?.id) && (media?.episode === targetFile?.media?.episode) && (!targetFile?.media?.season || (media?.season === targetFile?.media?.season))) return { media: media, episode: media?.episode, season: media?.season }
+            if ((media?.media?.id === targetFile?.media?.media?.id) && (media?.episode === targetFile?.media?.episode) && (!targetFile?.media?.season || (media?.season === targetFile?.media?.season))) return { media: (mediaCache.value[media?.media?.id] || media?.media), episode: media?.episode, season: media?.season }
         }
     }
 
@@ -331,18 +334,7 @@
           debug(`All occurrences were identical, guessing the episode and/or season and attaching to the files`, fileListToDebug(result))
       }
     }
-    result = remapByTitle(result)
-    result.sort((a, b) => a.media?.episode - b.media?.episode)
-    if (newPlaying?.media?.id) {
-        result.sort((a, b) => {
-            const seasonA = a.media?.parseObject?.anime_season
-            const seasonB = b.media?.parseObject?.anime_season
-            if (seasonA === undefined && seasonB === undefined) return 0
-            if (seasonA === undefined) return 1
-            if (seasonB === undefined) return -1
-            return seasonB - seasonA
-        })
-    } else result.sort((a, b) => (b.media?.parseObject?.anime_season ?? 1) - (a.media?.parseObject?.anime_season ?? 1))
+    result = sortFiles(result, newPlaying)
     debug(`Sorted ${result.length} files`, fileListToDebug(result))
 
     processed.set([...result, ...otherFiles])
@@ -350,6 +342,22 @@
     const file = (newPlaying?.episode && (result.find(({ media }) => media.episode === newPlaying.episode) || result.find(({ media }) => media.episode === 1))) || result[0]
     handleMedia(file?.media, newPlaying)
     playFile(file || 0)
+  }
+
+  function sortFiles (result, newPlaying) {
+      result = remapByTitle(result)
+      result.sort((a, b) => a.media?.episode - b.media?.episode)
+      if (newPlaying?.media?.id) {
+          result.sort((a, b) => {
+              const seasonA = a.media?.parseObject?.anime_season
+              const seasonB = b.media?.parseObject?.anime_season
+              if (seasonA === undefined && seasonB === undefined) return 0
+              if (seasonA === undefined) return 1
+              if (seasonB === undefined) return -1
+              return seasonB - seasonA
+          })
+      } else result.sort((a, b) => (b.media?.parseObject?.anime_season ?? 1) - (a.media?.parseObject?.anime_season ?? 1))
+      return result
   }
 
   // find element with most occurrences in array according to map function, if occurrences are identical return null.
