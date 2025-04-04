@@ -4,10 +4,12 @@
   import ToggleTitle from '@/views/ViewAnime/ToggleTitle.svelte'
 
   export let list = null
-  let showMore = false
+
+  $: showMore = !list
   function toggleList () {
     showMore = !showMore
   }
+
   export let title = 'Relations'
   export let promise = null
 </script>

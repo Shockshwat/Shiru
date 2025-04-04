@@ -20,7 +20,7 @@
   import SmallCard from '@/components/cards/SmallCard.svelte'
   import SkeletonCard from '@/components/cards/SkeletonCard.svelte'
   import Helper from '@/modules/helper.js'
-  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash, ArrowDownZA, ArrowUpZA } from 'lucide-svelte'
+  import { ArrowLeft, Clapperboard, ExternalLink, Users, Heart, Play, Share2, Timer, TrendingUp, Tv, Hash, ArrowDown01, ArrowUp10 } from 'lucide-svelte'
 
   export let overlay
   const view = getContext('view')
@@ -60,6 +60,7 @@
     else if (!media && staticMedia) staticMedia = null
   }
   mediaCache.subscribe((value) => { if (value && (JSON.stringify(value[media?.id]) !== JSON.stringify(media))) media = value[media?.id] })
+  $: episodeOrder = !!staticMedia
   $: watched = media?.mediaListEntry?.status === 'COMPLETED'
   $: userProgress =  ['CURRENT', 'REPEATING', 'PAUSED', 'DROPPED'].includes(media?.mediaListEntry?.status) && media?.mediaListEntry?.progress
   $: recommendations = staticMedia && anilistClient.recommendations({ id: staticMedia.id })
@@ -118,7 +119,6 @@
   function openInBrowser (url) {
     IPC.emit('open', url)
   }
-  let episodeOrder = true
   window.addEventListener('overlay-check', (event) => { if (!event?.detail?.nowPlaying && media) close() })
 
   function handlePlay(id, episode, torrentOnly) {
@@ -353,7 +353,7 @@
         </div>
         <div class='col-lg-5 col-12 d-none d-lg-flex flex-column pl-lg-20' bind:this={rightColumn}>
           <button class='close order pointer z-30 bg-dark position-absolute' use:click={()=> {episodeOrder = !episodeOrder}}>
-            <svelte:component this={episodeOrder ? ArrowDownZA : ArrowUpZA} size='2rem' />
+            <svelte:component this={episodeOrder ? ArrowDown01 : ArrowUp10} size='2rem' />
           </button>
           <EpisodeList bind:episodeLoad={episodeLoad} {media} {episodeOrder} bind:userProgress bind:watched episodeCount={getMediaMaxEp(media)} {play} />
         </div>
