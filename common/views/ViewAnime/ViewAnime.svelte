@@ -312,11 +312,7 @@
             <div class='col-lg-5 col-12 d-flex d-lg-none flex-column pl-lg-20 overflow-x-hidden h-600 mt-20'>
               <EpisodeList bind:episodeList={episodeList} mobileList={true} {media} {episodeOrder} bind:userProgress bind:watched episodeCount={getMediaMaxEp(media)} {play} />
             </div>
-            <ToggleList list={ staticMedia.relations?.edges?.filter(({ node }) => node.type === 'ANIME').sort((a, b) => {
-                  const typeComparison = a.relationType.localeCompare(b.relationType)
-                  if (typeComparison !== 0) return typeComparison
-                  return (a.node.seasonYear || 0) - (b.node.seasonYear || 0)
-                }) } promise={searchIDS} let:item let:promise title='Relations'>
+            <ToggleList list={ staticMedia.relations?.edges?.filter(({ node }) => node.type === 'ANIME' && node.relationType !== 'CHARACTER').sort((a, b) => (a.node.seasonYear || Infinity) - (b.node.seasonYear || Infinity)) } promise={searchIDS} let:item let:promise title='Relations'>
               {#await promise}
                 <div class='small-card'>
                   <SkeletonCard />
