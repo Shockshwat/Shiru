@@ -107,7 +107,20 @@ class MALClient {
     if (Object.keys(body).length > 0) {
       options.body = new URLSearchParams(body)
     }
-    return this.handleRequest(query, options)
+		return this.handleRequest(query, options);
+	}
+
+	async jikanRequest(query) {
+		const res = await fetch(`https://api.jikan.moe/v4/${query}`, {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded",
+			},
+		});
+		if (!res.ok) {
+			throw new Error(`Jikan request failed: ${res.status}`);
+		}
+		return res.json();
   }
 
   failedRefresh = []
@@ -312,10 +325,243 @@ class MALClient {
     }
     const res = await this.malRequest(query)
     setTimeout(async () => {
-      if (!variables.token) this.userLists.value = Promise.resolve(await this.getUserLists({sort: 'list_updated_at'})) // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
-    })
-    return res
-  }
+			if (!variables.token)
+				this.userLists.value = Promise.resolve(
+					await this.getUserLists({ sort: "list_updated_at" })
+				); // awaits before setting the value as it is super jarring to have stuff constantly re-rendering when it's not needed.
+		});
+		return res;
+	}
+
+	async malSearchCompound(flattenedTitles) {
+		debug(`Searching for ${flattenedTitles.title}`);
+
+		if (!flattenedTitles.length) return [];
+		const query = {
+			type: "GET",
+			path: `anime?q=${flattenedTitles.title}&limit=5&fields=id,title,alternative_titles,start_season`,
+		};
+		const rest = await this.malRequest(query);
+		if (rest?.data) {
+			const searchResults = rest.data.map((result) => ({
+				id: result.id,
+				title: {
+					english: result.alternative_titles.en,
+					native: result.alternative_titles.ja,
+				},
+				synonyms: result.alternative_titles.synonyms,
+				seasonYear: result.start_season.year,
+				isAdult: !(result.nsfw == "white"),
+			}));
+			return searchResults;
+		}
+	}
+
+	search(variables = {}) {
+		debug(`Searching for ${variables.q}`);
+
+		const queryParams = new URLSearchParams({
+			q: variables.q || "",
+			page: variables.page || 1,
+			limit: variables.limit || 10,
+			type: variables.type || "",
+			score: variables.score || "",
+			min_score: variables.min_score || "",
+			max_score: variables.max_score || "",
+			status: variables.status || "",
+			rating: variables.rating || "",
+			sfw: variables.sfw || "",
+			genres: variables.genres || "",
+			genres_exclude: variables.genres_exclude || "",
+			order_by: variables.order_by || "",
+			sort: variables.sort || "",
+			letter: variables.letter || "",
+			producers: variables.producers || "",
+			start_date: variables.start_date || "",
+			end_date: variables.end_date || "",
+			unapproved: variables.unapproved || "",
+		});
+
+		const query = `anime?${queryParams.toString()}`;
+
+		return this.jikanRequest(query).then(async (res) => {
+			if (!res?.data) {
+				debug("No results found.");
+				return [];
+			}
+
+			const results = await Promise.all(
+				res.data.map(async (anime) => {
+					const episodesQuery = `anime/${anime.mal_id}/episodes`;
+					const episodesRes = await this.jikanRequest(episodesQuery);
+
+					const streamingEpisodes = episodesRes?.data?.map((episode) => ({
+						title: episode.title,
+						thumbnail: episode.url,
+					}));
+
+					return {
+				id: anime.mal_id,
+				title: {
+					romaji: anime.title,
+					english: anime.title_english,
+					native: anime.title_japanese,
+					userPreferred: anime.title,
+				},
+				description: anime.synopsis,
+				season: anime.season?.toUpperCase(),
+				seasonYear: anime.year,
+				format: anime.type,
+				status: anime.status,
+				episodes: anime.episodes,
+				duration: anime.duration
+					? parseInt(anime.duration.split(" ")[0])
+					: null,
+				averageScore: anime.score ? Math.round(anime.score * 10) : null,
+				genres: anime.genres?.map((genre) => genre.name) || [],
+				isAdult: anime.rating?.toLowerCase().includes("r-17") || false,
+				coverImage: {
+					extraLarge: anime.images?.jpg?.large_image_url,
+					medium: anime.images?.jpg?.image_url,
+					color: null,
+				},
+				source: anime.source,
+						studios: anime.studios?.map((studio) => studio.name) || [],
+				countryOfOrigin: "JP",
+				isFavourite: false,
+				synonyms: anime.title_synonyms || [],
+				trailer: anime.trailer?.url
+					? {
+							id: anime.trailer.youtube_id,
+							site: "youtube",
+					  }
+					: null,
+						streamingEpisodes: streamingEpisodes || [],
+					};
+				})
+			);
+
+			return results;
+		});
+	}
+
+	async episodes(variables = {}) {
+		debug(`Getting episodes for ${variables.id}`);
+		const query = `anime/${variables.id}/episodes`;
+		return this.jikanRequest(query).then((res) => {
+			if (!res?.data) {
+				debug("No episodes found.");
+				return [];
+			}
+			return res.data.map((episode) => ({
+				episode: episode.mal_id,
+				airingAt: new Date(episode.aired).getTime(),
+			}));
+		});
+	}
+
+	episodeDate(variables) {
+		debug(`Searching for episode date: ${variables.id}, ${variables.ep}`);
+		const query = `anime/${variables.id}/episodes/${variables.ep}`;
+		return this.jikanRequest(query).then((res) => {
+			if (!res?.data) {
+				debug("No episode date found.");
+				return null;
+		}
+			return { airingAt: new Date(res.data.aired).getTime() };
+		});
+	}
+
+	async recommendations(variables) {
+		debug(`Fetching recommendations for media ID ${variables.id}`);
+		const res = await this.jikanRequest(
+			`anime/${variables.id}/recommendations`
+		);
+		if (!res?.data) {
+			debug("No recommendations found.");
+			return [];
+		}
+
+		return res.data.map((recommendation) => ({
+			id: recommendation.entry.mal_id,
+			title: recommendation.entry.title,
+			imageUrl: recommendation.entry.images.jpg.image_url,
+		}));
+	}
+
+	searchIDSingle(variables) {
+		debug(`Searching for ID: ${variables?.idMal}`);
+		const query = `anime/${variables.idMal}`;
+		return this.jikanRequest(query).then((res) => {
+			if (!res?.data) {
+				debug("No results found.");
+				return null;
+			}
+			const anime = res.data;
+			return {
+				id: anime.mal_id,
+				title: {
+					romaji: anime.title,
+					english: anime.title_english,
+					native: anime.title_japanese,
+					userPreferred: anime.title,
+				},
+				description: anime.synopsis,
+				season: anime.season?.toUpperCase(),
+				seasonYear: anime.year,
+				format: anime.type,
+				status: anime.status,
+				episodes: anime.episodes,
+				duration: anime.duration
+					? parseInt(anime.duration.split(" ")[0])
+					: null,
+				averageScore: anime.score ? Math.round(anime.score * 10) : null,
+				genres: anime.genres?.map((genre) => genre.name) || [],
+				isAdult: anime.rating?.toLowerCase().includes("r-17") || false,
+				coverImage: {
+					extraLarge: anime.images?.jpg?.large_image_url,
+					medium: anime.images?.jpg?.image_url,
+					color: null,
+				},
+				source: anime.source,
+				countryOfOrigin: "JP",
+				isFavourite: false,
+				synonyms: anime.title_synonyms || [],
+				nextAiringEpisode: anime.airing
+					? {
+							airingAt: new Date(anime.aired?.prop?.from).getTime(),
+							episode: anime.episodes || 1,
+					  }
+					: null,
+				trailer: anime.trailer?.url
+					? {
+							id: anime.trailer.youtube_id,
+							site: "youtube",
+					  }
+					: null,
+			};
+		});
+	}
+
+	searchIDS(variables) {
+		debug(`Searching for IDs: ${JSON.stringify(variables.ids)}`);
+		const promises = variables.ids.map((id) =>
+			this.searchIDSingle({ idMal: id })
+		);
+		return Promise.all(promises).then((results) =>
+			results.filter((result) => result)
+		);
+	}
+
+	async searchAllIDS(variables) {
+		debug(`Searching for all IDs: ${JSON.stringify(variables.ids)}`);
+		const results = [];
+		for (const id of variables.ids) {
+			const result = await this.searchIDSingle({ idMal: id });
+			if (result) results.push(result);
+		}
+		return results;
+	}
 }
 
-export const malClient = new MALClient()
+export const malClient = new MALClient();
